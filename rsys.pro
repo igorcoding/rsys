@@ -12,7 +12,9 @@ SOURCES += \
 HEADERS += \
     math/mvector.h \
     math/mexception.h \
-    util/traits.h
+    util/traits.h \
+    math/sparse.h \
+    math/matrix.h
 
 include(deployment.pri)
 qtcAddDeployment()

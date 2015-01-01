@@ -2,6 +2,8 @@
 #include <vector>
 
 #include "math/mvector.h"
+#include "math/sparse.h"
+#include "math/matrix.h"
 
 using namespace std;
 
@@ -23,6 +25,9 @@ ostream& operator <<(ostream& os, const my& m) {
 
 int main()
 {
+    math::matrix<int> matrix(3, 2);
+    matrix[0][0] = 1;
+
     math::mvector<int> mvec(10, 0);
 //    mvec[1] = 1;
 
