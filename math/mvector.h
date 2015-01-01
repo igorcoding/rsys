@@ -9,6 +9,7 @@
 #include <cstring>
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 
 namespace math {
@@ -55,7 +56,7 @@ public:
     mvector(size_t size, const T& default_value);
     mvector(const T* vec, size_t size);
     explicit mvector(const std::vector<T>& vec);
-    mvector(const mvector<T>& that);
+    template <typename Y> mvector(const mvector<Y>& that);
     mvector<T>& operator =(const mvector<T>& that);
     ~mvector();
 
@@ -86,12 +87,20 @@ public:
     }
 
     size_t size() const;
+    const T* data() const;
 
     T& operator [](size_t i);
     mvector<T>& operator +=(const mvector<T>& other);
     template <typename U> mvector<T>& operator +=(const U& other);
     mvector<T>& operator -=(const mvector<T>& other);
     template <typename U> mvector<T>& operator -=(const U& other);
+
+    template <typename U> mvector<T>& operator *=(const U& other);
+    template <typename U> mvector<T>& operator /=(const U& other);
+
+    T dot(const mvector<T>& rhs) const;
+    template <typename Y> mvector<Y> normalize() const;
+    double length() const;
 
 private:
     void check_index(size_t i);
@@ -217,7 +226,7 @@ mvector<T>::mvector(const T* vec, size_t size)
     : _size(size)
 {
     _vec = new T[_size];
-    std::memcpy(_vec, vec, _size);
+    std::memcpy(_vec, vec, _size * sizeof(T));
 }
 
 template <typename T>
@@ -225,28 +234,33 @@ mvector<T>::mvector(const std::vector<T>& vec)
     : _size(vec.size())
 {
     _vec = new T[_size];
-    std::memcpy(_vec, vec.data(), _size);
+    std::memcpy(_vec, vec.data(), _size * sizeof(T));
 }
 
 template <typename T>
-mvector<T>::mvector(const mvector<T>& that)
-    : _size(that._size)
+template <typename Y>
+mvector<T>::mvector(const mvector<Y>& that)
+    : _size(that.size())
 {
     _vec = new T[_size];
-    std::memcpy(_vec, that._vec, _size);
+    const Y* that_vec = that.data();
+    for (size_t i = 0; i < _size; ++i) {
+        _vec[i] = static_cast<T>(that_vec[i]);
+    }
 }
 
 template <typename T> inline
 mvector<T>& mvector<T>::operator =(const mvector<T>& that)
 {
     _size = that.size();
-    std::memcpy(_vec, that._vec, _size);
+    std::memcpy(_vec, that._vec, _size * sizeof(T));
     return *this;
 }
 
 template <typename T>
 mvector<T>::~mvector() {
     delete[] _vec;
+    _vec = nullptr;
 }
 
 template <typename T>
@@ -260,6 +274,11 @@ mvector<T> mvector<T>::zero(size_t size) {
 template <typename T> inline
 size_t mvector<T>::size() const {
     return _size;
+}
+
+template <typename T> inline
+const T* mvector<T>::data() const {
+    return _vec;
 }
 
 
@@ -305,8 +324,53 @@ mvector<T>& mvector<T>::operator -=(const U& other) {
     return *this;
 }
 
+template <typename T>
+template <typename U>
+mvector<T>& mvector<T>::operator *=(const U& other) {
+    for (size_t i = 0; i < _size; ++i) {
+        _vec[i] *= other;
+    }
+    return *this;
+}
 
-/************* operator + and operator - *************/
+template <typename T>
+template <typename U>
+mvector<T>& mvector<T>::operator /=(const U& other) {
+    for (size_t i = 0; i < _size; ++i) {
+        _vec[i] /= other;
+    }
+    return *this;
+}
+
+
+template <typename T>
+T mvector<T>::dot(const mvector<T>& rhs) const {
+    check_sizes(_size, rhs.size());
+    T ans = T();
+    for (size_t i = 0; i < _size; ++i) {
+        ans += _vec[i] * rhs._vec[i];
+    }
+    return ans;
+}
+
+template <typename T>
+double mvector<T>::length() const {
+    T ans = T();
+    for (size_t i = 0; i < _size; ++i) {
+        ans += _vec[i] * _vec[i];
+    }
+    return std::sqrt(ans);
+}
+
+template <typename T>
+template <typename Y>
+mvector<Y> mvector<T>::normalize() const {
+    mvector<Y> mvec(*this);
+    mvec /= mvec.length();
+    return mvec;
+}
+
+/************* operator +, -, *, / *************/
 
 template <typename T>
 mvector<T> operator +(const mvector<T>& l, const mvector<T>& r) {
@@ -319,6 +383,13 @@ template <typename T, typename U>
 mvector<T> operator +(const mvector<T>& l, const U& r) {
     mvector<T> mvec(l);
     mvec += r;
+    return mvec;
+}
+
+template <typename T, typename U>
+mvector<T> operator +(const U& l, const mvector<T>& r) {
+    mvector<T> mvec(r);
+    mvec += l;
     return mvec;
 }
 
@@ -336,8 +407,32 @@ mvector<T> operator -(const mvector<T>& l, const U& r) {
     return mvec;
 }
 
+template <typename T, typename U>
+mvector<T> operator *(const mvector<T>& l, const U& r) {
+    mvector<T> mvec(l);
+    mvec *= r;
+    return mvec;
+}
+
+template <typename T, typename U>
+mvector<T> operator *(const U& l, const mvector<T>& r) {
+    mvector<T> mvec(r);
+    mvec *= l;
+    return mvec;
+}
+
+template <typename T, typename U>
+mvector<T> operator /(const mvector<T>& l, const U& r) {
+    mvector<T> mvec(l);
+    mvec /= r;
+    return mvec;
+}
 
 
+
+
+
+/************* Private methods *************/
 
 
 template <typename T>

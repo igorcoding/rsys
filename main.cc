@@ -5,22 +5,42 @@
 
 using namespace std;
 
+struct my {
+    int a;
+    int b;
+};
+
+my& operator *=(my& lhs, int rhs) {
+    lhs.a *= rhs;
+    lhs.b *= rhs;
+    return lhs;
+}
+
+ostream& operator <<(ostream& os, const my& m) {
+    os << "{" << m.a << ", " << m.b << "}";
+    return os;
+}
+
 int main()
 {
     math::mvector<int> mvec(10, 0);
-    math::mvector<int> mvec2 = math::mvector<int>::zero(10);
 //    mvec[1] = 1;
 
-//    mvec = mvec - mvec;
-//    mvec -= mvec2;
+    for (size_t i = 0; i < mvec.size(); ++i) {
+        mvec[i] = i;
+    }
+
+    math::mvector<double> mvec2 = mvec.normalize<double>();
+    std::cout << mvec2.length() << std::endl;
+
 
 //    std::vector<int> vec;
 //    for (std::vector<int>::const_iterator it = vec.begin(); it != vec.end(); ++it) {
 //        std::cout << *it << " ";
 //    }
 
-    for (math::mvector<int>::const_iterator it = mvec.begin(); it != mvec.end(); ++it) {
-        std::cout << *it << " ";
+    for (const auto& v : mvec2) {
+        std::cout << v << " ";
     }
     std::cout << std::endl;
 
