@@ -18,8 +18,13 @@ public:
 
     mvector<T>& operator [](int i);
     const mvector<T>& operator [](int i) const;
-    template <typename U> mvector<T>& operator *=(const U& rhs);
-    template <typename U> mvector<T>& operator /=(const U& rhs);
+
+    void set_row(size_t row_index, const mvector<T>& row);
+
+    matrix<T>& operator +=(const matrix<T>& rhs);
+    matrix<T>& operator -=(const matrix<T>& rhs);
+    template <typename U> matrix<T>& operator *=(const U& rhs);
+    template <typename U> matrix<T>& operator /=(const U& rhs);
 
     matrix<T> transpose() const;
 
@@ -90,8 +95,30 @@ const mvector<T>& matrix<T>::operator [](int i) const {
 }
 
 template <typename T>
+void matrix<T>::set_row(size_t row_index, const mvector<T>& row) {
+    delete _m[row_index];
+    _m[row_index] = new mvector<T>(row);
+}
+
+template <typename T>
+matrix<T>& matrix<T>::operator +=(const matrix<T>& rhs) {
+    for (size_t i = 0; i < _rows; ++i) {
+        *(_m[i]) += rhs[i];
+    }
+    return *this;
+}
+
+template <typename T>
+matrix<T>& matrix<T>::operator -=(const matrix<T>& rhs) {
+    for (size_t i = 0; i < _rows; ++i) {
+        *(_m[i]) -= rhs[i];
+    }
+    return *this;
+}
+
+template <typename T>
 template <typename U>
-mvector<T>& matrix<T>::operator *=(const U& rhs) {
+matrix<T>& matrix<T>::operator *=(const U& rhs) {
     for (auto& row : _m) {
         (*row) *= rhs;
     }
@@ -100,7 +127,7 @@ mvector<T>& matrix<T>::operator *=(const U& rhs) {
 
 template <typename T>
 template <typename U>
-mvector<T>& matrix<T>::operator /=(const U& rhs) {
+matrix<T>& matrix<T>::operator /=(const U& rhs) {
     for (auto& row : _m) {
         (*row) /= rhs;
     }
@@ -134,11 +161,58 @@ matrix<T> matrix<T>::ID(size_t size, T value) {
 
 template <typename T>
 void matrix<T>::clean_up() {
-    for (size_t i = 0; i < _rows; ++i) {
-        delete _m[i];
-        _m[i] = nullptr;
+    if (this != nullptr) {
+        for (size_t i = 0; i < _rows; ++i) {
+            delete _m[i];
+            _m[i] = nullptr;
+        }
     }
 }
+
+/************* operator +, -, *, / *************/
+
+template <typename T>
+matrix<T> operator +(const matrix<T>& l, const matrix<T>& r) {
+    matrix<T> m(l);
+    m += r;
+    return m;
+}
+
+template <typename T>
+matrix<T> operator -(const matrix<T>& l, const matrix<T>& r) {
+    matrix<T> m(l);
+    m -= r;
+    return m;
+}
+
+template <typename T, typename U>
+matrix<T> operator *(const matrix<T>& l, const U& r) {
+    matrix<T> m(l);
+    m *= r;
+    return m;
+}
+
+template <typename T, typename U>
+matrix<T> operator *(const U& l, const matrix<T>& r) {
+    matrix<T> m(r);
+    m *= l;
+    return m;
+}
+
+template <typename T, typename U>
+matrix<T> operator /(const matrix<T>& l, const U& r) {
+    matrix<T> m(l);
+    m /= r;
+    return m;
+}
+
+template <typename T, typename U>
+matrix<T> operator /(const U& l, const matrix<T>& r) {
+    matrix<T> m(r);
+    m /= l;
+    return m;
+}
+
 
 /************* Other methods *************/
 template <typename T>

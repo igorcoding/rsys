@@ -4,6 +4,7 @@
 template<typename T>
 struct traits
 {
+    typedef T ordinal_type;
     typedef T& reference;
     typedef const T& const_reference;
 

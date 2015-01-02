@@ -52,15 +52,17 @@ void svd<T>::learn(float learning_rate, float regularization, size_t iterations_
         auto users_reg = regularization * get_users_reg();
         auto items_reg = regularization * get_items_reg();
 
-        matrix<T> dJu(_pU.rows(), _pU.cols(), false);
-        matrix<T> dJi(_pI.rows(), _pI.cols(), false);
+        matrix<T> dJu(_pU.rows(), _pU.cols());
+        matrix<T> dJi(_pI.rows(), _pI.cols());
 
         for (size_t j = 0; j < dJu.rows(); ++j) {
-            dJu[j] = get_user_deriv(j) + users_reg;
+            auto deriv = get_user_deriv(j);
+            dJu.set_row(j, deriv + users_reg);
         }
 
         for (size_t j = 0; j < dJi.rows(); ++j) {
-            dJi[j] = get_item_deriv(j) + items_reg;
+            auto deriv = get_item_deriv(j);
+            dJi.set_row(j, deriv + items_reg);
         }
 
         _pU -= learning_rate * dJu;
