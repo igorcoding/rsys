@@ -8,8 +8,8 @@
 #include <memory>
 #include <cstring>
 #include <vector>
-#include <iostream>
 #include <cmath>
+#include <ostream>
 
 
 namespace math {
@@ -56,6 +56,7 @@ public:
     mvector(size_t size, const T& default_value);
     mvector(const T* vec, size_t size);
     explicit mvector(const std::vector<T>& vec);
+    mvector(const mvector<T>& that);
     template <typename Y> mvector(const mvector<Y>& that);
     mvector<T>& operator =(const mvector<T>& that);
     ~mvector();
@@ -90,6 +91,7 @@ public:
     const T* data() const;
 
     T& operator [](size_t i);
+    const T& operator [](size_t i) const;
     mvector<T>& operator +=(const mvector<T>& other);
     template <typename U> mvector<T>& operator +=(const U& other);
     mvector<T>& operator -=(const mvector<T>& other);
@@ -103,8 +105,9 @@ public:
     double length() const;
 
 private:
-    void check_index(size_t i);
-    void check_sizes(size_t size1, size_t size2);
+    void clean_up();
+    void check_index(size_t i) const;
+    void check_sizes(size_t size1, size_t size2) const;
 
 private:
     T* _vec;
@@ -238,6 +241,16 @@ mvector<T>::mvector(const std::vector<T>& vec)
 }
 
 template <typename T>
+mvector<T>::mvector(const mvector<T>& that)
+    : _size(that.size())
+{
+    _vec = new T[_size];
+    for (size_t i = 0; i < _size; ++i) {
+        _vec[i] = that._vec[i];
+    }
+}
+
+template <typename T>
 template <typename Y>
 mvector<T>::mvector(const mvector<Y>& that)
     : _size(that.size())
@@ -252,15 +265,17 @@ mvector<T>::mvector(const mvector<Y>& that)
 template <typename T> inline
 mvector<T>& mvector<T>::operator =(const mvector<T>& that)
 {
+    clean_up();
+
     _size = that.size();
+    _vec = new T[_size];
     std::memcpy(_vec, that._vec, _size * sizeof(T));
     return *this;
 }
 
 template <typename T>
 mvector<T>::~mvector() {
-    delete[] _vec;
-    _vec = nullptr;
+    clean_up();
 }
 
 template <typename T>
@@ -284,6 +299,12 @@ const T* mvector<T>::data() const {
 
 template <typename T>
 T& mvector<T>::operator [](size_t i) {
+    check_index(i);
+    return _vec[i];
+}
+
+template <typename T>
+const T& mvector<T>::operator [](size_t i) const {
     check_index(i);
     return _vec[i];
 }
@@ -345,7 +366,7 @@ mvector<T>& mvector<T>::operator /=(const U& other) {
 
 template <typename T>
 T mvector<T>::dot(const mvector<T>& rhs) const {
-    check_sizes(_size, rhs.size());
+    check_sizes(size(), rhs.size());
     T ans = T();
     for (size_t i = 0; i < _size; ++i) {
         ans += _vec[i] * rhs._vec[i];
@@ -434,19 +455,38 @@ mvector<T> operator /(const mvector<T>& l, const U& r) {
 
 /************* Private methods *************/
 
+template <typename T>
+void mvector<T>::clean_up() {
+    delete[] _vec;
+    _vec = nullptr;
+}
 
 template <typename T>
-void mvector<T>::check_index(size_t i) {
+void mvector<T>::check_index(size_t i) const {
     if (i < 0 || i >= _size) {
         throw index_out_of_bound();
     }
 }
 
 template <typename T>
-void mvector<T>::check_sizes(size_t size1, size_t size2) {
+void mvector<T>::check_sizes(size_t size1, size_t size2) const {
     if (size1 != size2) {
         throw mexception("Sizes of two vectors have to be equal");
     }
+}
+
+/************* Other methods *************/
+template <typename T>
+std::ostream& operator <<(std::ostream& os, const mvector<T>& mvec) {
+    os << "[";
+
+    for (size_t i = 0; i < mvec.size() - 1; ++i) {
+        os << mvec[i] << ", ";
+    }
+    os << mvec[mvec.size() - 1];
+
+    os << "]";
+    return os;
 }
 
 } // namespace math

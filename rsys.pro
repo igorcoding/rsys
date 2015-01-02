@@ -14,7 +14,8 @@ HEADERS += \
     math/mexception.h \
     util/traits.h \
     math/sparse.h \
-    math/matrix.h
+    math/matrix.h \
+    algs/svd.h
 
 include(deployment.pri)
 qtcAddDeployment()
