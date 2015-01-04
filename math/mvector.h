@@ -20,14 +20,12 @@ class mvector
 public:
     template <typename _IT>
     class base_iterator {
+    public:
         typedef typename traits<_IT>::ordinal_type ordinal_type;
         typedef typename traits<_IT>::reference reference;
         typedef typename traits<_IT>::pointer pointer;
         typedef typename traits<_IT>::const_pointer const_pointer;
 
-        friend class mvector<ordinal_type>;
-
-    public:
         base_iterator(const base_iterator<pointer>& other);
         base_iterator(const base_iterator<const_pointer>& other);
         base_iterator& operator =(const base_iterator& other);
@@ -44,6 +42,8 @@ public:
         bool operator !=(const base_iterator& rhs) const;
     private:
         explicit base_iterator(_IT data);
+
+        friend class mvector<ordinal_type>;
 
     private:
         _IT _data;
@@ -206,7 +206,7 @@ bool mvector<T>::base_iterator<_IT>::operator ==(typename mvector<T>::template b
 template <typename T>
 template <typename _IT> inline
 bool mvector<T>::base_iterator<_IT>::operator !=(typename mvector<T>::template base_iterator<_IT> const& rhs) const {
-    return !(*this == rhs);
+    return ! (*this == rhs);
 }
 
 
@@ -215,9 +215,9 @@ bool mvector<T>::base_iterator<_IT>::operator !=(typename mvector<T>::template b
 
 template <typename T>
 mvector<T>::mvector(size_t size, const T& default_value)
-    : _size(size),
-      _vec(new T[_size])
+    : _size(size)
 {
+    _vec = new T[_size];
     for (size_t i = 0; i < _size; ++i) {
         _vec[i] = default_value;
     }
@@ -225,25 +225,25 @@ mvector<T>::mvector(size_t size, const T& default_value)
 
 template <typename T>
 mvector<T>::mvector(const T* vec, size_t size)
-    : _size(size),
-      _vec(new T[_size])
+    : _size(size)
 {
+    _vec = new T[_size];
     std::memcpy(_vec, vec, _size * sizeof(T));
 }
 
 template <typename T>
 mvector<T>::mvector(const std::vector<T>& vec)
-    : _size(vec.size()),
-      _vec(new T[_size])
+    : _size(vec.size())
 {
+    _vec = new T[_size];
     std::memcpy(_vec, vec.data(), _size * sizeof(T));
 }
 
 template <typename T>
 mvector<T>::mvector(const mvector<T>& that)
-    : _size(that.size()),
-      _vec(new T[_size])
+    : _size(that.size())
 {
+    _vec = new T[_size];
     for (size_t i = 0; i < _size; ++i) {
         _vec[i] = that._vec[i];
     }
@@ -252,9 +252,9 @@ mvector<T>::mvector(const mvector<T>& that)
 template <typename T>
 template <typename Y>
 mvector<T>::mvector(const mvector<Y>& that)
-    : _size(that.size()),
-      _vec(new T[_size])
+    : _size(that.size())
 {
+    _vec = new T[_size];
     const Y* that_vec = that.data();
     for (size_t i = 0; i < _size; ++i) {
         _vec[i] = static_cast<T>(that_vec[i]);
@@ -262,7 +262,8 @@ mvector<T>::mvector(const mvector<Y>& that)
 }
 
 template <typename T> inline
-mvector<T>& mvector<T>::operator =(const mvector<T>& that) {
+mvector<T>& mvector<T>::operator =(const mvector<T>& that)
+{
     if (this != nullptr) {
         clean_up();
 

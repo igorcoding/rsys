@@ -3,6 +3,9 @@
 
 #include "../math/matrix.h"
 
+#include <ctime>
+#include <cstdlib>
+
 namespace rsys {
 using namespace math;
 
@@ -11,14 +14,14 @@ class svd {
 public:
     svd(const matrix<T>& ratings, size_t features_count);
 
-    void learn(float learning_rate, float regularization, size_t iterations_count);
+    void learn(float learning_rate, float lambda, size_t iterations_count);
     T recommendation(size_t user_id, size_t item_id);
 
 private:
     mvector<T> get_user_deriv(size_t user_id);
     mvector<T> get_item_deriv(size_t item_id);
-    T get_users_reg();
-    T get_items_reg();
+    mvector<T> get_user_reg(size_t user_id);
+    mvector<T> get_item_reg(size_t item_id);
 
 private:
     matrix<T> _pU;
@@ -31,13 +34,35 @@ private:
 
 template <typename T>
 svd<T>::svd(const matrix<T>& ratings, size_t features_count)
-    : _pU(ratings.rows(), features_count, true),
-      _pI(ratings.cols(), features_count, true),
+    : _pU(ratings.rows(), features_count),
+      _pI(ratings.cols(), features_count),
 
       _ratings(ratings),
       _ratings_i(ratings.transpose()),
       _features_count(features_count)
 {
+//    _pU[0][0] = 6.7; _pU[0][1] = -0.23; _pU[0][2] = 0.19; _pU[0][3] = 0;
+//    _pU[1][0] = 4.3; _pU[1][1] = 3.67; _pU[1][2] = 0.15; _pU[1][3] = 0;
+//    _pU[2][0] = 1.54; _pU[2][1] = 0.42; _pU[2][2] = -1.2; _pU[2][3] = 0;
+//    _pU[3][0] = 5.88; _pU[3][1] = -2.53; _pU[3][2] = -0.006; _pU[3][3] = 0;
+//
+//
+//    _pI[0][0] = 0.56; _pI[0][1] = -0.68; _pI[0][2] = 0.48; _pI[0][3] = 0;
+//    _pI[1][0] = 0.77; _pI[1][1] = 0.21; _pI[1][2] = -0.602; _pI[1][3] = 0;
+//    _pI[2][0] = 0.305; _pI[2][1] = 0.707; _pI[2][2] = 0.64; _pI[2][3] = 0;
+//    _pI[3][0] = 0; _pI[3][1] = 0; _pI[3][2] = 0; _pI[3][3] = 1;
+    srand(static_cast<unsigned int>(time(nullptr)));
+    for (size_t i = 0; i < _pU.rows(); ++i) {
+        for (size_t j = 0; j < _pU.cols(); ++j) {
+            _pU[i][j] = static_cast <double> (rand()) / static_cast <double> (RAND_MAX);
+        }
+    }
+
+    for (size_t i = 0; i < _pI.rows(); ++i) {
+        for (size_t j = 0; j < _pI.cols(); ++j) {
+            _pI[i][j] = static_cast <double> (rand()) / static_cast <double> (RAND_MAX);
+        }
+    }
 }
 
 template <typename T>
@@ -46,23 +71,21 @@ T svd<T>::recommendation(size_t user_id, size_t item_id) {
 }
 
 template <typename T>
-void svd<T>::learn(float learning_rate, float regularization, size_t iterations_count) {
+void svd<T>::learn(float learning_rate, float lambda, size_t iterations_count) {
 
     for (size_t i = 0; i < iterations_count; ++i) {
-        auto users_reg = regularization * get_users_reg();
-        auto items_reg = regularization * get_items_reg();
+        std::cout << "Current _Pu:\n" << _pU << "\n\n";
+        std::cout << "Current _pI:\n" << _pI << "\n\n";
 
         matrix<T> dJu(_pU.rows(), _pU.cols());
         matrix<T> dJi(_pI.rows(), _pI.cols());
 
         for (size_t j = 0; j < dJu.rows(); ++j) {
-            auto deriv = get_user_deriv(j);
-            dJu.set_row(j, deriv + users_reg);
+            dJu.set_row(j, get_user_deriv(j) + lambda * _pU[j]);
         }
 
         for (size_t j = 0; j < dJi.rows(); ++j) {
-            auto deriv = get_item_deriv(j);
-            dJi.set_row(j, deriv + items_reg);
+            dJi.set_row(j, get_item_deriv(j) + lambda * _pI[j]);
         }
 
         _pU -= learning_rate * dJu;
@@ -80,8 +103,12 @@ mvector<T> svd<T>::get_user_deriv(size_t user_id) {
     for (size_t i = 0; i < items_per_user.size(); ++i) {
         const auto& qi = _pI[i];
         auto r = items_per_user[i];
-
-        ans += (pu.dot(qi) - r) * qi;
+        if (r != -1) { // TODO
+            auto e = pu.dot(qi) - r;
+            for (size_t k = 0; k < ans.size(); ++k) { // for each component of vector ans
+                ans[k] += e * qi[k];
+            }
+        }
     }
 
     return ans;
@@ -98,13 +125,18 @@ mvector<T> svd<T>::get_item_deriv(size_t item_id) {
         const auto& pu = _pU[i];
         auto r = users_per_item[i];
 
-        ans += (pu.dot(qi) - r) * qi;
+        if (r != -1) { // TODO
+            auto e = pu.dot(qi) - r;
+            for (size_t k = 0; k < ans.size(); ++k) { // for each component of vector ans
+                ans[k] += e * pu[k];
+            }
+        }
     }
     return ans;
 }
 
 template <typename T>
-T svd<T>::get_users_reg() {
+mvector<T> svd<T>::get_user_reg(size_t user_id) {
     T reg = 0.0;
     for (size_t i = 0; i < _pU.rows(); ++i) {
         reg += _pU[i].length();
@@ -114,7 +146,7 @@ T svd<T>::get_users_reg() {
 }
 
 template <typename T>
-T svd<T>::get_items_reg() {
+mvector<T> svd<T>::get_item_reg(size_t item_id) {
     T reg = 0.0;
     for (size_t i = 0; i < _pI.rows(); ++i) {
         reg += _pI[i].length();
