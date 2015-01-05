@@ -52,7 +52,7 @@ public:
     typedef base_iterator<T*> iterator;
     typedef base_iterator<const T*> const_iterator;
 
-    mvector(size_t size, const T& default_value);
+    mvector(size_t size, const T& default_value = T());
     mvector(const T* vec, size_t size);
     explicit mvector(const std::vector<T>& vec);
     mvector(const mvector<T>& that);
@@ -89,6 +89,9 @@ public:
     size_t size() const;
     const T* data() const;
 
+	const T& at(size_t i) const;
+	void set(size_t i, const T& obj);
+
     T& operator [](size_t i);
     const T& operator [](size_t i) const;
     mvector<T>& operator +=(const mvector<T>& other);
@@ -100,7 +103,7 @@ public:
     template <typename U> mvector<T>& operator /=(const U& other);
 
     T dot(const mvector<T>& rhs) const;
-    template <typename Y> mvector<Y> normalize() const;
+    mvector<double> normalize() const;
     double length() const;
 
 private:
@@ -297,6 +300,18 @@ const T* mvector<T>::data() const {
     return _vec;
 }
 
+template <typename T> inline
+const T& mvector<T>::at(size_t i) const {
+	check_index(i);
+	return _vec[i];
+}
+
+
+template <typename T> 
+void mvector<T>::set(size_t i, const T& obj) {
+	check_index(i);
+	_vec[i] = obj;
+}
 
 template <typename T>
 T& mvector<T>::operator [](size_t i) {
@@ -385,9 +400,8 @@ double mvector<T>::length() const {
 }
 
 template <typename T>
-template <typename Y>
-mvector<Y> mvector<T>::normalize() const {
-    mvector<Y> mvec(*this);
+mvector<double> mvector<T>::normalize() const {
+    mvector<double> mvec(*this);
     mvec /= mvec.length();
     return mvec;
 }

@@ -5,6 +5,7 @@
 
 #include <ctime>
 #include <cstdlib>
+#include <iostream>
 
 namespace rsys {
 using namespace math;
@@ -18,10 +19,8 @@ public:
     T recommendation(size_t user_id, size_t item_id);
 
 private:
-    mvector<T> get_user_deriv(size_t user_id);
-    mvector<T> get_item_deriv(size_t item_id);
-    mvector<T> get_user_reg(size_t user_id);
-    mvector<T> get_item_reg(size_t item_id);
+    auto get_user_deriv(size_t user_id);
+    auto get_item_deriv(size_t item_id);
 
 private:
     matrix<T> _pU;
@@ -81,11 +80,11 @@ void svd<T>::learn(float learning_rate, float lambda, size_t iterations_count) {
         matrix<T> dJi(_pI.rows(), _pI.cols());
 
         for (size_t j = 0; j < dJu.rows(); ++j) {
-            dJu.set_row(j, get_user_deriv(j) + lambda * _pU[j]);
+            dJu.set(j, get_user_deriv(j) + lambda * _pU[j]);
         }
 
         for (size_t j = 0; j < dJi.rows(); ++j) {
-            dJi.set_row(j, get_item_deriv(j) + lambda * _pI[j]);
+            dJi.set(j, get_item_deriv(j) + lambda * _pI[j]);
         }
 
         _pU -= learning_rate * dJu;
@@ -94,8 +93,8 @@ void svd<T>::learn(float learning_rate, float lambda, size_t iterations_count) {
 }
 
 template <typename T>
-mvector<T> svd<T>::get_user_deriv(size_t user_id) {
-    mvector<T>& pu = _pU[user_id];
+auto svd<T>::get_user_deriv(size_t user_id) {
+    auto& pu = _pU[user_id];
     auto& items_per_user = _ratings[user_id];
 
     mvector<T> ans = mvector<T>::zero(pu.size());
@@ -115,8 +114,8 @@ mvector<T> svd<T>::get_user_deriv(size_t user_id) {
 }
 
 template <typename T>
-mvector<T> svd<T>::get_item_deriv(size_t item_id) {
-    mvector<T>& qi = _pI[item_id];
+auto svd<T>::get_item_deriv(size_t item_id) {
+    auto& qi = _pI[item_id];
     auto& users_per_item = _ratings_i[item_id];
 
     mvector<T> ans = mvector<T>::zero(qi.size());
@@ -133,26 +132,6 @@ mvector<T> svd<T>::get_item_deriv(size_t item_id) {
         }
     }
     return ans;
-}
-
-template <typename T>
-mvector<T> svd<T>::get_user_reg(size_t user_id) {
-    T reg = 0.0;
-    for (size_t i = 0; i < _pU.rows(); ++i) {
-        reg += _pU[i].length();
-    }
-
-    return reg;
-}
-
-template <typename T>
-mvector<T> svd<T>::get_item_reg(size_t item_id) {
-    T reg = 0.0;
-    for (size_t i = 0; i < _pI.rows(); ++i) {
-        reg += _pI[i].length();
-    }
-
-    return reg;
 }
 
 } // namespace rsys

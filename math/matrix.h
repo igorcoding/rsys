@@ -19,7 +19,9 @@ public:
     mvector<T>& operator [](int i);
     const mvector<T>& operator [](int i) const;
 
-    void set_row(size_t row_index, const mvector<T>& row);
+    const T& at(size_t row, size_t col) const;
+    void set(size_t row_index, const mvector<T>& row);
+    void set(size_t row, size_t col, const T& obj);
 
     matrix<T>& operator +=(const matrix<T>& rhs);
     matrix<T>& operator -=(const matrix<T>& rhs);
@@ -95,7 +97,17 @@ const mvector<T>& matrix<T>::operator [](int i) const {
 }
 
 template <typename T>
-void matrix<T>::set_row(size_t row_index, const mvector<T>& row) {
+const T& matrix<T>::at(size_t row, size_t col) const {
+    return (*_m[row])[col];
+}
+
+template <typename T>
+void matrix<T>::set(size_t row, size_t col, const T& obj) {
+    (*_m[row])[col] = obj;
+}
+
+template <typename T>
+void matrix<T>::set(size_t row_index, const mvector<T>& row) {
     delete _m[row_index];
     _m[row_index] = new mvector<T>(row);
 }
