@@ -9,6 +9,6 @@ params = dict(libraries = ["boost_python"],
 
 setup(name="rsys",
     ext_modules=[
-        Extension("rsys", ["rsys.py.cc"], **params)
+        Extension("rsys", ["rsys.py.cc", "../src/math/mexception.cc"], **params)
         # Extension("rsys.math", ["./math/mexception.cc"], **params)
     ])
