@@ -16,7 +16,7 @@ public:
     svd(const matrix<T>& ratings, size_t features_count);
 
     void learn(float learning_rate, float lambda, size_t iterations_count);
-    T recommendation(size_t user_id, size_t item_id);
+    T predict(size_t user_id, size_t item_id);
 
 private:
     auto get_user_deriv(size_t user_id);
@@ -53,19 +53,19 @@ svd<T>::svd(const matrix<T>& ratings, size_t features_count)
     srand(static_cast<unsigned int>(time(nullptr)));
     for (size_t i = 0; i < _pU.rows(); ++i) {
         for (size_t j = 0; j < _pU.cols(); ++j) {
-            _pU[i][j] = static_cast <double> (rand()) / static_cast <double> (RAND_MAX);
+            _pU.set(i, j, static_cast <double> (rand()) / static_cast <double> (RAND_MAX));
         }
     }
 
     for (size_t i = 0; i < _pI.rows(); ++i) {
         for (size_t j = 0; j < _pI.cols(); ++j) {
-            _pI[i][j] = static_cast <double> (rand()) / static_cast <double> (RAND_MAX);
+            _pI.set(i, j, static_cast <double> (rand()) / static_cast <double> (RAND_MAX));
         }
     }
 }
 
 template <typename T>
-T svd<T>::recommendation(size_t user_id, size_t item_id) {
+T svd<T>::predict(size_t user_id, size_t item_id) {
     return _pU[user_id].dot(_pI[item_id]);
 }
 
@@ -73,8 +73,8 @@ template <typename T>
 void svd<T>::learn(float learning_rate, float lambda, size_t iterations_count) {
 
     for (size_t i = 0; i < iterations_count; ++i) {
-        std::cout << "Current _Pu:\n" << _pU << "\n\n";
-        std::cout << "Current _pI:\n" << _pI << "\n\n";
+//        std::cout << "Current _Pu:\n" << _pU << "\n\n";
+//        std::cout << "Current _pI:\n" << _pI << "\n\n";
 
         matrix<T> dJu(_pU.rows(), _pU.cols());
         matrix<T> dJi(_pI.rows(), _pI.cols());

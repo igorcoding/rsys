@@ -6,7 +6,8 @@ project(rsys)
 set (SRC "src")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-set(HEADER_FILES ${SRC}/algs/svd.h
+set(HEADER_FILES ${SRC}/algs/rsys.h
+                 ${SRC}/algs/svd.h
                  ${SRC}/math/mvector.h
                  ${SRC}/math/matrix.h
                  ${SRC}/math/sparse.h

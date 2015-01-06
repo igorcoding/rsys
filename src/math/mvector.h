@@ -10,6 +10,7 @@
 #include <vector>
 #include <cmath>
 #include <ostream>
+#include <iostream>
 
 
 namespace math {
@@ -52,12 +53,16 @@ public:
     typedef base_iterator<T*> iterator;
     typedef base_iterator<const T*> const_iterator;
 
-    mvector(size_t size, const T& default_value = T());
+    explicit mvector(size_t size, const T& default_value = T());
     mvector(const T* vec, size_t size);
+    mvector(T* vec, size_t size, bool no_copy);
+    mvector(T*&& vec, size_t size);
     explicit mvector(const std::vector<T>& vec);
     mvector(const mvector<T>& that);
     template <typename Y> mvector(const mvector<Y>& that);
+    mvector(mvector&& that);
     mvector<T>& operator =(const mvector<T>& that);
+    mvector<T>& operator =(mvector<T>&& that);
     ~mvector();
 
     static mvector<T> zero(size_t size);
@@ -112,8 +117,9 @@ private:
     void check_sizes(size_t size1, size_t size2) const;
 
 private:
-    T* _vec;
     size_t _size;
+    bool _no_copy;
+    T* _vec;
 };
 
 
@@ -218,7 +224,8 @@ bool mvector<T>::base_iterator<_IT>::operator !=(typename mvector<T>::template b
 
 template <typename T>
 mvector<T>::mvector(size_t size, const T& default_value)
-    : _size(size)
+    : _size(size),
+      _no_copy(false)
 {
     _vec = new T[_size];
     for (size_t i = 0; i < _size; ++i) {
@@ -228,15 +235,39 @@ mvector<T>::mvector(size_t size, const T& default_value)
 
 template <typename T>
 mvector<T>::mvector(const T* vec, size_t size)
-    : _size(size)
+    : _size(size),
+      _no_copy(false)
 {
     _vec = new T[_size];
     std::memcpy(_vec, vec, _size * sizeof(T));
 }
 
 template <typename T>
+mvector<T>::mvector(T* vec, size_t size, bool no_copy)
+        : _size(size),
+          _no_copy(no_copy)
+{
+    if (no_copy) {
+        _vec = vec;
+    } else {
+        _vec = new T[_size];
+        std::memcpy(_vec, vec, _size * sizeof(T));
+    }
+}
+
+template <typename T>
+mvector<T>::mvector(T*&& vec, size_t size)
+        : _size(size),
+          _no_copy(false)
+{
+    _vec = vec;
+    vec = nullptr;
+}
+
+template <typename T>
 mvector<T>::mvector(const std::vector<T>& vec)
-    : _size(vec.size())
+    : _size(vec.size()),
+      _no_copy(false)
 {
     _vec = new T[_size];
     std::memcpy(_vec, vec.data(), _size * sizeof(T));
@@ -244,8 +275,10 @@ mvector<T>::mvector(const std::vector<T>& vec)
 
 template <typename T>
 mvector<T>::mvector(const mvector<T>& that)
-    : _size(that.size())
+    : _size(that.size()),
+      _no_copy(false)
 {
+//    std::cout << "mvector copy" << std::endl;
     _vec = new T[_size];
     for (size_t i = 0; i < _size; ++i) {
         _vec[i] = that._vec[i];
@@ -255,7 +288,8 @@ mvector<T>::mvector(const mvector<T>& that)
 template <typename T>
 template <typename Y>
 mvector<T>::mvector(const mvector<Y>& that)
-    : _size(that.size())
+    : _size(that.size()),
+      _no_copy(false)
 {
     _vec = new T[_size];
     const Y* that_vec = that.data();
@@ -264,17 +298,51 @@ mvector<T>::mvector(const mvector<Y>& that)
     }
 }
 
+template <typename T>
+mvector<T>::mvector(mvector<T>&& that)
+        : _size(0),
+          _no_copy(false),
+          _vec(nullptr)
+{
+    _size = that._size;
+    _no_copy = that._no_copy;
+    _vec = that._vec;
+
+    that._size = 0;
+    that._no_copy = false;
+    that._vec = nullptr;
+}
+
 template <typename T> inline
 mvector<T>& mvector<T>::operator =(const mvector<T>& that)
 {
-    if (this != nullptr) {
+//    std::cout << "mvector operator=" << std::endl;
+    if (this != &that) {
         clean_up();
 
         _size = that.size();
+        _no_copy = false;
         _vec = new T[_size];
         std::memcpy(_vec, that._vec, _size * sizeof(T));
-        return *this;
     }
+    return *this;
+}
+
+template <typename T> inline
+mvector<T>& mvector<T>::operator =(mvector<T>&& that)
+{
+    if (this != &that) {
+        clean_up();
+
+        _size = that.size();
+        _no_copy = that._no_copy;
+        _vec = that._vec;
+
+        that._size = 0;
+        that._no_copy = false;
+        that._vec = nullptr;
+    }
+    return *this;
 }
 
 template <typename T>
@@ -307,7 +375,7 @@ const T& mvector<T>::at(size_t i) const {
 }
 
 
-template <typename T> 
+template <typename T>
 void mvector<T>::set(size_t i, const T& obj) {
 	check_index(i);
 	_vec[i] = obj;
@@ -472,7 +540,7 @@ mvector<T> operator /(const mvector<T>& l, const U& r) {
 
 template <typename T>
 void mvector<T>::clean_up() {
-    if (this != nullptr) {
+    if (this != nullptr && !_no_copy) {
         delete[] _vec;
         _vec = nullptr;
     }

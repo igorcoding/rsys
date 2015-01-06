@@ -42,14 +42,18 @@ void export_math() {
             .def("normalize", &t_mvector::normalize)
             .def("length", &t_mvector::length);
 
+    // const T& at(size_t row, size_t col) const;
+    const T& (t_matrix::*at1)(size_t, size_t) const = &t_matrix::at;
+    const t_mvector (t_matrix::*at2)(size_t) const = &t_matrix::at;
+
     void (t_matrix::*set1)(size_t, size_t, const T&) = &t_matrix::set;
     void (t_matrix::*set2)(size_t, const t_mvector&) = &t_matrix::set;
 
     class_<t_matrix>("matrix", init<size_t, size_t>())
            .add_property("rows", &t_matrix::rows)
            .add_property("cols", &t_matrix::cols)
-           .def("at", &t_matrix::at, return_value_policy<copy_const_reference>(),
-                      (arg("row"), arg("col")))
+		   .def("at", at1, return_value_policy<copy_const_reference>(), (arg("row"), arg("col")))
+           .def("at", at2, (arg("row")))
            .def("set", set1, (arg("row"), arg("col"), arg("obj")))
            .def("set", set2, (arg("row"), arg("new_mvec")))
            .def(self += self)
@@ -75,7 +79,7 @@ void export_rsys() {
     class_<t_svd>("SVD", init<t_matrix, size_t>((arg("dataset"), arg("features_count"))))
            .def("learn", &t_svd::learn,
                 (arg("learning_rate"), arg("regularization"), arg("iterations_count")))
-           .def("recommendation", &t_svd::recommendation, (arg("row"), arg("col")));
+           .def("predict", &t_svd::predict, (arg("row"), arg("col")));
 }
 
 BOOST_PYTHON_MODULE(rsys) {
