@@ -278,7 +278,7 @@ mvector<T>::mvector(const mvector<T>& that)
     : _size(that.size()),
       _no_copy(false)
 {
-//    std::cout << "mvector copy" << std::endl;
+    std::cout << "mvector copy" << std::endl;
     _vec = new T[_size];
     for (size_t i = 0; i < _size; ++i) {
         _vec[i] = that._vec[i];

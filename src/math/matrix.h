@@ -62,6 +62,7 @@ matrix<T>::matrix(const matrix<T>& other)
       _cols(other._cols),
       _m(new T*[_rows])
 {
+    std::cout << "matrix copy" << std::endl;
     for (size_t i = 0; i < _rows; ++i) {
          _m[i] = new T[_cols];
         for (size_t j = 0; j < _cols; ++j) {
@@ -162,9 +163,6 @@ template <typename T>
 void matrix<T>::set(size_t row_index, const mvector<T>& row) {
     assert(_cols == row.size());
 
-    delete[] _m[row_index];
-
-    _m[row_index] = new T[_cols];
     for (size_t j = 0; j < _cols; ++j) {
         _m[row_index][j] = row[j];
     }

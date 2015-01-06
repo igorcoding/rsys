@@ -22,6 +22,7 @@ int main()
     std::cout << m << std::endl;
 
     rsys::svd<double, math::sparse> svd(m, 4);
+//    rsys::rsys<double, math::sparse, rsys::svd> sys(svd);
     svd.learn(0.1, 0.2, 1000);
 
     std::cout << "Initial:" << std::endl << m << std::endl;
