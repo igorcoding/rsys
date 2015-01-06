@@ -10,10 +10,10 @@
 namespace rsys {
 using namespace math;
 
-template <typename T>
+template <typename T, template <class> class D>
 class svd {
 public:
-    svd(const matrix<T>& ratings, size_t features_count);
+    svd(const D<T>& ratings, size_t features_count);
 
     void learn(float learning_rate, float lambda, size_t iterations_count);
     T predict(size_t user_id, size_t item_id);
@@ -26,18 +26,16 @@ private:
     matrix<T> _pU;
     matrix<T> _pI;
 
-    matrix<T> _ratings;
-    matrix<T> _ratings_i;
+    D<T> _ratings;
     size_t _features_count;
 };
 
-template <typename T>
-svd<T>::svd(const matrix<T>& ratings, size_t features_count)
+template <typename T, template <class> class D>
+svd<T,D>::svd(const D<T>& ratings, size_t features_count)
     : _pU(ratings.rows(), features_count),
       _pI(ratings.cols(), features_count),
 
       _ratings(ratings),
-      _ratings_i(ratings.transpose()),
       _features_count(features_count)
 {
 //    _pU[0][0] = 6.7; _pU[0][1] = -0.23; _pU[0][2] = 0.19; _pU[0][3] = 0;
@@ -64,13 +62,13 @@ svd<T>::svd(const matrix<T>& ratings, size_t features_count)
     }
 }
 
-template <typename T>
-T svd<T>::predict(size_t user_id, size_t item_id) {
+template <typename T, template <class> class D>
+T svd<T,D>::predict(size_t user_id, size_t item_id) {
     return _pU[user_id].dot(_pI[item_id]);
 }
 
-template <typename T>
-void svd<T>::learn(float learning_rate, float lambda, size_t iterations_count) {
+template <typename T, template <class> class D>
+void svd<T,D>::learn(float learning_rate, float lambda, size_t iterations_count) {
 
     for (size_t i = 0; i < iterations_count; ++i) {
 //        std::cout << "Current _Pu:\n" << _pU << "\n\n";
@@ -92,16 +90,16 @@ void svd<T>::learn(float learning_rate, float lambda, size_t iterations_count) {
     }
 }
 
-template <typename T>
-auto svd<T>::get_user_deriv(size_t user_id) {
+template <typename T, template <class> class D>
+auto svd<T,D>::get_user_deriv(size_t user_id) {
     auto& pu = _pU[user_id];
-    auto& items_per_user = _ratings[user_id];
 
     mvector<T> ans = mvector<T>::zero(pu.size());
 
-    for (size_t i = 0; i < items_per_user.size(); ++i) {
+    for (size_t i = 0; i < _ratings.cols(); ++i) {
+
         const auto& qi = _pI[i];
-        auto r = items_per_user[i];
+        auto r = _ratings.at(user_id, i);
         if (r != -1) { // TODO
             auto e = pu.dot(qi) - r;
             for (size_t k = 0; k < ans.size(); ++k) { // for each component of vector ans
@@ -113,16 +111,15 @@ auto svd<T>::get_user_deriv(size_t user_id) {
     return ans;
 }
 
-template <typename T>
-auto svd<T>::get_item_deriv(size_t item_id) {
+template <typename T, template <class> class D>
+auto svd<T,D>::get_item_deriv(size_t item_id) {
     auto& qi = _pI[item_id];
-    auto& users_per_item = _ratings_i[item_id];
 
     mvector<T> ans = mvector<T>::zero(qi.size());
 
-    for (size_t i = 0; i < users_per_item.size(); ++i) {
+    for (size_t i = 0; i < _ratings.rows(); ++i) {
         const auto& pu = _pU[i];
-        auto r = users_per_item[i];
+        auto r = _ratings.at(i, item_id);
 
         if (r != -1) { // TODO
             auto e = pu.dot(qi) - r;
