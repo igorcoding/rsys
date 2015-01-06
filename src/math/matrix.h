@@ -23,6 +23,7 @@ public:
 
     const mvector<T> at(size_t row) const;
     const T& at(size_t row, size_t col) const;
+    T& at(size_t row, size_t col);
     void set(size_t row_index, const mvector<T>& row);
     void set(size_t row, size_t col, const T& obj);
 
@@ -140,6 +141,13 @@ const mvector<T> matrix<T>::at(size_t row) const {
 
 template <typename T>
 const T& matrix<T>::at(size_t row, size_t col) const {
+    assert(row >= 0 && row < _rows);
+    assert(col >= 0 && col < _cols);
+    return _m[row][col];
+}
+
+template <typename T>
+T& matrix<T>::at(size_t row, size_t col) {
     assert(row >= 0 && row < _rows);
     assert(col >= 0 && col < _cols);
     return _m[row][col];
