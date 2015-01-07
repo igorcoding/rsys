@@ -4,6 +4,8 @@
 build*/
 .tags*
 .idea/
+datasets/*
+!datasets/*.zip
 
 # Compiled Object files
 *.slo

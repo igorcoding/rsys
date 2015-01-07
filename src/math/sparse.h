@@ -19,6 +19,9 @@ public:
     size_t rows() const { return _rows; }
     size_t cols() const { return _cols; }
 
+    std::vector<size_t> rows(size_t col);
+    std::vector<size_t> cols(size_t row);
+
     void set(size_t row, size_t col, const T& value);
     const T& at(size_t row, size_t col) const;
 
@@ -26,6 +29,7 @@ private:
     size_t _rows;
     size_t _cols;
     hashmap<size_t, hashmap<size_t, T>*> _row_index;
+    hashmap<size_t, hashmap<size_t, T*>*> _col_index;
     T _def_value;
 };
 
@@ -35,6 +39,7 @@ sparse<T>::sparse(size_t rows, size_t cols, const T& default_value)
     : _rows(rows),
       _cols(cols),
       _row_index(),
+      _col_index(),
       _def_value(default_value)
 {
     if (rows <= 0 || cols <= 0) {
@@ -51,6 +56,40 @@ sparse<T>::~sparse() {
 }
 
 template <typename T>
+std::vector<size_t> sparse<T>::rows(size_t col) {
+    std::vector<size_t> rows;
+    hashmap<size_t, T*>* col_data;
+    try {
+        col_data = _col_index.at(col);
+    } catch (std::out_of_range&) {
+        return rows;
+    }
+
+    rows.reserve(col_data->size());
+    for(auto& kv : *col_data) {
+        rows.push_back(kv.first);
+    }
+    return rows;
+}
+
+template <typename T>
+std::vector<size_t> sparse<T>::cols(size_t row) {
+    std::vector<size_t> cols;
+    hashmap<size_t, T>* row_data;
+    try {
+        row_data = _row_index.at(row);
+    } catch (std::out_of_range&) {
+        return cols;
+    }
+
+    cols.reserve(row_data->size());
+    for(auto& kv : *row_data) {
+        cols.push_back(kv.first);
+    }
+    return cols;
+}
+
+template <typename T>
 void sparse<T>::set(size_t row, size_t col, const T& value) {
     hashmap<size_t, T>* row_data;
     try {
@@ -61,6 +100,17 @@ void sparse<T>::set(size_t row, size_t col, const T& value) {
     }
 
     (*row_data)[col] = value;
+
+
+    hashmap<size_t, T*>* col_data;
+    try {
+        col_data = _col_index.at(col);
+    } catch (std::out_of_range&) {
+        col_data = new hashmap<size_t, T*>();
+        _col_index[col] = col_data;
+    }
+
+    (*col_data)[row] = &(*row_data)[col];
 }
 
 template <typename T>
