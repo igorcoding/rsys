@@ -9,7 +9,7 @@ namespace math {
 template <typename T>
 class matrix {
 public:
-    matrix(size_t rows, size_t cols);
+    matrix(size_t rows, size_t cols, const T& default_value = T());
     matrix(const matrix<T>& other);
     matrix(matrix<T>&& other);
     matrix& operator =(const matrix<T>& other);
@@ -18,6 +18,7 @@ public:
 
     size_t rows() const { return _rows; }
     size_t cols() const { return _cols; }
+    size_t total() const { return _total; }
 
     const mvector<T> operator [](int i) const;
 
@@ -42,17 +43,25 @@ private:
 private:
     size_t _rows;
     size_t _cols;
+    size_t _total;
+    T _def_value;
     T** _m;
 };
 
 template <typename T>
-matrix<T>::matrix(size_t rows, size_t cols)
+matrix<T>::matrix(size_t rows, size_t cols, const T& default_value)
     : _rows(rows),
-      _cols(cols)
+      _cols(cols),
+      _total(0),
+      _def_value(default_value)
 {
     _m = new T*[_rows];
-    for (size_t i = 0; i < rows; ++i) {
+    for (size_t i = 0; i < _rows; ++i) {
         _m[i] = new T[_cols];
+
+        for (size_t j = 0; j < _cols; ++j) {
+            _m[i][j] = _def_value;
+        }
     }
 }
 
@@ -60,6 +69,8 @@ template <typename T>
 matrix<T>::matrix(const matrix<T>& other)
     : _rows(other._rows),
       _cols(other._cols),
+      _total(other._total),
+      _def_value(other._def_value),
       _m(new T*[_rows])
 {
     std::cout << "matrix copy" << std::endl;
@@ -75,14 +86,20 @@ template <typename T>
 matrix<T>::matrix(matrix<T>&& other)
         : _rows(0),
           _cols(0),
+          _total(0),
+          _def_value(T()),
           _m(nullptr)
 {
     _rows = other._rows;
     _cols = other._cols;
+    _total = other._total;
+    _def_value = other._def_value;
     _m = other._m;
 
     other._rows = 0;
     other._cols = 0;
+    other._total = 0;
+    other._def_value = T();
     other._m = nullptr;
 }
 
@@ -93,6 +110,8 @@ matrix<T>& matrix<T>::operator =(const matrix<T>& other)
         clean_up();
         _rows = other._rows;
         _cols = other._cols;
+        _total = other._total;
+        _def_value = other._def_value;
 
         _m = new T* [_rows];
         for (size_t i = 0; i < _rows; ++i) {
@@ -113,18 +132,21 @@ matrix<T>& matrix<T>::operator =(matrix<T>&& other)
 
         _rows = other._rows;
         _cols = other._cols;
+        _total = other._total;
+        _def_value = other._def_value;
         _m = other._m;
 
         other._rows = 0;
         other._cols = 0;
+        other._total = 0;
+        other._def_value = T();
         other._m = nullptr;
     }
     return *this;
 }
 
 template <typename T>
-matrix<T>::~matrix()
-{
+matrix<T>::~matrix() {
     clean_up();
 }
 
@@ -156,6 +178,12 @@ T& matrix<T>::at(size_t row, size_t col) {
 
 template <typename T>
 void matrix<T>::set(size_t row, size_t col, const T& obj) {
+    const auto& old_v = _m[row][col];
+    if (old_v == _def_value && obj != _def_value) {
+        ++_total;
+    } else if (old_v != _def_value && obj == _def_value) {
+        --_total;
+    }
     _m[row][col] = obj;
 }
 
@@ -164,7 +192,14 @@ void matrix<T>::set(size_t row_index, const mvector<T>& row) {
     assert(_cols == row.size());
 
     for (size_t j = 0; j < _cols; ++j) {
-        _m[row_index][j] = row[j];
+        const auto& old_v = _m[row_index][j];
+        const auto& v = row[j];
+        if (old_v == _def_value && v != _def_value) {
+            ++_total;
+        } else if (old_v != _def_value && v == _def_value) {
+            --_total;
+        }
+        _m[row_index][j] = v;
     }
 }
 

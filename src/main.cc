@@ -34,8 +34,8 @@ int main()
     std::cout << m << std::endl;
 
 
-//    std::string prefix = "/home/igor/Projects/cpp/rsys/ml-1m/ml-1m";
-//    std::string filename = prefix + "/ratings.dat";
+//    std::string prefix = "/home/igor/Projects/cpp/rsys/datasets/ml-1m/";
+//    std::string filename = prefix + "ratings.dat";
 //    std::fstream fs;
 //    fs.open(filename, std::ios_base::in);
 //    if (!fs.is_open()) {
@@ -66,7 +66,7 @@ int main()
 
     rsys::svd<double, math::sparse> svd(m, 4);
 //    rsys::rsys<double, math::sparse, rsys::svd> sys(svd);
-    svd.learn(0.1, 0.2, 1000);
+    svd.learn(0.1);
 
 //    fs.open(prefix + "initial.dat", ios_base::out);
 //    fs << "Initial:" << std::endl << m << std::endl;
@@ -77,7 +77,7 @@ int main()
     std::cout << "Predictions:" << std::endl;
     for (size_t i = 0; i < m.rows(); ++i) {
          for (size_t j = 0; j < m.cols(); ++j) {
-             std::cout << std::setprecision(2) << svd.predict(i, j) << " ";
+             std::cout << std::setprecision(3) << svd.predict(i, j) << " ";
 //             fs << std::setprecision(1) << svd.predict(i, j) << " ";
          }
         std::cout << std::endl;

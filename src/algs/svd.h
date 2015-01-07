@@ -15,17 +15,20 @@ class svd {
 public:
     svd(const D<T>& ratings, size_t features_count);
 
-    void learn(float learning_rate, float regularization, size_t iterations_count) noexcept;
+    void learn(float regularization) noexcept;
     T predict(size_t user_id, size_t item_id) noexcept;
 
 private:
-    double error(float regularization) const;
-    auto get_user_deriv(size_t user_id, float regularization);
-    auto get_item_deriv(size_t item_id, float regularization);
+    T predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept;
 
 private:
+    size_t _users_count;
+    size_t _items_count;
     matrix<T> _pU;
     matrix<T> _pI;
+    mvector<T> _bu;
+    mvector<T> _bi;
+    double _mu;
 
     D<T> _ratings;
     size_t _features_count;
@@ -33,127 +36,99 @@ private:
 
 template <typename T, template <class> class D>
 svd<T,D>::svd(const D<T>& ratings, size_t features_count)
-    : _pU(ratings.rows(), features_count),
-      _pI(ratings.cols(), features_count),
+    : _users_count(ratings.rows()),
+      _items_count(ratings.cols()),
+      _pU(_users_count, features_count),
+      _pI(_items_count, features_count),
+      _bu(_users_count),
+      _bi(_items_count),
+      _mu(0),
 
       _ratings(ratings),
       _features_count(features_count)
 {
     srand(static_cast<unsigned int>(time(nullptr)));
-    for (size_t i = 0; i < _pU.rows(); ++i) {
-        for (size_t j = 0; j < _pU.cols(); ++j) {
-            _pU.set(i, j, static_cast <double> (rand()) / static_cast <double> (RAND_MAX));
+    double rand_max = static_cast <double> (RAND_MAX);
+
+    for (size_t i = 0; i < _users_count; ++i) {
+        for (size_t j = 0; j < _features_count; ++j) {
+            _pU.set(i, j, static_cast <double> (rand()) / rand_max);
         }
+//        for (size_t j = 0; j < _bu.cols(); ++j) {
+//            _bu.set(i, j, static_cast <double> (rand()) / rand_max);
+//        }
     }
 
-    for (size_t i = 0; i < _pI.rows(); ++i) {
-        for (size_t j = 0; j < _pI.cols(); ++j) {
-            _pI.set(i, j, static_cast <double> (rand()) / static_cast <double> (RAND_MAX));
+    for (size_t i = 0; i < _items_count; ++i) {
+        for (size_t j = 0; j < _features_count; ++j) {
+            _pI.set(i, j, static_cast <double> (rand()) / rand_max);
         }
+
+//        for (size_t j = 0; j < _bi.cols(); ++j) {
+//            _bi.set(i, j, static_cast <double> (rand()) / rand_max);
+//        }
     }
 }
 
 template <typename T, template <class> class D>
 T svd<T,D>::predict(size_t user_id, size_t item_id) noexcept {
-    return _pU[user_id].dot(_pI[item_id]);
+    return _pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu;
+}
+
+template <typename T, template <class> class D> inline
+T svd<T,D>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
+    return user.dot(item) + _bu[user_id] + _bi[item_id] + _mu;
 }
 
 template <typename T, template <class> class D>
-void svd<T,D>::learn(float learning_rate, float regularization, size_t iterations_count) noexcept {
+void svd<T,D>::learn(float regularization) noexcept {
+    size_t iteration = 1;
+    double rmse = 1.0;
+    double old_rmse = 0.0;
+    double eps = 0.00001;
+    double learning_rate = 0.1;
+    double threshold = 0.01;
 
-    matrix<T> dJu(_pU.rows(), _pU.cols());
-    matrix<T> dJi(_pI.rows(), _pI.cols());
-
-    for (size_t i = 0; i < iterations_count; ++i) {
+    while(fabs(rmse - old_rmse) > eps) {
 //        std::cout << "Current _Pu:\n" << _pU << "\n\n";
 //        std::cout << "Current _pI:\n" << _pI << "\n\n";
-//        std::cout << "Current error: " << error(regularization) << std::endl;
-        std::cout << i << std::endl;
+        std::cout << "Iteration #" << iteration++ << std::endl;
+        old_rmse = rmse;
+        for (size_t user_id = 0; user_id < _pU.rows(); ++user_id) {
+            auto pu = _pU[user_id];
+            auto items_ids_by_user = _ratings.cols(user_id);
 
-        for (size_t j = 0; j < dJu.rows(); ++j) {
-            dJu.set(j, get_user_deriv(j, regularization));
-        }
+            for (size_t item_id = 0; item_id < items_ids_by_user.size(); ++item_id) {
+                auto qi = _pI[item_id];
+                const auto& r = _ratings.at(user_id, item_id);
+                if (r != -1) { // TODO
+                    auto e = predict(pu, qi, user_id, item_id) - r;
+                    rmse += e * e;
 
-        for (size_t j = 0; j < dJi.rows(); ++j) {
-            dJi.set(j, get_item_deriv(j, regularization));
-        }
+                    _bu[user_id] -= learning_rate * (e + regularization * _bu[user_id]);
+                    _bi[item_id] -= learning_rate * (e + regularization * _bi[item_id]);
+                    _mu -= learning_rate * e;
 
-        dJu *= learning_rate;
-        dJi *= learning_rate;
-
-        _pU -= dJu;
-        _pI -= dJi;
-    }
-}
-
-template <typename T, template <class> class D>
-double svd<T,D>::error(float regularization) const {
-    double e = 0.0;
-    for (size_t u = 0; u < _ratings.rows(); ++u) {
-        for (size_t i = 0; i < _ratings.cols(); ++i) {
-            T d = _pU[u].dot(_pI[i]) - _ratings.at(u, i);
-            e += static_cast<double>(d * d);
-        }
-    }
-
-    for (size_t u = 0; u < _ratings.rows(); ++u) {
-        for (size_t k = 0; k < _pU.cols(); ++k) {
-            T r_u = _pU.at(u, k);
-            e += regularization * static_cast<double>(r_u * r_u);
-        }
-    }
-
-    for (size_t i = 0; i < _ratings.cols(); ++i) {
-        for (size_t k = 0; k < _pI.cols(); ++k) {
-            T r_i = _pI.at(i, k);
-            e += regularization * static_cast<double>(r_i * r_i);
-        }
-    }
-    e /= 2.0;
-    return e;
-}
-
-template <typename T, template <class> class D>
-auto svd<T,D>::get_user_deriv(size_t user_id, float regularization) {
-    auto& pu = _pU[user_id];
-
-    mvector<T> ans = mvector<T>::zero(pu.size());
-    auto items_ids_by_user = _ratings.cols(user_id);
-
-    for (size_t i = 0; i < items_ids_by_user.size(); ++i) {
-
-        const auto& qi = _pI[i];
-        auto r = _ratings.at(user_id, i);
-        if (r != -1) { // TODO
-            auto e = pu.dot(qi) - r;
-            for (size_t k = 0; k < ans.size(); ++k) { // for each component of vector ans
-                ans[k] += e * qi[k] + regularization * pu[k];
+                    for (size_t k = 0; k < _features_count; ++k) {
+                        auto pu_new = pu[k] - learning_rate * (e * qi[k] + regularization * pu[k]);
+                        auto qi_new = qi[k] - learning_rate * (e * pu[k] + regularization * qi[k]);
+                        _pU.set(user_id, k, pu_new);
+                        _pI.set(item_id, k, qi_new);
+                    }
+                }
             }
+
+        }
+
+        rmse /= _ratings.total();
+        rmse = std::sqrt(rmse);
+        std::cout << rmse << std::endl;
+
+        if (old_rmse - rmse < threshold) {
+            learning_rate *= 0.8;
+            threshold *= 0.5;
         }
     }
-
-    return ans;
-}
-
-template <typename T, template <class> class D>
-auto svd<T,D>::get_item_deriv(size_t item_id, float regularization) {
-    auto& qi = _pI[item_id];
-
-    mvector<T> ans = mvector<T>::zero(qi.size());
-    auto users_ids_by_item = _ratings.rows(item_id);
-
-    for (size_t i = 0; i < users_ids_by_item.size(); ++i) {
-        const auto& pu = _pU[i];
-        auto r = _ratings.at(i, item_id);
-
-        if (r != -1) { // TODO
-            auto e = pu.dot(qi) - r;
-            for (size_t k = 0; k < ans.size(); ++k) { // for each component of vector ans
-                ans[k] += e * pu[k] + regularization * qi[k];
-            }
-        }
-    }
-    return ans;
 }
 
 } // namespace rsys

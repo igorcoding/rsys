@@ -18,6 +18,7 @@ public:
 
     size_t rows() const { return _rows; }
     size_t cols() const { return _cols; }
+    size_t total() const { return _total; }
 
     std::vector<size_t> rows(size_t col);
     std::vector<size_t> cols(size_t row);
@@ -31,6 +32,7 @@ private:
     hashmap<size_t, hashmap<size_t, T>*> _row_index;
     hashmap<size_t, hashmap<size_t, T*>*> _col_index;
     T _def_value;
+    size_t _total;
 };
 
 /***************** Implementation *****************/
@@ -40,7 +42,8 @@ sparse<T>::sparse(size_t rows, size_t cols, const T& default_value)
       _cols(cols),
       _row_index(),
       _col_index(),
-      _def_value(default_value)
+      _def_value(default_value),
+      _total(0)
 {
     if (rows <= 0 || cols <= 0) {
         throw mexception("Number of rows and columns should be positive");
@@ -99,18 +102,24 @@ void sparse<T>::set(size_t row, size_t col, const T& value) {
         _row_index[row] = row_data;
     }
 
-    (*row_data)[col] = value;
+    if (value != _def_value) {
+        (*row_data)[col] = value;
 
+        hashmap<size_t, T*>* col_data;
+        try {
+            col_data = _col_index.at(col);
+        } catch (std::out_of_range&) {
+            col_data = new hashmap<size_t, T*>();
+            _col_index[col] = col_data;
+        }
 
-    hashmap<size_t, T*>* col_data;
-    try {
-        col_data = _col_index.at(col);
-    } catch (std::out_of_range&) {
-        col_data = new hashmap<size_t, T*>();
-        _col_index[col] = col_data;
+        (*col_data)[row] = &(*row_data)[col];
+
+        ++_total;
+    } else {
+        int removed_count = row_data->erase(col);
+        _total -= removed_count;
     }
-
-    (*col_data)[row] = &(*row_data)[col];
 }
 
 template <typename T>
