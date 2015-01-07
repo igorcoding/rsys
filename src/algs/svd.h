@@ -15,7 +15,7 @@ class svd {
 public:
     svd(const D<T>& ratings, size_t features_count);
 
-    void learn(float regularization) noexcept;
+    void learn(float regularization, bool print_results = true) noexcept;
     T predict(size_t user_id, size_t item_id) noexcept;
 
 private:
@@ -81,7 +81,7 @@ T svd<T,D>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_
 }
 
 template <typename T, template <class> class D>
-void svd<T,D>::learn(float regularization) noexcept {
+void svd<T,D>::learn(float regularization, bool print_results) noexcept {
     size_t iteration = 1;
     double rmse = 1.0;
     double old_rmse = 0.0;
@@ -90,9 +90,8 @@ void svd<T,D>::learn(float regularization) noexcept {
     double threshold = 0.01;
 
     while(fabs(rmse - old_rmse) > eps) {
-//        std::cout << "Current _Pu:\n" << _pU << "\n\n";
-//        std::cout << "Current _pI:\n" << _pI << "\n\n";
         std::cout << "Iteration #" << iteration++ << std::endl;
+
         old_rmse = rmse;
         for (size_t user_id = 0; user_id < _pU.rows(); ++user_id) {
             auto pu = _pU[user_id];
@@ -129,6 +128,18 @@ void svd<T,D>::learn(float regularization) noexcept {
             threshold *= 0.5;
         }
     }
+
+    if (print_results) {
+        std::cout << "\n=== Results ===" << "\n";
+        std::cout << "Users\' features:\n" << _pU << "\n\n";
+        std::cout << "Items\' features:\n" << _pI << "\n\n";
+        std::cout << "Base users predictors: " << _bu << "\n";
+        std::cout << "Base items predictors: " << _bi << "\n";
+        std::cout << "mu: " << _mu << "\n";
+        std::cout << "=== End of Results ===" << "\n\n";
+        std::cout << std::flush;
+    }
+
 }
 
 } // namespace rsys
