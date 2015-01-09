@@ -1,20 +1,20 @@
 #ifndef SPARSE_H
 #define SPARSE_H
 
+#include "imatrix.h"
 #include "mexception.h"
 
 #include <unordered_map>
-#include <dirent.h>
 
 namespace math {
 template <typename K, typename V> using hashmap = std::unordered_map<K, V>;
 
 template <typename T>
-class sparse {
+class sparse_matrix : public imatrix<T> {
 
 public:
-    sparse(size_t rows, size_t cols, const T& default_value = T());
-    ~sparse();
+    sparse_matrix(size_t rows, size_t cols, const T& default_value = T());
+    ~sparse_matrix();
 
     size_t rows() const { return _rows; }
     size_t cols() const { return _cols; }
@@ -23,8 +23,16 @@ public:
     std::vector<size_t> rows(size_t col);
     std::vector<size_t> cols(size_t row);
 
-    void set(size_t row, size_t col, const T& value);
+    const T& get_def_value() const { return _def_value; }
+
     const T& at(size_t row, size_t col) const;
+    void set(size_t row, size_t col, const T& value);
+
+
+    sparse_matrix<T>& operator +=(const imatrix<T>& rhs);
+    sparse_matrix<T>& operator -=(const imatrix<T>& rhs);
+    sparse_matrix<T>& operator *=(const T& rhs);
+    sparse_matrix<T>& operator /=(const T& rhs);
 
 private:
     size_t _rows;
@@ -37,7 +45,7 @@ private:
 
 /***************** Implementation *****************/
 template <typename T>
-sparse<T>::sparse(size_t rows, size_t cols, const T& default_value)
+sparse_matrix<T>::sparse_matrix(size_t rows, size_t cols, const T& default_value)
     : _rows(rows),
       _cols(cols),
       _row_index(),
@@ -51,7 +59,7 @@ sparse<T>::sparse(size_t rows, size_t cols, const T& default_value)
 }
 
 template <typename T>
-sparse<T>::~sparse() {
+sparse_matrix<T>::~sparse_matrix() {
     for (auto it = _row_index.begin(); it != _row_index.end(); ++it) {
         delete it->second;
         it->second = nullptr;
@@ -59,7 +67,7 @@ sparse<T>::~sparse() {
 }
 
 template <typename T>
-std::vector<size_t> sparse<T>::rows(size_t col) {
+std::vector<size_t> sparse_matrix<T>::rows(size_t col) {
     std::vector<size_t> rows;
     hashmap<size_t, T*>* col_data;
     try {
@@ -76,7 +84,7 @@ std::vector<size_t> sparse<T>::rows(size_t col) {
 }
 
 template <typename T>
-std::vector<size_t> sparse<T>::cols(size_t row) {
+std::vector<size_t> sparse_matrix<T>::cols(size_t row) {
     std::vector<size_t> cols;
     hashmap<size_t, T>* row_data;
     try {
@@ -93,7 +101,7 @@ std::vector<size_t> sparse<T>::cols(size_t row) {
 }
 
 template <typename T>
-void sparse<T>::set(size_t row, size_t col, const T& value) {
+void sparse_matrix<T>::set(size_t row, size_t col, const T& value) {
     hashmap<size_t, T>* row_data;
     try {
         row_data = _row_index.at(row);
@@ -123,7 +131,7 @@ void sparse<T>::set(size_t row, size_t col, const T& value) {
 }
 
 template <typename T>
-const T& sparse<T>::at(size_t row, size_t col) const {
+const T& sparse_matrix<T>::at(size_t row, size_t col) const {
     hashmap<size_t, T>* row_data;
     try {
         row_data = _row_index.at(row);
@@ -137,10 +145,67 @@ const T& sparse<T>::at(size_t row, size_t col) const {
         return _def_value;
     }
 }
+template <typename T>
+sparse_matrix<T>& sparse_matrix<T>::operator +=(const imatrix<T>& rhs) {
+    for (size_t i = 0; i < rhs.rows(); ++i) {
+        for (size_t j = 0; j < rhs.cols(); ++j) {
+            const auto& val = this->at(i, j);
+            if (val != _def_value) { // contains
+                auto new_value = val + rhs.at(i, j);
+                this->set(i, j, new_value);
+            }
+        }
+    }
+    return *this;
+}
+
+template <typename T>
+sparse_matrix<T>& sparse_matrix<T>::operator -=(const imatrix<T>& rhs) {
+    for (size_t i = 0; i < rhs.rows(); ++i) {
+        for (size_t j = 0; j < rhs.cols(); ++j) {
+            const auto& val = this->at(i, j);
+            if (val != _def_value) { // contains
+                auto new_value = val - rhs.at(i, j);
+                this->set(i, j, new_value);
+            }
+        }
+    }
+    return *this;
+}
+
+template <typename T>
+sparse_matrix<T>& sparse_matrix<T>::operator *=(const T& rhs) {
+    for (size_t i = 0; i < _rows; ++i) {
+        auto c = cols(i);
+        for (size_t j = 0; j < c.size(); ++j) {
+            const auto& val = this->at(i, j);
+            if (val != _def_value) { // contains
+                auto new_value = val * rhs;
+                this->set(i, j, new_value);
+            }
+        }
+    }
+    return *this;
+}
+
+template <typename T>
+sparse_matrix<T>& sparse_matrix<T>::operator /=(const T& rhs) {
+    for (size_t i = 0; i < _rows; ++i) {
+        auto c = cols(i);
+        for (size_t j = 0; j < c.size(); ++j) {
+            const auto& val = this->at(i, j);
+            if (val != _def_value) { // contains
+                auto new_value = val / rhs;
+                this->set(i, j, new_value);
+            }
+        }
+    }
+    return *this;
+}
 
 /************* Other methods *************/
 template <typename T>
-std::ostream& operator <<(std::ostream& os, const sparse<T>& s) {
+std::ostream& operator <<(std::ostream& os, const sparse_matrix<T>& s) {
     for (size_t i = 0; i < s.rows(); ++i) {
         for (size_t j = 0; j < s.cols(); ++j) {
             os << s.at(i, j);

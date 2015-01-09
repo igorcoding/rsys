@@ -59,11 +59,12 @@ public:
     mvector(T*&& vec, size_t size);
     explicit mvector(const std::vector<T>& vec);
     mvector(const mvector<T>& that);
-    template <typename Y> mvector(const mvector<Y>& that);
     mvector(mvector&& that);
     mvector<T>& operator =(const mvector<T>& that);
     mvector<T>& operator =(mvector<T>&& that);
     ~mvector();
+
+    template <typename Y> mvector<Y> cast();
 
     static mvector<T> zero(size_t size);
 
@@ -112,6 +113,7 @@ public:
     double length() const;
 
 private:
+    explicit mvector(size_t size, bool empty);
     void clean_up();
     void check_index(size_t i) const;
     void check_sizes(size_t size1, size_t size2) const;
@@ -124,7 +126,6 @@ private:
 
 
 /***************** base_iterator implementation *****************/
-
 template <typename T>
 template <typename _IT>
 mvector<T>::base_iterator<_IT>::base_iterator(_IT data)
@@ -223,6 +224,14 @@ bool mvector<T>::base_iterator<_IT>::operator !=(typename mvector<T>::template b
 /***************** Implementation *****************/
 
 template <typename T>
+mvector<T>::mvector(size_t size, bool empty)
+        : _size(size),
+          _no_copy(false),
+          _vec(nullptr)
+{
+}
+
+template <typename T>
 mvector<T>::mvector(size_t size, const T& default_value)
     : _size(size),
       _no_copy(false)
@@ -287,15 +296,14 @@ mvector<T>::mvector(const mvector<T>& that)
 
 template <typename T>
 template <typename Y>
-mvector<T>::mvector(const mvector<Y>& that)
-    : _size(that.size()),
-      _no_copy(false)
+mvector<Y> mvector<T>::cast()
 {
-    _vec = new T[_size];
-    const Y* that_vec = that.data();
+    mvector<Y> mvec(_size, true);
+    mvec._vec = new T[_size];
     for (size_t i = 0; i < _size; ++i) {
-        _vec[i] = static_cast<T>(that_vec[i]);
+        mvec._vec[i] = static_cast<Y>(_vec[i]);
     }
+    return mvec;
 }
 
 template <typename T>

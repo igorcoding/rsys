@@ -1,13 +1,14 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include "imatrix.h"
+
 #include <assert.h>
-#include "mvector.h"
 
 namespace math {
 
 template <typename T>
-class matrix {
+class matrix : public imatrix<T> {
 public:
     matrix(size_t rows, size_t cols, const T& default_value = T());
     matrix(const matrix<T>& other);
@@ -20,16 +21,23 @@ public:
     size_t cols() const { return _cols; }
     size_t total() const { return _total; }
 
+    const T& get_def_value() const { return _def_value; }
+    void set_default_value(const T& def_value);
+
+    std::vector<size_t> rows(size_t col);
+    std::vector<size_t> cols(size_t row);
+
     const mvector<T> operator [](int i) const;
 
-    const mvector<T> at(size_t row) const;
     const T& at(size_t row, size_t col) const;
     T& at(size_t row, size_t col);
     void set(size_t row_index, const mvector<T>& row);
     void set(size_t row, size_t col, const T& obj);
 
-    matrix<T>& operator +=(const matrix<T>& rhs);
-    matrix<T>& operator -=(const matrix<T>& rhs);
+    matrix<T>& operator +=(const imatrix<T>& rhs);
+    matrix<T>& operator -=(const imatrix<T>& rhs);
+    matrix<T>& operator *=(const T& rhs);
+    matrix<T>& operator /=(const T& rhs);
     template <typename U> matrix<T>& operator *=(const U& rhs);
     template <typename U> matrix<T>& operator /=(const U& rhs);
 
@@ -151,15 +159,38 @@ matrix<T>::~matrix() {
 }
 
 template <typename T>
-const mvector<T> matrix<T>::operator [](int i) const {
-    assert(i >= 0 && i < _rows);
-    return mvector<T>(_m[i], _cols, true);
+void matrix<T>::set_default_value(const T& def_value) {
+    _def_value = def_value;
 }
 
 template <typename T>
-const mvector<T> matrix<T>::at(size_t row) const {
-    assert(row >= 0 && row < _rows);
-    return mvector<T>(_m[row], _cols, true);
+std::vector<size_t> matrix<T>::rows(size_t col) {
+    std::vector<size_t> rows;
+    rows.reserve(_rows);
+    for (size_t i = 0; i < _rows; ++i) {
+        if (_m[i][col] != _def_value) {
+            rows.push_back(i);
+        }
+    }
+    return rows;
+}
+
+template <typename T>
+std::vector<size_t> matrix<T>::cols(size_t row) {
+    std::vector<size_t> cols;
+    cols.reserve(_cols);
+    for (size_t j = 0; j < _rows; ++j) {
+        if (_m[row][j] != _def_value) {
+            cols.push_back(j);
+        }
+    }
+    return cols;
+}
+
+template <typename T>
+const mvector<T> matrix<T>::operator [](int i) const {
+    assert(i >= 0 && i < _rows);
+    return mvector<T>(_m[i], _cols, true);
 }
 
 template <typename T>
@@ -204,20 +235,40 @@ void matrix<T>::set(size_t row_index, const mvector<T>& row) {
 }
 
 template <typename T>
-matrix<T>& matrix<T>::operator +=(const matrix<T>& rhs) {
+matrix<T>& matrix<T>::operator +=(const imatrix<T>& rhs) {
     for (size_t i = 0; i < _rows; ++i) {
         for (size_t j = 0; j < _cols; ++j) {
-            _m[i][j] += rhs._m[i][j];
+            _m[i][j] += rhs.at(i, j);
         }
     }
     return *this;
 }
 
 template <typename T>
-matrix<T>& matrix<T>::operator -=(const matrix<T>& rhs) {
+matrix<T>& matrix<T>::operator -=(const imatrix<T>& rhs) {
     for (size_t i = 0; i < _rows; ++i) {
         for (size_t j = 0; j < _cols; ++j) {
-            _m[i][j] -= rhs._m[i][j];
+            _m[i][j] -= rhs.at(i, j);
+        }
+    }
+    return *this;
+}
+
+template <typename T>
+matrix<T>& matrix<T>::operator *=(const T& rhs) {
+    for (size_t i = 0; i < _rows; ++i) {
+        for (size_t j = 0; j < _cols; ++j) {
+            _m[i][j] *= rhs;
+        }
+    }
+    return *this;
+}
+
+template <typename T>
+matrix<T>& matrix<T>::operator /=(const T& rhs) {
+    for (size_t i = 0; i < _rows; ++i) {
+        for (size_t j = 0; j < _cols; ++j) {
+            _m[i][j] /= rhs;
         }
     }
     return *this;

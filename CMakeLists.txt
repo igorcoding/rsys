@@ -8,9 +8,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 set(HEADER_FILES ${SRC}/algs/rsys.h
                  ${SRC}/algs/svd.h
+                 ${SRC}/algs/rbm.h
                  ${SRC}/math/mvector.h
+                 ${SRC}/math/imatrix.h
                  ${SRC}/math/matrix.h
-                 ${SRC}/math/sparse.h
+                 ${SRC}/math/sparse_matrix.h
                  ${SRC}/math/mexception.h
                  ${SRC}/util/traits.h)
 

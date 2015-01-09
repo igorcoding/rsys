@@ -21,7 +21,7 @@ private:
 //using rsys_matrix = rsys<T, math::matrix, M>;
 
 //template <typename T, template <class,class> class M>
-//using rsys_sparse = rsys<T, math::sparse, M>;
+//using rsys_sparse = rsys<T, math::sparse_matrix, M>;
 
 template <typename T, template <class> class D, template <class, template <class> class> class M>
 rsys<T,D,M>::rsys(const M<T, D>& model)

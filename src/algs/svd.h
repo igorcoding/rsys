@@ -1,7 +1,7 @@
 #ifndef SVD_H
 #define SVD_H
 
-#include "../math/matrix.h"
+#include "../math/mvector.h"
 
 #include <ctime>
 #include <cstdlib>
@@ -15,7 +15,7 @@ class svd {
 public:
     svd(const D<T>& ratings, size_t features_count);
 
-    void learn(float regularization, bool print_results = true) noexcept;
+    void learn(float regularization, int max_iterations = 0, bool print_results = true) noexcept;
     T predict(size_t user_id, size_t item_id) noexcept;
 
 private:
@@ -54,19 +54,12 @@ svd<T,D>::svd(const D<T>& ratings, size_t features_count)
         for (size_t j = 0; j < _features_count; ++j) {
             _pU.set(i, j, static_cast <double> (rand()) / rand_max);
         }
-//        for (size_t j = 0; j < _bu.cols(); ++j) {
-//            _bu.set(i, j, static_cast <double> (rand()) / rand_max);
-//        }
     }
 
     for (size_t i = 0; i < _items_count; ++i) {
         for (size_t j = 0; j < _features_count; ++j) {
             _pI.set(i, j, static_cast <double> (rand()) / rand_max);
         }
-
-//        for (size_t j = 0; j < _bi.cols(); ++j) {
-//            _bi.set(i, j, static_cast <double> (rand()) / rand_max);
-//        }
     }
 }
 
@@ -81,7 +74,7 @@ T svd<T,D>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_
 }
 
 template <typename T, template <class> class D>
-void svd<T,D>::learn(float regularization, bool print_results) noexcept {
+void svd<T,D>::learn(float regularization, int max_iterations, bool print_results) noexcept {
     size_t iteration = 1;
     double rmse = 1.0;
     double old_rmse = 0.0;
@@ -100,7 +93,7 @@ void svd<T,D>::learn(float regularization, bool print_results) noexcept {
             for (size_t item_id = 0; item_id < items_ids_by_user.size(); ++item_id) {
                 auto qi = _pI[item_id];
                 const auto& r = _ratings.at(user_id, item_id);
-                if (r != -1) { // TODO
+                if (r != _ratings.get_def_value()) { // TODO
                     auto e = predict(pu, qi, user_id, item_id) - r;
                     rmse += e * e;
 
@@ -121,11 +114,15 @@ void svd<T,D>::learn(float regularization, bool print_results) noexcept {
 
         rmse /= _ratings.total();
         rmse = std::sqrt(rmse);
-        std::cout << rmse << std::endl;
+        std::cout << "RMSE = " << rmse << std::endl;
 
         if (old_rmse - rmse < threshold) {
             learning_rate *= 0.8;
             threshold *= 0.5;
+        }
+
+        if (max_iterations > 0 && iteration >= max_iterations) {
+            break;
         }
     }
 
@@ -133,8 +130,8 @@ void svd<T,D>::learn(float regularization, bool print_results) noexcept {
         std::cout << "\n=== Results ===" << "\n";
         std::cout << "Users\' features:\n" << _pU << "\n\n";
         std::cout << "Items\' features:\n" << _pI << "\n\n";
-        std::cout << "Base users predictors: " << _bu << "\n";
-        std::cout << "Base items predictors: " << _bi << "\n";
+        std::cout << "Baseline users predictors: " << _bu << "\n";
+        std::cout << "Baseline items predictors: " << _bi << "\n";
         std::cout << "mu: " << _mu << "\n";
         std::cout << "=== End of Results ===" << "\n\n";
         std::cout << std::flush;
