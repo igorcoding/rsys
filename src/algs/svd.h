@@ -90,7 +90,8 @@ void svd<T,D>::learn(float regularization, int max_iterations, bool print_result
             auto pu = _pU[user_id];
             auto items_ids_by_user = _ratings.cols(user_id);
 
-            for (size_t item_id = 0; item_id < items_ids_by_user.size(); ++item_id) {
+            for (auto item_it = items_ids_by_user.begin(); item_it != items_ids_by_user.end(); ++item_it) {
+                size_t item_id = *item_it;
                 auto qi = _pI[item_id];
                 const auto& r = _ratings.at(user_id, item_id);
                 if (r != _ratings.get_def_value()) { // TODO

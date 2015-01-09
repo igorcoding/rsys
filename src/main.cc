@@ -17,8 +17,8 @@ int movielens_example();
 
 int main() {
     int basic = 0, mlens = 0;
-//    basic = basic_example();
-    mlens = movielens_example();
+    basic = basic_example();
+//    mlens = movielens_example();
     return basic + mlens;
 }
 
@@ -75,11 +75,11 @@ int movielens_example() {
         std::string item;
 
         std::getline(ss, item, ':');
-        int user_id = to_int(item);
+        int user_id = to_int(item) - 1;
 
         std::getline(ss, item, ':');
         std::getline(ss, item, ':');
-        int item_id = to_int(item);
+        int item_id = to_int(item) - 1;
 
         std::getline(ss, item, ':');
         std::getline(ss, item, ':');
@@ -94,9 +94,9 @@ int movielens_example() {
     svd.learn(0.1, 200, false);
     std::cout << "Finished" << std::endl;
 
-    fs.open(prefix + "initial.dat", ios_base::out);
-    fs << "Initial:" << std::endl << m << std::endl;
-    fs.close();
+//    fs.open(prefix + "initial.dat", ios_base::out);
+//    fs << "Initial:" << std::endl << m << std::endl;
+//    fs.close();
 
     fs.open(prefix + "predictions.dat", ios_base::out);
     for (size_t i = 0; i < m.rows(); ++i) {
