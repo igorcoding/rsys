@@ -9,13 +9,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 set(HEADER_FILES ${SRC}/algs/rsys.h
                  ${SRC}/algs/svd.h
                  ${SRC}/algs/rbm.h
-                 ${SRC}/math/mvector.h
-                 ${SRC}/math/imatrix.h
-                 ${SRC}/math/matrix.h
-                 ${SRC}/math/sparse_matrix.h
-                 ${SRC}/math/mexception.h
+                 ${SRC}/algs/item_score.h
+                 ${SRC}/data_structures/mvector.h
+                 ${SRC}/data_structures/imatrix.h
+                 ${SRC}/data_structures/matrix.h
+                 ${SRC}/data_structures/sparse_matrix.h
+                 ${SRC}/data_structures/mexception.h
                  ${SRC}/util/traits.h)
 
-set(SOURCE_FILES ${SRC}/math/mexception.cc
+set(SOURCE_FILES ${SRC}/data_structures/mexception.cc
                  ${SRC}/main.cc)
 add_executable(rsys ${HEADER_FILES} ${SOURCE_FILES})

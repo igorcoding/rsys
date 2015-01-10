@@ -24,8 +24,8 @@ public:
     const T& get_def_value() const { return _def_value; }
     void set_default_value(const T& def_value);
 
-    std::vector<size_t> rows(size_t col);
-    std::vector<size_t> cols(size_t row);
+    std::vector<size_t> rows(size_t col) const;
+    std::vector<size_t> cols(size_t row) const;
 
     const mvector<T> operator [](int i) const;
 
@@ -164,7 +164,7 @@ void matrix<T>::set_default_value(const T& def_value) {
 }
 
 template <typename T>
-std::vector<size_t> matrix<T>::rows(size_t col) {
+std::vector<size_t> matrix<T>::rows(size_t col) const {
     std::vector<size_t> rows;
     rows.reserve(_rows);
     for (size_t i = 0; i < _rows; ++i) {
@@ -176,7 +176,7 @@ std::vector<size_t> matrix<T>::rows(size_t col) {
 }
 
 template <typename T>
-std::vector<size_t> matrix<T>::cols(size_t row) {
+std::vector<size_t> matrix<T>::cols(size_t row) const {
     std::vector<size_t> cols;
     cols.reserve(_cols);
     for (size_t j = 0; j < _rows; ++j) {
@@ -391,7 +391,7 @@ std::ostream& operator <<(std::ostream& os, const matrix<T>& m) {
     return os;
 }
 
-} // namespace math
+} // namespace data_structures
 
 #endif // MATRIX_H
 

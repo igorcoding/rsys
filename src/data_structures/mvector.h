@@ -582,6 +582,6 @@ std::ostream& operator <<(std::ostream& os, const mvector<T>& mvec) {
     return os;
 }
 
-} // namespace math
+} // namespace data_structures
 
 #endif // MVECTOR_H
