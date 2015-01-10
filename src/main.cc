@@ -12,7 +12,8 @@
 
 using namespace rsys;
 
-typedef svd<double, ds::sparse_matrix> svd_t;
+template <typename T> using data_holder = ds::sparse_matrix<T>;
+typedef svd<double, data_holder> svd_t;
 
 
 int basic_example();
@@ -28,7 +29,7 @@ int main() {
 int basic_example() {
 
 //    data_structures::matrix<double> m(5, 5, -1);
-    ds::sparse_matrix<double> m(5, 5, -1);
+    data_holder<double> m(5, 5, -1);
     m.set(0, 0, 4);   m.set(0, 1, 5);   m.set(0, 2, 2);  m.set(0, 3, -1);  m.set(0, 4, -1);
     m.set(1, 0, -1);  m.set(1, 1, 4);   m.set(1, 2, 4);  m.set(1, 3, 3);   m.set(1, 4, -1);
     m.set(2, 0, -1);  m.set(2, 1, 2);   m.set(2, 2, -1); m.set(2, 3, 5);  m.set(2, 4, -1);
@@ -74,7 +75,7 @@ int to_int(const std::string& s) {
 }
 
 int movielens_example() {
-    ds::sparse_matrix<double> m(6040, 3952, -1);
+    data_holder<double> m(6040, 3952, -1);
 
     std::string prefix = "/home/igor/Projects/cpp/rsys/datasets/ml-1m/";
     std::string filename = prefix + "ratings.dat";

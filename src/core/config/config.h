@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 namespace rsys {
-    template <typename ALG>
+    template <typename M>
     class config {
     public:
 

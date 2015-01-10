@@ -3,15 +3,15 @@
 
 namespace rsys {
 
-template <typename T>
-class rbm {
-public:
+    template<typename T>
+    class rbm {
+    public:
 
 
-private:
+    private:
 
-};
+    };
 
-}
+} // namespace rsys
 
 #endif // RBM_H
