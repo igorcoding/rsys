@@ -7,10 +7,12 @@
 #include "data_structures/mvector.h"
 #include "data_structures/sparse_matrix.h"
 #include "data_structures/matrix.h"
-#include "algs/rsys.h"
-#include "algs/svd.h"
+#include "core/rsys.h"
+#include "core/svd.h"
 
-typedef rsys::svd<double, rsys::sparse_matrix> svd_t;
+using namespace rsys;
+
+typedef svd<double, ds::sparse_matrix> svd_t;
 
 
 int basic_example();
@@ -18,15 +20,15 @@ int movielens_example();
 
 int main() {
     int basic = 0, mlens = 0;
-//    basic = basic_example();
-    mlens = movielens_example();
+    basic = basic_example();
+//    mlens = movielens_example();
     return basic + mlens;
 }
 
 int basic_example() {
 
 //    data_structures::matrix<double> m(5, 5, -1);
-    math::sparse_matrix<double> m(5, 5, -1);
+    ds::sparse_matrix<double> m(5, 5, -1);
     m.set(0, 0, 4);   m.set(0, 1, 5);   m.set(0, 2, 2);  m.set(0, 3, -1);  m.set(0, 4, -1);
     m.set(1, 0, -1);  m.set(1, 1, 4);   m.set(1, 2, 4);  m.set(1, 3, 3);   m.set(1, 4, -1);
     m.set(2, 0, -1);  m.set(2, 1, 2);   m.set(2, 2, -1); m.set(2, 3, 5);  m.set(2, 4, -1);
@@ -72,7 +74,7 @@ int to_int(const std::string& s) {
 }
 
 int movielens_example() {
-    math::sparse_matrix<double> m(6040, 3952, -1);
+    ds::sparse_matrix<double> m(6040, 3952, -1);
 
     std::string prefix = "/home/igor/Projects/cpp/rsys/datasets/ml-1m/";
     std::string filename = prefix + "ratings.dat";

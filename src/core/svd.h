@@ -11,8 +11,9 @@
 #include <iostream>
 #include <queue>
 
+using namespace rsys::ds;
+
 namespace rsys {
-using namespace math;
 
 template <typename T = double, template <class> class D = sparse_matrix>
 class svd {
