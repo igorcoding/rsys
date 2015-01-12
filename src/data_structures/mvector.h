@@ -54,7 +54,7 @@ namespace rsys {
             typedef base_iterator<T*> iterator;
             typedef base_iterator<const T*> const_iterator;
 
-            explicit mvector(size_t size, const T& default_value = T());
+            explicit mvector(size_t size = 0, const T& default_value = T());
             mvector(const T* vec, size_t size);
             mvector(T* vec, size_t size, bool no_copy);
             mvector(T*&& vec, size_t size);
@@ -64,6 +64,8 @@ namespace rsys {
             mvector<T>& operator =(const mvector<T>& that);
             mvector<T>& operator =(mvector<T>&& that);
             ~mvector();
+
+            void set_new_data(const T* vec, size_t size);
 
             template<typename Y> mvector<Y> cast();
 
@@ -79,7 +81,8 @@ namespace rsys {
             size_t size() const { return _size; }
             const T* data() const { return _vec; }
 
-            const T& at(size_t i) const;
+            T& at(size_t i, bool check = true);
+            const T& at(size_t i, bool check = true) const;
             void set(size_t i, const T& obj);
 
             T& operator [](size_t i);
@@ -274,7 +277,7 @@ namespace rsys {
         mvector<T>::mvector(const mvector<T>& that)
                 : _size(that.size()),
                   _no_copy(false) {
-//            std::cout << "mvector copy" << std::endl;
+            std::cout << "mvector copy" << std::endl;
             _vec = new T[_size];
             for (size_t i = 0; i < _size; ++i) {
                 _vec[i] = that._vec[i];
@@ -344,6 +347,15 @@ namespace rsys {
         }
 
         template<typename T>
+        void mvector<T>::set_new_data(const T* vec, size_t size) {
+            clean_up();
+
+            _size = size;
+            _vec = new T[_size];
+            std::memcpy(_vec, vec, _size * sizeof(T));
+        }
+
+        template<typename T>
         mvector<T> mvector<T>::zero(size_t size) {
             mvector<T> mvec(size, T());
             return mvec;
@@ -351,8 +363,17 @@ namespace rsys {
 
         template<typename T>
         inline
-        const T& mvector<T>::at(size_t i) const {
-            check_index(i);
+        T& mvector<T>::at(size_t i, bool check) {
+            if (check)
+                check_index(i);
+            return _vec[i];
+        }
+
+        template<typename T>
+        inline
+        const T& mvector<T>::at(size_t i, bool check) const {
+            if (check)
+                check_index(i);
             return _vec[i];
         }
 
@@ -362,13 +383,13 @@ namespace rsys {
             _vec[i] = obj;
         }
 
-        template<typename T>
+        template<typename T> inline
         T& mvector<T>::operator [](size_t i) {
             check_index(i);
             return _vec[i];
         }
 
-        template<typename T>
+        template<typename T> inline
         const T& mvector<T>::operator [](size_t i) const {
             check_index(i);
             return _vec[i];
@@ -522,9 +543,11 @@ namespace rsys {
                 delete[] _vec;
                 _vec = nullptr;
             }
+            _size = 0;
+            _no_copy = false;
         }
 
-        template<typename T>
+        template<typename T> inline
         void mvector<T>::check_index(size_t i) const {
             if (i < 0 || i >= _size) {
                 throw index_out_of_bound();

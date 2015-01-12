@@ -105,11 +105,11 @@ namespace rsys {
 
             old_rmse = rmse;
             for (size_t user_id = 0; user_id < _pU.rows(); ++user_id) {
-                auto pu = _pU[user_id];
+                auto& pu = _pU[user_id];
                 auto items_ids_by_user = _ratings.cols(user_id);
 
                 for (const auto& item_id : items_ids_by_user) {
-                    auto qi = _pI[item_id];
+                    auto& qi = _pI[item_id];
                     const auto& r = _ratings.at(user_id, item_id);
                     if (r != _ratings.get_def_value()) {
                         auto e = predict(pu, qi, user_id, item_id) - r;
@@ -120,10 +120,8 @@ namespace rsys {
                         _mu -= learning_rate * e;
 
                         for (size_t k = 0; k < _features_count; ++k) {
-                            auto pu_new = pu[k] - learning_rate * (e * qi[k] + lambda * pu[k]);
-                            auto qi_new = qi[k] - learning_rate * (e * pu[k] + lambda * qi[k]);
-                            _pU.set(user_id, k, pu_new);
-                            _pI.set(item_id, k, qi_new);
+                            _pU[user_id][k] -= learning_rate * (e * qi[k] + lambda * pu[k]);
+                            _pI[user_id][k] -= learning_rate * (e * pu[k] + lambda * qi[k]);
                         }
                     }
                 }

@@ -13,7 +13,7 @@
 
 using namespace rsys;
 
-template <typename T> using data_holder = dst::matrix<T>;
+template <typename T> using data_holder = dst::sparse_matrix<T>;
 typedef svd<double, data_holder> svd_t;
 
 
@@ -42,7 +42,7 @@ int basic_example() {
     std::cout << m << std::endl;
 
 
-    ds::simple_ds<double, dst::matrix> ds(&m);
+//    ds::simple_ds<double, data_holder> ds(&m);
 
     svd_t::config_t c(&m, 4, 0.01);
 
@@ -61,7 +61,7 @@ int basic_example() {
         std::cout << std::endl;
     }
 
-    auto recommendations = svd.recommend(4, 2);
+    auto recommendations = svd.recommend(2, 4);
 
     std::cout << "[";
     for (const auto& v : recommendations) {
