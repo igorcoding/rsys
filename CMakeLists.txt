@@ -23,6 +23,7 @@ set(HEADER_FILES ${SRC}/core/rsys.h
                  ${SRC}/data_structures/sparse_matrix.h
                  ${SRC}/data_structures/mexception.h
 
+                 ${SRC}/util/base_iterator.h
                  ${SRC}/util/traits.h)
 
 set(SOURCE_FILES ${SRC}/data_structures/mexception.cc

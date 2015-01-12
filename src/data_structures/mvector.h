@@ -2,7 +2,7 @@
 #define MVECTOR_H
 
 #include "mexception.h"
-#include "../util/traits.h"
+#include "../util/base_iterator.h"
 
 #include <cstdlib>
 #include <memory>
@@ -17,42 +17,10 @@ namespace rsys {
 
         template<typename T>
         class mvector {
+            template <typename _IT> using my_base_iterator = base_iterator<_IT, mvector<T>>;
         public:
-            template<typename _IT>
-            class base_iterator {
-            public:
-                typedef typename traits<_IT>::ordinal_type ordinal_type;
-                typedef typename traits<_IT>::reference reference;
-                typedef typename traits<_IT>::pointer pointer;
-                typedef typename traits<_IT>::const_pointer const_pointer;
-
-                base_iterator(const base_iterator<pointer>& other);
-                base_iterator(const base_iterator<const_pointer>& other);
-                base_iterator& operator =(const base_iterator& other);
-
-                base_iterator& operator ++();
-                base_iterator operator ++(int);
-                base_iterator& operator --();
-                base_iterator operator --(int);
-                base_iterator& operator +=(int n);
-                base_iterator& operator -=(int n);
-
-                reference operator *();
-                _IT data() const;
-
-                bool operator ==(const base_iterator& rhs) const;
-                bool operator !=(const base_iterator& rhs) const;
-
-            private:
-                explicit base_iterator(_IT data);
-                friend class mvector<ordinal_type>;
-
-            private:
-                _IT _data;
-            };
-
-            typedef base_iterator<T*> iterator;
-            typedef base_iterator<const T*> const_iterator;
+            typedef my_base_iterator<T*> iterator;
+            typedef my_base_iterator<const T*> const_iterator;
 
             explicit mvector(size_t size = 0, const T& default_value = T());
             mvector(const T* vec, size_t size);
@@ -112,113 +80,7 @@ namespace rsys {
         };
 
 
-/***************** base_iterator implementation *****************/
-        template<typename T>
-        template<typename _IT>
-        mvector<T>::base_iterator<_IT>::base_iterator(_IT data)
-                : _data(data) {
-        }
-
-        template<typename T>
-        template<typename _IT>
-        mvector<T>::base_iterator<_IT>::base_iterator(const base_iterator<pointer>& other)
-                : _data(other._data) {
-        }
-
-        template<typename T>
-        template<typename _IT>
-        mvector<T>::base_iterator<_IT>::base_iterator(const base_iterator<const_pointer>& other)
-                : _data(other._data) {
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        typename mvector<T>::template base_iterator<_IT>& mvector<T>::base_iterator<_IT>::operator =(const base_iterator<_IT>& other) {
-            _data = other._data;
-            return *this;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        typename mvector<T>::template base_iterator<_IT>& mvector<T>::base_iterator<_IT>::operator ++() {
-            ++_data;
-            return *this;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        typename mvector<T>::template base_iterator<_IT> mvector<T>::base_iterator<_IT>::operator ++(int) {
-            base_iterator <_IT> old(*this);
-            ++*this;
-            return old;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        typename mvector<T>::template base_iterator<_IT>& mvector<T>::base_iterator<_IT>::operator --() {
-            --_data;
-            return *this;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        typename mvector<T>::template base_iterator<_IT> mvector<T>::base_iterator<_IT>::operator --(int) {
-            base_iterator <_IT> old(*this);
-            --*this;
-            return old;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        typename mvector<T>::template base_iterator<_IT>& mvector<T>::base_iterator<_IT>::operator +=(int n) {
-            _data += n;
-            return *this;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        typename mvector<T>::template base_iterator<_IT>& mvector<T>::base_iterator<_IT>::operator -=(int n) {
-            _data -= n;
-            return *this;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        typename mvector<T>::template base_iterator<_IT>::reference mvector<T>::base_iterator<_IT>::operator *() {
-            return *_data;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        _IT mvector<T>::base_iterator<_IT>::data() const {
-            return _data;
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        bool mvector<T>::base_iterator<_IT>::operator ==(typename mvector<T>::template base_iterator<_IT> const& rhs) const {
-            return this->data() == rhs.data();
-        }
-
-        template<typename T>
-        template<typename _IT>
-        inline
-        bool mvector<T>::base_iterator<_IT>::operator !=(typename mvector<T>::template base_iterator<_IT> const& rhs) const {
-            return !(*this == rhs);
-        }
-
-
-/***************** Implementation *****************/
+        /***************** Implementation *****************/
 
         template<typename T>
         mvector<T>::mvector(size_t size, bool empty)
