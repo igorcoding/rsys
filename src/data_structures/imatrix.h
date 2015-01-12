@@ -6,11 +6,13 @@
 #include <vector>
 
 namespace rsys {
-    namespace ds {
+    namespace dst {
 
         template<typename T>
         class imatrix {
         public:
+            virtual ~imatrix() {}
+
             virtual size_t rows() const = 0;
             virtual size_t cols() const = 0;
             virtual size_t total() const = 0;

@@ -11,7 +11,7 @@
 #include <iostream>
 #include <queue>
 
-using namespace rsys::ds;
+using namespace rsys::dst;
 
 namespace rsys {
 
@@ -94,11 +94,11 @@ namespace rsys {
         auto print_results = _config.print_result();
 
         size_t iteration = 1;
-        double rmse = 1.0;
-        double old_rmse = 0.0;
-        double eps = 0.00001;
-        double learning_rate = 0.1;
-        double threshold = 0.01;
+        float rmse = 1.0;
+        float old_rmse = 0.0;
+        float eps = 0.00001;
+        float learning_rate = _config.learning_rate();
+        float threshold = 0.01;
 
         while (fabs(rmse - old_rmse) > eps) {
             std::cout << "Iteration #" << iteration++ << std::endl;
@@ -111,7 +111,7 @@ namespace rsys {
                 for (const auto& item_id : items_ids_by_user) {
                     auto qi = _pI[item_id];
                     const auto& r = _ratings.at(user_id, item_id);
-                    if (r != _ratings.get_def_value()) { // TODO
+                    if (r != _ratings.get_def_value()) {
                         auto e = predict(pu, qi, user_id, item_id) - r;
                         rmse += e * e;
 

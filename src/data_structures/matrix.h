@@ -7,19 +7,58 @@
 #include <assert.h>
 
 namespace rsys {
-    namespace ds {
+    namespace dst {
 
         template<typename T>
         class matrix : public imatrix<T> {
+            template<typename _IT>
+            class base_iterator {
+            public:
+                typedef typename traits<_IT>::ordinal_type ordinal_type;
+                typedef typename traits<_IT>::reference reference;
+                typedef typename traits<_IT>::pointer pointer;
+                typedef typename traits<_IT>::const_pointer const_pointer;
+
+                base_iterator(const base_iterator<pointer>& other);
+                base_iterator(const base_iterator<const_pointer>& other);
+                base_iterator& operator =(const base_iterator& other);
+
+                base_iterator& operator ++();
+                base_iterator operator ++(int);
+                base_iterator& operator --();
+                base_iterator operator --(int);
+                base_iterator& operator +=(int n);
+                base_iterator& operator -=(int n);
+
+                reference operator *();
+                _IT data() const;
+
+                bool operator ==(const base_iterator& rhs) const;
+                bool operator !=(const base_iterator& rhs) const;
+
+            protected:
+                explicit base_iterator(_IT data);
+                friend class matrix<ordinal_type>;
+
+            protected:
+                _IT _data;
+            };
+
+
         public:
+            typedef base_iterator<T**> iterator;
+            typedef base_iterator<const T**> const_iterator;
+
+
             matrix(size_t rows, size_t cols, const T& default_value = T());
+            matrix(std::initializer_list<std::initializer_list<T>> list, const T& default_value = T());
             matrix(const matrix<T>& other);
             matrix(matrix<T>&& other);
 
             matrix& operator =(const matrix<T>& other);
             matrix& operator =(matrix<T>&& other);
 
-            ~matrix();
+            virtual ~matrix();
 
             size_t rows() const { return _rows; }
             size_t cols() const { return _cols; }
@@ -49,6 +88,14 @@ namespace rsys {
 
             static matrix<T> ID(size_t size, T value);
 
+
+            iterator begin() noexcept { return iterator(_m); }
+            const_iterator begin() const noexcept { return const_iterator(_m); }
+            iterator end() noexcept { return iterator(_m + _rows); }
+            const_iterator end() const noexcept { return const_iterator(_m + _rows); }
+            const_iterator cbegin() const noexcept { return const_iterator(_m); }
+            const_iterator cend() const noexcept { return const_iterator(_m + _rows); }
+
         private:
             void clean_up();
 
@@ -59,6 +106,121 @@ namespace rsys {
             T _def_value;
             T** _m;
         };
+
+        /***************** base_iterator implementation *****************/
+        template<typename T>
+        template<typename _IT>
+        matrix<T>::base_iterator<_IT>::base_iterator(_IT data)
+                : _data(data) {
+        }
+
+        template<typename T>
+        template<typename _IT>
+        matrix<T>::base_iterator<_IT>::base_iterator(const base_iterator<pointer>& other)
+                : _data(other._data) {
+        }
+
+        template<typename T>
+        template<typename _IT>
+        matrix<T>::base_iterator<_IT>::base_iterator(const base_iterator<const_pointer>& other)
+                : _data(other._data) {
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        typename matrix<T>::template base_iterator<_IT>& matrix<T>::base_iterator<_IT>::operator =(const base_iterator<_IT>& other) {
+            _data = other._data;
+            return *this;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        typename matrix<T>::template base_iterator<_IT>& matrix<T>::base_iterator<_IT>::operator ++() {
+            ++_data;
+            return *this;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        typename matrix<T>::template base_iterator<_IT> matrix<T>::base_iterator<_IT>::operator ++(int) {
+            base_iterator <_IT> old(*this);
+            ++*this;
+            return old;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        typename matrix<T>::template base_iterator<_IT>& matrix<T>::base_iterator<_IT>::operator --() {
+            --_data;
+            return *this;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        typename matrix<T>::template base_iterator<_IT> matrix<T>::base_iterator<_IT>::operator --(int) {
+            base_iterator <_IT> old(*this);
+            --*this;
+            return old;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        typename matrix<T>::template base_iterator<_IT>& matrix<T>::base_iterator<_IT>::operator +=(int n) {
+            _data += n;
+            return *this;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        typename matrix<T>::template base_iterator<_IT>& matrix<T>::base_iterator<_IT>::operator -=(int n) {
+            _data -= n;
+            return *this;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        typename matrix<T>::template base_iterator<_IT>::reference matrix<T>::base_iterator<_IT>::operator *() {
+            return *_data;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        _IT matrix<T>::base_iterator<_IT>::data() const {
+            return _data;
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        bool matrix<T>::base_iterator<_IT>::operator ==(typename matrix<T>::template base_iterator<_IT> const& rhs) const {
+            return this->data() == rhs.data();
+        }
+
+        template<typename T>
+        template<typename _IT>
+        inline
+        bool matrix<T>::base_iterator<_IT>::operator !=(typename matrix<T>::template base_iterator<_IT> const& rhs) const {
+            return !(*this == rhs);
+        }
+
+
+
+
+
+
+
+
+
+
 
         template<typename T>
         matrix<T>::matrix(size_t rows, size_t cols, const T& default_value)
@@ -72,6 +234,31 @@ namespace rsys {
 
                 for (size_t j = 0; j < _cols; ++j) {
                     _m[i][j] = _def_value;
+                }
+            }
+        }
+
+        template<typename T>
+        matrix<T>::matrix(std::initializer_list<std::initializer_list<T>> list, const T& default_value)
+                : _total(0),
+                  _def_value(default_value) {
+            _rows = list.size();
+            _cols = list.begin()->size();
+            _m = new T* [_rows];
+
+            size_t i = 0;
+            typename std::initializer_list<std::initializer_list<T>>::iterator it1;
+            typename std::initializer_list<T>::iterator it2;
+            for (it1 = list.begin(); it1 != list.end(); ++it1, ++i) {
+                _m[i] = new T[_cols];
+
+                size_t j = 0;
+                for (it2 = it1->begin(); it2 != it1->end(); ++it2, ++j) {
+                    _m[i][j] = *it2;
+
+                    if (_m[i][j] != _def_value) {
+                        ++_total;
+                    }
                 }
             }
         }

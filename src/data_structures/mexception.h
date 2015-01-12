@@ -5,7 +5,7 @@
 #include <string>
 
 namespace rsys {
-    namespace ds {
+    namespace dst {
 
         class mexception : public std::exception {
         public:

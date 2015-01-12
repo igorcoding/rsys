@@ -9,10 +9,11 @@
 #include "data_structures/matrix.h"
 #include "core/rsys.h"
 #include "core/svd.h"
+#include "data_sources/simple_ds.h"
 
 using namespace rsys;
 
-template <typename T> using data_holder = ds::sparse_matrix<T>;
+template <typename T> using data_holder = dst::matrix<T>;
 typedef svd<double, data_holder> svd_t;
 
 
@@ -27,9 +28,11 @@ int main() {
 }
 
 int basic_example() {
-
-//    data_structures::matrix<double> m(5, 5, -1);
     data_holder<double> m(5, 5, -1);
+//    data_holder<double> m({{4, 5, 2, -1, -1},
+//                           {-1, 4, 4, 3, -1},
+//                           {-1, 2, -1, 5, -1 }}, -1);
+
     m.set(0, 0, 4);   m.set(0, 1, 5);   m.set(0, 2, 2);  m.set(0, 3, -1);  m.set(0, 4, -1);
     m.set(1, 0, -1);  m.set(1, 1, 4);   m.set(1, 2, 4);  m.set(1, 3, 3);   m.set(1, 4, -1);
     m.set(2, 0, -1);  m.set(2, 1, 2);   m.set(2, 2, -1); m.set(2, 3, 5);  m.set(2, 4, -1);
@@ -38,7 +41,10 @@ int basic_example() {
 
     std::cout << m << std::endl;
 
-    svd_t::config_t c(&m, 4, 0.1);
+
+    ds::simple_ds<double, dst::matrix> ds(&m);
+
+    svd_t::config_t c(&m, 4, 0.01);
 
     svd_t svd(c);
     svd.learn();
@@ -55,7 +61,7 @@ int basic_example() {
         std::cout << std::endl;
     }
 
-    auto recommendations = svd.recommend(4, 5);
+    auto recommendations = svd.recommend(4, 2);
 
     std::cout << "[";
     for (const auto& v : recommendations) {

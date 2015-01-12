@@ -1,7 +1,7 @@
 #include "mexception.h"
 
 namespace rsys {
-    namespace ds {
+    namespace dst {
 
         mexception::mexception() throw() {
 
