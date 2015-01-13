@@ -14,6 +14,7 @@ namespace rsys {
         typedef typename traits<_IT>::raw_pointer raw_pointer;
         typedef typename traits<_IT>::const_pointer const_pointer;
 
+        base_iterator();
         base_iterator(const base_iterator<raw_pointer, FRIEND>& other);
         base_iterator(const base_iterator<const_pointer, FRIEND>& other);
         base_iterator& operator =(const base_iterator& other);
@@ -42,6 +43,11 @@ namespace rsys {
 
     /***************** base_iterator implementation *****************/
     template<typename _IT, typename FRIEND>
+    base_iterator<_IT,FRIEND>::base_iterator()
+            : _data(nullptr) {
+    }
+
+    template<typename _IT, typename FRIEND>
     base_iterator<_IT,FRIEND>::base_iterator(pointer data)
             : _data(data) {
     }
@@ -62,7 +68,9 @@ namespace rsys {
     template<typename _IT, typename FRIEND>
     inline
     base_iterator<_IT,FRIEND>& base_iterator<_IT,FRIEND>::operator =(const base_iterator<_IT,FRIEND>& other) {
-        _data = other._data;
+        if (this != &other) {
+            _data = other._data;
+        }
         return *this;
     }
 

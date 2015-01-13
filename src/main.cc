@@ -13,7 +13,7 @@
 
 using namespace rsys;
 
-template <typename T> using data_holder = dst::matrix<T>;
+template <typename T> using data_holder = dst::sparse_matrix<T>;
 typedef svd<double, data_holder> svd_t;
 
 
@@ -41,6 +41,14 @@ int basic_example() {
 
     std::cout << m << std::endl;
 
+    std::cout << std::endl;
+    for (auto& row : m) {
+        for (auto& val: row) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
+
 
 //    for (const auto& row : m) {
 //        for (const auto& val : row) {
@@ -50,12 +58,12 @@ int basic_example() {
 //    }
 
 
-    ds::simple_ds<double, dst::matrix> ds(&m);
+    ds::simple_ds<double, data_holder> ds(&m);
 
     svd_t::config_t c(&m, 4, 0.01);
 
     svd_t svd(c);
-    svd.learn();
+//    svd.learn();
 
     std::cout << "Finished" << std::endl;
 
