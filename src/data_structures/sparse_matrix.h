@@ -26,6 +26,8 @@ namespace rsys {
                 typedef typename traits<V>::reference reference;
                 typedef typename traits<V>::pointer pointer;
 
+                __hashmap_base_iterator(ITER data) : _data(data) {}
+
                 reference operator *() {
                     return _data->second;
                 }
@@ -40,29 +42,31 @@ namespace rsys {
             /**
             *  __hashmap_base_iterator specialization with std::shared_ptr as a value_type
             */
-//            template <typename K, typename V, typename ITER>
-//            class __hashmap_base_iterator<K, std::shared_ptr<V>, ITER> {
-//            public:
-//
-//                typedef typename traits<V>::value_type value_type;
-//                typedef typename traits<V>::reference reference;
-//                typedef typename traits<V>::pointer pointer;
-//
-//                reference operator *() {
-//                    return *_data->second;
-//                }
-//                pointer operator ->() {
-//                    return &(*_data->second);
-//                }
-//
-//            protected:
-//                ITER _data;
-//            };
+            template <typename K, typename V, typename ITER>
+            class __hashmap_base_iterator<K, std::shared_ptr<V>, ITER> {
+            public:
 
-//            template <typename K, typename V, typename ITER>
-//            struct my_base {
-//                typedef __hashmap_base_iterator<K, V, ITER> type;
-//            };
+                typedef typename traits<V>::value_type value_type;
+                typedef typename traits<V>::reference reference;
+                typedef typename traits<V>::pointer pointer;
+
+                __hashmap_base_iterator(ITER data) : _data(data) {}
+
+                reference operator *() {
+                    return *_data->second;
+                }
+                pointer operator ->() {
+                    return &(*_data->second);
+                }
+
+            protected:
+                ITER _data;
+            };
+
+            template <typename K, typename V, typename ITER>
+            struct my_base {
+                typedef __hashmap_base_iterator<K, V, ITER> type;
+            };
 //
 //            template <typename K, typename V, typename ITER>
 //            using my_base_using = typename my_base<K, V, ITER>::type;
@@ -70,14 +74,16 @@ namespace rsys {
 
             template <typename K, typename V, typename ITER>
             class hashmap_base_iterator : public __hashmap_base_iterator<K, V, ITER> {
+                using __hashmap_base_iterator<K,V,ITER>::_data;
             public:
 
                 typedef typename traits<V>::value_type value_type;
                 typedef typename traits<V>::reference reference;
                 typedef typename traits<V>::pointer pointer;
 
-                explicit hashmap_base_iterator(ITER data = nullptr) : _data(data) { }
-                hashmap_base_iterator(const hashmap_base_iterator& other) : _data(other._data) { }
+                explicit hashmap_base_iterator(ITER data = nullptr) : __hashmap_base_iterator<K,V,ITER>(data) { }
+                hashmap_base_iterator(const hashmap_base_iterator& other) : __hashmap_base_iterator<K,V,ITER>(other._data) { }
+
                 hashmap_base_iterator& operator =(const hashmap_base_iterator& other) {
                     if (this != &other) {
                         this->_data = other._data;

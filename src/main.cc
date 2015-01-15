@@ -42,12 +42,12 @@ int basic_example() {
     std::cout << m << std::endl;
 
     std::cout << std::endl;
-    for (auto& row : m) {
-        for (auto& val: row) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-    }
+//    for (auto& row : m) {
+//        for (auto& val: row) {
+//            std::cout << val << " ";
+//        }
+//        std::cout << std::endl;
+//    }
 
 
 //    for (const auto& row : m) {
@@ -63,7 +63,7 @@ int basic_example() {
     svd_t::config_t c(&m, 4, 0.01);
 
     svd_t svd(c);
-//    svd.learn();
+    svd.learn();
 
     std::cout << "Finished" << std::endl;
 
