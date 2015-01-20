@@ -14,6 +14,7 @@
 using namespace core;
 
 template <typename T> using data_holder = dst::matrix<T>;
+typedef core::rsys<double, data_holder, svd> rsys_t;
 typedef svd<double, data_holder> svd_t;
 
 
@@ -28,7 +29,7 @@ int main() {
 }
 
 int basic_example() {
-    data_holder<double> m(5, 5, -1);
+    rsys_t::datasource_t m(5, 5, -1);
 //    data_holder<double> m({{4, 5, 2, -1, -1},
 //                           {-1, 4, 4, 3, -1},
 //                           {-1, 2, -1, 5, -1 }}, -1);
@@ -42,31 +43,24 @@ int basic_example() {
     std::cout << m << std::endl;
 
     std::cout << std::endl;
-    for (auto& row : m) {
-        for (auto& val: row) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-    }
-
-
-//    for (const auto& row : m) {
-//        for (const auto& val : row) {
+//    for (auto& row : m) {
+//        for (auto& val: row) {
 //            std::cout << val << " ";
 //        }
 //        std::cout << std::endl;
 //    }
 
-    svd_t::config_t c(&m, 4, 0.01);
 
 
-    typedef core::rsys<double, matrix, svd> rsys_t;
+
+    rsys_t::config_t c(&m, 4, 0.01);
 
     rsys_t r(c);
+    r.learn();
 
 
     svd_t svd(c);
-    svd.learn();
+//    svd.learn();
 
     std::cout << "Finished" << std::endl;
 

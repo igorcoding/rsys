@@ -34,6 +34,7 @@ namespace core {
             ~mvector();
 
             void set_new_data(const T* vec, size_t size);
+            void set_new_data_own(T* vec, size_t size);
 
             template<typename Y> mvector<Y> cast();
 
@@ -215,6 +216,14 @@ namespace core {
             _size = size;
             _vec = new T[_size];
             std::memcpy(_vec, vec, _size * sizeof(T));
+        }
+
+        template<typename T>
+        void mvector<T>::set_new_data_own(T* vec, size_t size) {
+            clean_up();
+
+            _size = size;
+            _vec = vec;
         }
 
         template<typename T>

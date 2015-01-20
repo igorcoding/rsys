@@ -87,7 +87,7 @@ namespace core {
                 for (size_t j = 0; j < _cols; ++j) {
                     new_cols[j] = _def_value;
                 }
-                _m[i].set_new_data(new_cols, _cols);
+                _m[i].set_new_data_own(new_cols, _cols);
             }
         }
 
@@ -110,7 +110,7 @@ namespace core {
                 for (it2 = it1->begin(); it2 != it1->end(); ++it2, ++j) {
                     new_cols[j] = *it2;
 
-                    _m[i].set_new_data(new_cols, _cols);
+                    _m[i].set_new_data_own(new_cols, _cols);
 
                     if (_m[i][j] != _def_value) {
                         ++_total;
@@ -132,7 +132,7 @@ namespace core {
                 for (size_t j = 0; j < _cols; ++j) {
                     new_cols[j] = other._m[i].at(j, false);
                 }
-                _m[i].set_new_data(new_cols, _cols);
+                _m[i].set_new_data_own(new_cols, _cols);
             }
         }
 
@@ -171,7 +171,7 @@ namespace core {
                     for (size_t j = 0; j < _cols; ++j) {
                         new_cols[j] = other._m[i].at(j, false);
                     }
-                    _m[i].set_new_data(new_cols, _cols);
+                    _m[i].set_new_data_own(new_cols, _cols);
                 }
             }
             return *this;

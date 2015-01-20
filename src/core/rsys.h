@@ -8,7 +8,7 @@ namespace core {
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
     class rsys {
     public:
-        typedef DS<T> dataset_t;
+        typedef DS<T> datasource_t;
         typedef MODEL<T,DS> model_t;
         typedef typename model_t::config_t config_t;
 
