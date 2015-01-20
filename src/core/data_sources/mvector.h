@@ -13,7 +13,7 @@
 #include <iostream>
 
 namespace core {
-    namespace dst {
+    namespace ds {
 
         template<typename T>
         class mvector {

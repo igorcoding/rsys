@@ -5,7 +5,7 @@
 #include <string>
 
 namespace core {
-    namespace dst {
+    namespace ds {
 
         class mexception : public std::exception {
         public:

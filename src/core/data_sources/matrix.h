@@ -8,7 +8,7 @@
 #include <assert.h>
 
 namespace core {
-    namespace dst {
+    namespace ds {
 
         template<typename T>
         class matrix : public imatrix<T> {

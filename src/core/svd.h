@@ -1,8 +1,8 @@
 #ifndef SVD_H
 #define SVD_H
 
-#include "../data_structures/imatrix.h"
-#include "../data_structures/sparse_matrix.h"
+#include "data_sources/imatrix.h"
+#include "data_sources/sparse_matrix.h"
 #include "item_score.h"
 #include "config/svd_config.h"
 
@@ -11,7 +11,7 @@
 #include <iostream>
 #include <queue>
 
-using namespace core::dst;
+using namespace core::ds;
 
 namespace core {
 

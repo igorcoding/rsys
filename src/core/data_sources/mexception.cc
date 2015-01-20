@@ -1,7 +1,7 @@
 #include "mexception.h"
 
 namespace core {
-    namespace dst {
+    namespace ds {
 
         mexception::mexception() throw() {
 

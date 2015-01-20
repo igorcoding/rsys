@@ -4,16 +4,15 @@
 #include <sstream>
 #include <iomanip>
 
-#include "data_structures/mvector.h"
-#include "data_structures/sparse_matrix.h"
-#include "data_structures/matrix.h"
+#include "core/data_sources/mvector.h"
+#include "core/data_sources/sparse_matrix.h"
+#include "core/data_sources/matrix.h"
 #include "core/rsys.h"
 #include "core/svd.h"
-#include "data_sources/simple_ds.h"
 
 using namespace core;
 
-template <typename T> using data_holder = dst::matrix<T>;
+template <typename T> using data_holder = ds::matrix<T>;
 typedef core::rsys<double, data_holder, svd> rsys_t;
 typedef svd<double, data_holder> svd_t;
 
@@ -56,11 +55,11 @@ int basic_example() {
     rsys_t::config_t c(&m, 4, 0.01);
 
     rsys_t r(c);
-    r.learn();
+//    r.learn();
 
 
     svd_t svd(c);
-//    svd.learn();
+    svd.learn();
 
     std::cout << "Finished" << std::endl;
 

@@ -2,14 +2,15 @@
 #define IMATRIX_H
 
 #include "mvector.h"
+#include "data_source.h"
 
 #include <vector>
 
 namespace core {
-    namespace dst {
+    namespace ds {
 
         template<typename T>
-        class imatrix {
+        class imatrix : public data_source<T> {
         public:
             virtual ~imatrix() {}
 

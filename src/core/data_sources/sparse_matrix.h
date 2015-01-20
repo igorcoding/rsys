@@ -8,7 +8,7 @@
 #include <memory>
 
 namespace core {
-    namespace dst {
+    namespace ds {
         template<typename K, typename V> using hashmap = std::unordered_map<K, V>;
         template<typename K, typename V> using hashmap_p = std::shared_ptr<hashmap<K, V>>;
 
