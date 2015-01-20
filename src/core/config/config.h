@@ -1,7 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-namespace rsys {
+#include <cstdlib>
+
+namespace core {
     template <typename M>
     class config {
     public:
@@ -9,6 +11,6 @@ namespace rsys {
     private:
 
     };
-}  // namespace rsys
+}  // namespace core
 
 #endif // CONFIG_H

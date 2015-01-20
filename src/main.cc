@@ -11,9 +11,9 @@
 #include "core/svd.h"
 #include "data_sources/simple_ds.h"
 
-using namespace rsys;
+using namespace core;
 
-template <typename T> using data_holder = dst::sparse_matrix<T>;
+template <typename T> using data_holder = dst::matrix<T>;
 typedef svd<double, data_holder> svd_t;
 
 
@@ -42,12 +42,12 @@ int basic_example() {
     std::cout << m << std::endl;
 
     std::cout << std::endl;
-//    for (auto& row : m) {
-//        for (auto& val: row) {
-//            std::cout << val << " ";
-//        }
-//        std::cout << std::endl;
-//    }
+    for (auto& row : m) {
+        for (auto& val: row) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
 
 
 //    for (const auto& row : m) {
@@ -57,10 +57,13 @@ int basic_example() {
 //        std::cout << std::endl;
 //    }
 
-
-    ds::simple_ds<double, data_holder> ds(&m);
-
     svd_t::config_t c(&m, 4, 0.01);
+
+
+    typedef core::rsys<double, matrix, svd> rsys_t;
+
+    rsys_t r(c);
+
 
     svd_t svd(c);
     svd.learn();
@@ -99,7 +102,7 @@ int to_int(const std::string& s) {
 int movielens_example() {
     data_holder<double> m(6040, 3952, -1);
 
-    std::string prefix = "/home/igor/Projects/cpp/rsys/datasets/ml-1m/";
+    std::string prefix = "/home/igor/Projects/cpp/core/datasets/ml-1m/";
     std::string filename = prefix + "ratings.dat";
     std::fstream fs;
     fs.open(filename, std::ios_base::in);

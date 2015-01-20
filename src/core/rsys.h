@@ -3,39 +3,44 @@
 
 #include "config/config.h"
 
-namespace rsys {
+namespace core {
 
-    template<typename M>
+    template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
     class rsys {
     public:
-        rsys(const config<M>& conf);
+        typedef DS<T> dataset_t;
+        typedef MODEL<T,DS> model_t;
+        typedef typename model_t::config_t config_t;
+
+
+        rsys(const config_t& conf);
         ~rsys();
 
-        const M& get_model() const { return *_model; }
-        config<M>& get_config() { return _model->get_config(); }
+        const model_t& get_model() const { return *_model; }
+        config_t& get_config() { return _model->get_config(); }
 
         void learn() noexcept;
 
     private:
-        M* _model;
+        model_t* _model;
     };
 
-    template<typename M>
-    rsys<M>::rsys(const config<M>& conf)
-            : _model(new M(conf)) {
+    template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
+    rsys<T,DS,MODEL>::rsys(const config_t& conf)
+            : _model(new model_t(conf)) {
 
     }
 
-    template<typename M>
-    rsys<M>::~rsys() {
+    template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
+    rsys<T,DS,MODEL>::~rsys() {
         delete _model;
     }
 
-    template<typename M>
-    void rsys<M>::learn() noexcept {
+    template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
+    void rsys<T,DS,MODEL>::learn() noexcept {
         _model->learn();
     }
-} // namespace rsys
+} // namespace core
 
 #endif // RSYS_H
 

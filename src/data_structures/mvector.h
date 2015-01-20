@@ -12,7 +12,7 @@
 #include <ostream>
 #include <iostream>
 
-namespace rsys {
+namespace core {
     namespace dst {
 
         template<typename T>
@@ -438,6 +438,6 @@ namespace rsys {
         }
 
     } // namespace ds
-} // namespace rsys
+} // namespace core
 
 #endif // MVECTOR_H

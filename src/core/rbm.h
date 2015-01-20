@@ -1,7 +1,7 @@
 #ifndef RBM_H
 #define RBM_H
 
-namespace rsys {
+namespace core {
 
     template<typename T>
     class rbm {
@@ -12,6 +12,6 @@ namespace rsys {
 
     };
 
-} // namespace rsys
+} // namespace core
 
 #endif // RBM_H

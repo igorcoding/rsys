@@ -1,7 +1,7 @@
 #ifndef SVD_H
 #define SVD_H
 
-#include "../data_structures/matrix.h"
+#include "../data_structures/imatrix.h"
 #include "../data_structures/sparse_matrix.h"
 #include "item_score.h"
 #include "config/svd_config.h"
@@ -11,14 +11,14 @@
 #include <iostream>
 #include <queue>
 
-using namespace rsys::dst;
+using namespace core::dst;
 
-namespace rsys {
+namespace core {
 
-    template<typename T = float, template<class> class D = sparse_matrix>
+    template<typename T = float, template<class> class DS = sparse_matrix>
     class svd {
     public:
-        typedef config<svd<T, D>> config_t;
+        typedef config<svd<T, DS>> config_t;
         typedef item_score<T> item_score_t;
 
         svd(const config_t& conf);
@@ -43,11 +43,11 @@ namespace rsys {
         mvector<T> _bi;
         double _mu;
 
-        const D<T>& _ratings;
+        const DS<T>& _ratings;
     };
 
-    template<typename T, template<class> class D>
-    svd<T, D>::svd(const config_t& conf)
+    template<typename T, template<class> class DS>
+    svd<T, DS>::svd(const config_t& conf)
             : _config(conf),
               _users_count(_config.ratings().rows()),
               _items_count(_config.ratings().cols()),
@@ -75,19 +75,19 @@ namespace rsys {
         }
     }
 
-    template<typename T, template<class> class D>
-    T svd<T, D>::predict(size_t user_id, size_t item_id) noexcept {
+    template<typename T, template<class> class DS>
+    T svd<T, DS>::predict(size_t user_id, size_t item_id) noexcept {
         return _pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu;
     }
 
-    template<typename T, template<class> class D>
+    template<typename T, template<class> class DS>
     inline
-    T svd<T, D>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
+    T svd<T, DS>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
         return user.dot(item) + _bu[user_id] + _bi[item_id] + _mu;
     }
 
-    template<typename T, template<class> class D>
-    void svd<T, D>::learn() noexcept {
+    template<typename T, template<class> class DS>
+    void svd<T, DS>::learn() noexcept {
 
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
@@ -102,16 +102,19 @@ namespace rsys {
 
         while (fabs(rmse - old_rmse) > eps) {
             std::cout << "Iteration #" << iteration++ << std::endl;
-
             old_rmse = rmse;
+
+            auto user_it = _ratings.begin();
+
             for (size_t user_id = 0; user_id < _pU.rows(); ++user_id) {
                 auto& pu = _pU[user_id];
-                auto items_ids_by_user = _ratings.cols(user_id);
 
-                for (const auto& item_id : items_ids_by_user) {
+                auto items_it = user_it->begin();
+                for (size_t item_id = 0; items_it != user_it->end(); ++item_id, ++items_it) {
                     auto& qi = _pI[item_id];
-                    const auto& r = _ratings.at(user_id, item_id);
-                    if (r != _ratings.get_def_value()) {
+                    const auto& r = *items_it; //_ratings.at(user_id, item_id);
+//                    if (r != _ratings.get_def_value()) {
+                    if (r != -1) {
                         auto e = predict(pu, qi, user_id, item_id) - r;
                         rmse += e * e;
 
@@ -155,8 +158,8 @@ namespace rsys {
 
     }
 
-    template<typename T, template<class> class D>
-    std::deque<typename svd<T, D>::item_score_t> svd<T, D>::recommend(size_t user_id, int k) noexcept {
+    template<typename T, template<class> class DS>
+    std::deque<typename svd<T, DS>::item_score_t> svd<T, DS>::recommend(size_t user_id, int k) noexcept {
         auto comp = [](const item_score_t& a, const item_score_t& b) {
             return a.score > b.score;
         };
@@ -188,7 +191,7 @@ namespace rsys {
     }
 
 
-} // namespace rsys
+} // namespace core
 
 #endif // SVD_H
 

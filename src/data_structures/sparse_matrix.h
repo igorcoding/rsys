@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <memory>
 
-namespace rsys {
+namespace core {
     namespace dst {
         template<typename K, typename V> using hashmap = std::unordered_map<K, V>;
         template<typename K, typename V> using hashmap_p = std::shared_ptr<hashmap<K, V>>;
@@ -192,9 +192,6 @@ namespace rsys {
             size_t cols() const { return _cols; }
             size_t total() const { return _total; }
 
-            std::vector<size_t> rows(size_t col) const;
-            std::vector<size_t> cols(size_t row) const;
-
             const T& get_def_value() const { return _def_value; }
 
             const T& at(size_t row, size_t col) const;
@@ -228,40 +225,6 @@ namespace rsys {
             if (rows <= 0 || cols <= 0) {
                 throw mexception("Number of rows and columns should be positive");
             }
-        }
-
-        template<typename T>
-        std::vector<size_t> sparse_matrix<T>::rows(size_t col) const {
-            std::vector<size_t> rows;
-//            hashmap_p<size_t, T*> col_data;
-//            try {
-//                col_data = _col_index.at(col);
-//            } catch (std::out_of_range&) {
-//                return rows;
-//            }
-//
-//            rows.reserve(col_data->size());
-//            for (auto& kv : *col_data) {
-//                rows.push_back(kv.first);
-//            }
-            return rows;
-        }
-
-        template<typename T>
-        std::vector<size_t> sparse_matrix<T>::cols(size_t row) const {
-            std::vector<size_t> cols;
-            row_impl_p row_data;
-            try {
-                row_data = _row_index.at(row);
-            } catch (std::out_of_range&) {
-                return cols;
-            }
-
-            cols.reserve(row_data->_row_contents.size());
-            for (auto& kv : row_data->_row_contents) {
-                cols.push_back(kv.first);
-            }
-            return cols;
         }
 
         template<typename T>
@@ -332,31 +295,41 @@ namespace rsys {
 
         template<typename T>
         sparse_matrix<T>& sparse_matrix<T>::operator *=(const T& rhs) {
-            for (size_t i = 0; i < _rows; ++i) {
-                auto c = cols(i);
-                for (size_t j = 0; j < c.size(); ++j) {
-                    const auto& val = this->at(i, j);
-                    if (val != _def_value) { // contains
-                        auto new_value = val * rhs;
-                        this->set(i, j, new_value);
-                    }
+            for (auto& row : *this) {
+                for (auto& val: row) {
+                    val *= rhs;
                 }
             }
+//            for (size_t i = 0; i < _rows; ++i) {
+//                auto c = cols(i);
+//                for (size_t j = 0; j < c.size(); ++j) {
+//                    const auto& val = this->at(i, j);
+//                    if (val != _def_value) { // contains
+//                        auto new_value = val * rhs;
+//                        this->set(i, j, new_value);
+//                    }
+//                }
+//            }
             return *this;
         }
 
         template<typename T>
         sparse_matrix<T>& sparse_matrix<T>::operator /=(const T& rhs) {
-            for (size_t i = 0; i < _rows; ++i) {
-                auto c = cols(i);
-                for (size_t j = 0; j < c.size(); ++j) {
-                    const auto& val = this->at(i, j);
-                    if (val != _def_value) { // contains
-                        auto new_value = val / rhs;
-                        this->set(i, j, new_value);
-                    }
+            for (auto& row : *this) {
+                for (auto& val: row) {
+                    val *= rhs;
                 }
             }
+//            for (size_t i = 0; i < _rows; ++i) {
+//                auto c = cols(i);
+//                for (size_t j = 0; j < c.size(); ++j) {
+//                    const auto& val = this->at(i, j);
+//                    if (val != _def_value) { // contains
+//                        auto new_value = val / rhs;
+//                        this->set(i, j, new_value);
+//                    }
+//                }
+//            }
             return *this;
         }
 
@@ -379,7 +352,7 @@ namespace rsys {
 
 
     } // namespace ds
-} // namespace rsys
+} // namespace core
 
 #endif // SPARSE_H
 

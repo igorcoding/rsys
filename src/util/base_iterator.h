@@ -4,7 +4,7 @@
 #include "traits.h"
 
 
-namespace rsys {
+namespace core {
     template<typename _IT, typename FRIEND>
     class base_iterator {
     public:

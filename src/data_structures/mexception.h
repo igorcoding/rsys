@@ -4,7 +4,7 @@
 #include <exception>
 #include <string>
 
-namespace rsys {
+namespace core {
     namespace dst {
 
         class mexception : public std::exception {

@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 
-namespace rsys {
+namespace core {
     namespace ds {
         template <typename T>
         class data_source {

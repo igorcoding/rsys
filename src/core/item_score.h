@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <ostream>
 
-namespace rsys {
+namespace core {
 
     template<typename T>
     struct item_score {

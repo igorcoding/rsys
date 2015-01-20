@@ -3,43 +3,45 @@
 
 #include "data_source.h"
 #include "../data_structures/imatrix.h"
+#include "../data_structures/sparse_matrix.h"
+#include "../data_structures/matrix.h"
 
-using namespace rsys::dst;
+using namespace core::dst;
 
-namespace rsys {
+namespace core {
     namespace ds {
         template <typename T, template <class> class M>
         class simple_ds : public data_source<T> {
-
-            template <typename IT>
-            class base_iterator {
-
-            };
-
         public:
             typedef typename M<T>::iterator iterator;
             typedef typename M<T>::const_iterator const_iterator;
 
-            simple_ds(const M<T>* matrix);
+            simple_ds(M<T>* matrix);
             virtual ~simple_ds();
 
             virtual size_t rows() const;
             virtual size_t cols() const;
 
-            virtual iterator begin() noexcept {};
-            virtual const_iterator begin() const noexcept {};
-            virtual iterator end() noexcept {};
-            virtual const_iterator end() const noexcept {};
-            virtual const_iterator cbegin() const noexcept {};
-            virtual const_iterator cend() const noexcept {};
+            virtual iterator begin() noexcept { return _matrix->begin(); };
+            virtual const_iterator begin() const noexcept { return _matrix->cbegin(); };
+            virtual iterator end() noexcept { return _matrix->end(); };
+            virtual const_iterator end() const noexcept { return _matrix->cend(); };
+            virtual const_iterator cbegin() const noexcept { return _matrix->cbegin(); };
+            virtual const_iterator cend() const noexcept { return _matrix->cbegin(); };
 
         private:
-            const M<T>* _matrix;
+            M<T>* _matrix;
         };
+
+        template <typename T>
+        using simple_ds_sparse = simple_ds<T, sparse_matrix>;
+
+        template <typename T>
+        using simple_ds_matrix = simple_ds<T, matrix>;
 
 
         template <typename T, template <class> class M>
-        simple_ds<T,M>::simple_ds(const M<T>* matrix)
+        simple_ds<T,M>::simple_ds(M<T>* matrix)
                 : _matrix(matrix) {
 
         }

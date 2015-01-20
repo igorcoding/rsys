@@ -7,7 +7,7 @@
 
 #include <assert.h>
 
-namespace rsys {
+namespace core {
     namespace dst {
 
         template<typename T>
@@ -34,9 +34,6 @@ namespace rsys {
             const T& get_def_value() const { return _def_value; }
 
             void set_default_value(const T& def_value);
-
-            std::vector<size_t> rows(size_t col) const;
-            std::vector<size_t> cols(size_t row) const;
 
             mvector<T>& operator [](int i);
             const mvector<T>& operator [](int i) const;
@@ -208,30 +205,6 @@ namespace rsys {
         template<typename T>
         void matrix<T>::set_default_value(const T& def_value) {
             _def_value = def_value;
-        }
-
-        template<typename T>
-        std::vector<size_t> matrix<T>::rows(size_t col) const {
-            std::vector<size_t> rows;
-            rows.reserve(_rows);
-            for (size_t i = 0; i < _rows; ++i) {
-                if (_m[i][col] != _def_value) {
-                    rows.push_back(i);
-                }
-            }
-            return rows;
-        }
-
-        template<typename T>
-        std::vector<size_t> matrix<T>::cols(size_t row) const {
-            std::vector<size_t> cols;
-            cols.reserve(_cols);
-            for (size_t j = 0; j < _rows; ++j) {
-                if (_m[row][j] != _def_value) {
-                    cols.push_back(j);
-                }
-            }
-            return cols;
         }
 
         template<typename T>
@@ -447,7 +420,7 @@ namespace rsys {
         }
 
     } // namespace ds
-} // namespace rsys
+} // namespace core
 
 #endif // MATRIX_H
 
