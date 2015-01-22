@@ -1,8 +1,9 @@
 #ifndef SVD_H
 #define SVD_H
 
+#include "model.h"
 #include "data_sources/imatrix.h"
-#include "data_sources/sparse_matrix.h"
+#include "data_sources/matrix.h"
 #include "item_score.h"
 #include "config/svd_config.h"
 
@@ -15,8 +16,8 @@ using namespace core::ds;
 
 namespace core {
 
-    template<typename T = float, template<class> class DS = sparse_matrix>
-    class svd {
+    template<typename T = float, template<class> class DS = matrix>
+    class svd : public model<T> {
     public:
         typedef config<svd<T, DS>> config_t;
         typedef item_score<T> item_score_t;

@@ -9,6 +9,7 @@
 #include "core/data_sources/matrix.h"
 #include "core/rsys.h"
 #include "core/svd.h"
+#include "core/ensemblers/ensembler.h"
 
 using namespace core;
 
@@ -49,16 +50,16 @@ int basic_example() {
 //        std::cout << std::endl;
 //    }
 
-
-
-
     rsys_t::config_t c(&m, 4, 0.01);
 
-    rsys_t r(c);
-//    r.learn();
-
+//    rsys_t r(c);
 
     svd_t svd(c);
+
+    core::ensembler<double, mean_pred<double>> comb;
+    comb.add_model(&svd);
+    comb.learn();
+
     svd.learn();
 
     std::cout << "Finished" << std::endl;
@@ -73,14 +74,14 @@ int basic_example() {
         std::cout << std::endl;
     }
 
-    auto recommendations = svd.recommend(4, 2);
-
-    std::cout << "[";
-    for (const auto& v : recommendations) {
-        std::cout << "\t" << v << ",\n";
-    }
-    std::cout << "]";
-    std::cout << std::endl;
+//    auto recommendations = comb.recommend(4, 2);
+//
+//    std::cout << "[";
+//    for (const auto& v : recommendations) {
+//        std::cout << "\t" << v << ",\n";
+//    }
+//    std::cout << "]";
+//    std::cout << std::endl;
 
     return 0;
 }

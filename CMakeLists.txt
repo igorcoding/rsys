@@ -8,6 +8,7 @@ set(SRC_CORE "src/core")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 set(HEADER_FILES ${SRC_CORE}/rsys.h
+                 ${SRC_CORE}/model.h
                  ${SRC_CORE}/svd.h
                  ${SRC_CORE}/rbm.h
                  ${SRC_CORE}/item_score.h
@@ -15,8 +16,9 @@ set(HEADER_FILES ${SRC_CORE}/rsys.h
                  ${SRC_CORE}/config/config.h
                  ${SRC_CORE}/config/svd_config.h
 
+                 ${SRC_CORE}/ensemblers/ensembler.h
+
                  ${SRC_CORE}/data_sources/data_source.h
-                 ${SRC_CORE}/data_sources/simple_ds.h
                  ${SRC_CORE}/data_sources/mvector.h
                  ${SRC_CORE}/data_sources/imatrix.h
                  ${SRC_CORE}/data_sources/matrix.h
