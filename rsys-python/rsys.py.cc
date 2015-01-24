@@ -1,5 +1,6 @@
 #include "../src/rsys/svd.h"
 #include "../src/rsys/data_sources/matrix.h"
+#include "../src/rsys/data_sources/mvector.h"
 
 
 
@@ -9,6 +10,7 @@ using namespace boost::python;
 
 template <typename T>
 void export_data_sources() {
+    using namespace rsys;
 
     // make "from mypackage.Util import <whatever>" work
     object data_sources_module(handle<>(borrowed(PyImport_AddModule("rsys.data_sources"))));
@@ -17,32 +19,32 @@ void export_data_sources() {
     // set the current scope to the new sub-module
     scope data_sources_scope = data_sources_module;
 
-//    typedef math::mvector<T> t_mvector;
+    typedef ds::mvector<T> t_mvector;
 
-//    class_<t_mvector>("mvector", init<size_t>())
-//            .add_property("size", &t_mvector::size)
-//            .def("at", &t_mvector::at, return_value_policy<copy_const_reference>(),
-//                       (arg("index")))
-//            .def("set", &t_mvector::set, (arg("index"), arg("obj")))
-//            .def(self += self)
-//            .def(self += U())
-//            .def(self + self)
-//            .def(self + U())
-//            .def(U() + self)
-//            .def(self -= self)
-//            .def(self -= U())
-//            .def(self - U())
-//            .def(self - self)
-//            .def(self *= U())
-//            .def(self /= U())
-//            .def(self * U())
-//            .def(U() * self)
-//            .def(self / U())
-//            .def("dot", &t_mvector::dot, (arg("other")))
-//            .def("normalize", &t_mvector::normalize)
-//            .def("length", &t_mvector::length);
+    const T& (t_mvector::*vec_at)(size_t) const = &t_mvector::at;
 
-    using namespace rsys;
+    class_<t_mvector>("mvector", init<size_t>())
+            .add_property("size", &t_mvector::size)
+            .def("at", vec_at, return_value_policy<copy_const_reference>(), (arg("index")))
+           .def("set", &t_mvector::set, (arg("index"), arg("obj")))
+           .def(self += self)
+           .def(self += T())
+           .def(self + self)
+           .def(self + T())
+           .def(T() + self)
+           .def(self -= self)
+           .def(self -= T())
+           .def(self - T())
+           .def(self - self)
+           .def(self *= T())
+           .def(self /= T())
+           .def(self * T())
+           .def(T() * self)
+           .def(self / T())
+            .def("dot", &t_mvector::dot, (arg("other")))
+            .def("normalize", &t_mvector::normalize)
+            .def("length", &t_mvector::length);
+
     typedef ds::matrix<T> t_matrix;
     const T& (t_matrix::*at1)(size_t, size_t) const = &t_matrix::at;
     void (t_matrix::*set1)(size_t, size_t, const T&) = &t_matrix::set;
@@ -83,7 +85,7 @@ void export_rsys() {
 
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
 
-    class_<t_svd>("SVD", init<config_t>((arg("config"))))
+    class_<t_svd>("SVD", init<config_t>())
            .def("learn", &t_svd::learn)
            .def("predict", predict1, (arg("user_id"), arg("item_id")));
 }

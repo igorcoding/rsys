@@ -53,6 +53,8 @@ int basic_example() {
 
     rsys_t::config_t c(m, 4, 0.005);
 
+    rsys_t::config_t c2(c);
+
     rsys_t r(c);
 
 //    svd_t svd(c);

@@ -126,7 +126,7 @@ namespace rsys {
                   _total(other._total),
                   _def_value(other._def_value),
                   _m(new mvector<T>[_rows]) {
-            std::cout << "matrix copy" << std::endl;
+            std::cout << "matrix copy" << other._rows << other._cols << _rows << _cols << std::endl;
             for (size_t i = 0; i < _rows; ++i) {
                 T* new_cols = new T[_cols];
                 for (size_t j = 0; j < _cols; ++j) {

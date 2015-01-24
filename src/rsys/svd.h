@@ -60,6 +60,7 @@ namespace rsys {
               _mu(0),
 
               _ratings(_config.ratings()) {
+        std::cout << "Constructing svd" << std::endl;
         srand(static_cast<unsigned int>(time(nullptr)));
         double rand_max = static_cast <double> (RAND_MAX);
 
@@ -74,6 +75,7 @@ namespace rsys {
                 _pI.set(i, j, static_cast <double> (rand()) / rand_max);
             }
         }
+        std::cout << "Constructed svd" << std::endl;
     }
 
     template<typename T, template<class> class DS>
@@ -106,15 +108,15 @@ namespace rsys {
             old_rmse = rmse;
 
             size_t total = 0;
-            auto user_it = _ratings.begin();
+            // auto user_it = _ratings.begin();
 
             for (size_t user_id = 0; user_id < _pU.rows(); ++user_id) {
                 auto& pu = _pU[user_id];
 
-                auto items_it = user_it->begin();
-                for (size_t item_id = 0; items_it != user_it->end(); ++item_id, ++items_it) {
+                // auto items_it = user_it->begin();
+                for (size_t item_id = 0; item_id < _ratings.cols(); ++item_id) {
                     auto& qi = _pI[item_id];
-                    const auto& r = *items_it; //_ratings.at(user_id, item_id);
+                    const auto& r = _ratings.at(user_id, item_id);
 //                    if (r != _ratings.get_def_value()) {
                     if (r != _ratings.get_def_value()) {
                         auto e = predict(pu, qi, user_id, item_id) - r;
@@ -176,7 +178,7 @@ namespace rsys {
                 auto score = predict(user_id, i);
                 item_score_t pair(i, score);
 
-                if (k > 0 && heap.size() == k) {
+                if (k > 0 && heap.size() == static_cast<size_t>(k)) {
                     heap.pop();
                 }
                 heap.push(pair);

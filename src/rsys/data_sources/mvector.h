@@ -51,7 +51,8 @@ namespace rsys {
             const T* data() const { return _vec; }
 
             T& at(size_t i, bool check = true);
-            const T& at(size_t i, bool check = true) const;
+            const T& at(size_t i) const;
+            const T& at(size_t i, bool check) const;
             void set(size_t i, const T& obj);
 
             T& operator [](size_t i);
@@ -238,6 +239,12 @@ namespace rsys {
             if (check)
                 check_index(i);
             return _vec[i];
+        }
+
+        template<typename T>
+        inline
+        const T& mvector<T>::at(size_t i) const {
+            return at(i, true);
         }
 
         template<typename T>
