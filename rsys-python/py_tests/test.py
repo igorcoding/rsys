@@ -1,7 +1,7 @@
 import rsys
 
 if __name__ == "__main__":
-    m = rsys.math.matrix(4, 4)
+    m = rsys.data_sources.matrix(4, 4)
     m.set(0, 0, 4)
     m.set(0, 1, 5)
     m.set(0, 2, 2)
@@ -22,8 +22,9 @@ if __name__ == "__main__":
     m.set(3, 2, -1)
     m.set(3, 3, -1)
 
-    svd = rsys.SVD(m, 6)
-    svd.learn(0.1, 0.5, 1000)
+    config = rsys.SVDConfig(m, 4)
+    svd = rsys.SVD(config)
+    # svd.learn()
 
     for i in xrange(0, m.rows):
         for j in xrange(0, m.cols):
@@ -31,7 +32,7 @@ if __name__ == "__main__":
         print
     print
 
-    for i in xrange(0, m.rows):
-        for j in xrange(0, m.cols):
-            print "%f " % svd.recommendation(i, j),
-        print
+    # for i in xrange(0, m.rows):
+    #     for j in xrange(0, m.cols):
+    #         print "%f " % svd.predict(i, j),
+    #     print

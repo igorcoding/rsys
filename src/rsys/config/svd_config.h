@@ -11,7 +11,8 @@ namespace rsys {
     template <typename T, template <class> class DS>
     class config<svd<T,DS>> {
     public:
-        config(const DS<T>* _ratings, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
+        config(const DS<T>& _ratings, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
+//        config(const DS<T>* _ratings, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
 
         config& set_ratings(const DS<T>* ratings);
         config& set_features_count(size_t features_count);
@@ -25,7 +26,7 @@ namespace rsys {
         float learning_rate() const { return _learning_rate; }
         float regularization() const { return _regularization; }
         int max_iterations() const { return _max_iterations; }
-        bool print_result() const { return _print_results; }
+        bool print_results() const { return _print_results; }
 
     private:
         const DS<T>* _ratings;
@@ -37,8 +38,8 @@ namespace rsys {
     };
 
     template <typename T, template <class> class DS>
-    config<svd<T,DS>>::config(const DS<T>* ratings, size_t features_count, float regularization, int max_iterations, bool print_results, float learning_rate)
-            : _ratings(ratings),
+    config<svd<T,DS>>::config(const DS<T>& ratings, size_t features_count, float regularization, int max_iterations, bool print_results, float learning_rate)
+            : _ratings(&ratings),
               _features_count(features_count),
               _learning_rate(learning_rate),
               _regularization(regularization),
@@ -46,6 +47,12 @@ namespace rsys {
               _print_results(print_results)
     {
     }
+//
+//    template <typename T, template <class> class DS>
+//    config<svd<T,DS>>::config(const DS<T>* ratings, size_t features_count, float regularization, int max_iterations, bool print_results, float learning_rate)
+//            : config(*ratings, features_count, regularization, max_iterations, print_results, learning_rate)
+//    {
+//    }
 
     template <typename T, template <class> class DS>
     config<svd<T,DS>>& config<svd<T,DS>>::set_ratings(const DS<T>* ratings) {

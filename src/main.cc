@@ -51,7 +51,7 @@ int basic_example() {
 //        std::cout << std::endl;
 //    }
 
-    rsys_t::config_t c(&m, 4, 0.005);
+    rsys_t::config_t c(m, 4, 0.005);
 
     rsys_t r(c);
 
@@ -127,7 +127,7 @@ int movielens_example() {
 
     std::cout << "parsed" << std::endl;
 
-    svd_t::config_t c(&m, 4, 0.1, 200, false);
+    svd_t::config_t c(m, 4, 0.1, 200, false);
     svd_t svd(c);
 
     svd.learn();

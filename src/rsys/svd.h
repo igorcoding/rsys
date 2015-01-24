@@ -92,9 +92,9 @@ namespace rsys {
 
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
-        auto print_results = _config.print_result();
+        auto print_results = _config.print_results();
 
-        size_t iteration = 1;
+        int iteration = 1;
         float rmse = 1.0;
         float old_rmse = 0.0;
         float eps = 0.00001;
@@ -116,7 +116,7 @@ namespace rsys {
                     auto& qi = _pI[item_id];
                     const auto& r = *items_it; //_ratings.at(user_id, item_id);
 //                    if (r != _ratings.get_def_value()) {
-                    if (r != -1) {
+                    if (r != _ratings.get_def_value()) {
                         auto e = predict(pu, qi, user_id, item_id) - r;
                         rmse += e * e;
 
