@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <memory>
 
-namespace core {
+namespace rsys {
     namespace ds {
         template<typename K, typename V> using hashmap = std::unordered_map<K, V>;
         template<typename K, typename V> using hashmap_p = std::shared_ptr<hashmap<K, V>>;
@@ -352,7 +352,7 @@ namespace core {
 
 
     } // namespace ds
-} // namespace core
+} // namespace recommender
 
 #endif // SPARSE_H
 

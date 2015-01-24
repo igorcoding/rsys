@@ -3,7 +3,7 @@
 
 #include "config.h"
 
-namespace core {
+namespace rsys {
 
     template <typename T, template <class> class DS>
     class svd;
@@ -84,6 +84,6 @@ namespace core {
     }
 
 
-}  // namespace core
+}  // namespace recommender
 
 #endif // SVD_CONFIG_H

@@ -12,9 +12,9 @@
 #include <iostream>
 #include <queue>
 
-using namespace core::ds;
+using namespace rsys::ds;
 
-namespace core {
+namespace rsys {
 
     template<typename T = float, template<class> class DS = matrix>
     class svd : public model<T> {
@@ -105,6 +105,7 @@ namespace core {
             std::cout << "Iteration #" << iteration++ << std::endl;
             old_rmse = rmse;
 
+            size_t total = 0;
             auto user_it = _ratings.begin();
 
             for (size_t user_id = 0; user_id < _pU.rows(); ++user_id) {
@@ -127,12 +128,14 @@ namespace core {
                             _pU[user_id][k] -= learning_rate * (e * qi[k] + lambda * pu[k]);
                             _pI[user_id][k] -= learning_rate * (e * pu[k] + lambda * qi[k]);
                         }
+
+                        ++total;
                     }
                 }
 
             }
 
-            rmse /= _ratings.total();
+            rmse /= total;
             rmse = std::sqrt(rmse);
             std::cout << "RMSE = " << rmse << std::endl;
 
@@ -192,7 +195,7 @@ namespace core {
     }
 
 
-} // namespace core
+} // namespace recommender
 
 #endif // SVD_H
 

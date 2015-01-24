@@ -4,17 +4,17 @@
 #include <sstream>
 #include <iomanip>
 
-#include "core/data_sources/mvector.h"
-#include "core/data_sources/sparse_matrix.h"
-#include "core/data_sources/matrix.h"
-#include "core/rsys.h"
-#include "core/svd.h"
-#include "core/ensemblers/ensembler.h"
+#include "rsys/data_sources/mvector.h"
+#include "rsys/data_sources/sparse_matrix.h"
+#include "rsys/data_sources/matrix.h"
+#include "rsys/recommender.h"
+#include "rsys/svd.h"
+#include "rsys/ensemblers/ensembler.h"
 
-using namespace core;
+using namespace rsys;
 
 template <typename T> using data_holder = ds::matrix<T>;
-typedef core::rsys<double, data_holder, svd> rsys_t;
+typedef rsys::recommender<double, data_holder, svd> rsys_t;
 typedef svd<double, data_holder> svd_t;
 
 
@@ -23,6 +23,7 @@ int movielens_example();
 
 int main() {
     int basic = 0, mlens = 0;
+
     basic = basic_example();
 //    mlens = movielens_example();
     return basic + mlens;
@@ -50,17 +51,17 @@ int basic_example() {
 //        std::cout << std::endl;
 //    }
 
-    rsys_t::config_t c(&m, 4, 0.01);
+    rsys_t::config_t c(&m, 4, 0.005);
 
-//    rsys_t r(c);
+    rsys_t r(c);
 
-    svd_t svd(c);
+//    svd_t svd(c);
 
-    core::ensembler<double, mean_pred<double>> comb;
-    comb.add_model(&svd);
-    comb.learn();
+//    recommender::ensembler<double, mean_pred<double>> comb;
+//    comb.add_model(&r);
+//    comb.learn();
 
-    svd.learn();
+    r.learn();
 
     std::cout << "Finished" << std::endl;
 
@@ -69,7 +70,7 @@ int basic_example() {
     std::cout << "Predictions:" << std::endl;
     for (size_t i = 0; i < m.rows(); ++i) {
         for (size_t j = 0; j < m.cols(); ++j) {
-             std::cout << std::setprecision(3) << svd.predict(i, j) << " ";
+             std::cout << std::setprecision(3) << r.predict(i, j) << " ";
         }
         std::cout << std::endl;
     }
@@ -96,7 +97,7 @@ int to_int(const std::string& s) {
 int movielens_example() {
     data_holder<double> m(6040, 3952, -1);
 
-    std::string prefix = "/home/igor/Projects/cpp/core/datasets/ml-1m/";
+    std::string prefix = "/home/igor/Projects/cpp/recommender/datasets/ml-1m/";
     std::string filename = prefix + "ratings.dat";
     std::fstream fs;
     fs.open(filename, std::ios_base::in);

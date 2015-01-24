@@ -7,7 +7,7 @@
 #include <vector>
 #include <deque>
 
-namespace core {
+namespace rsys {
 
     template <typename T>
     struct mean_pred {

@@ -4,30 +4,44 @@ project(rsys)
 # find_package(Boost 1.56 EXACT REQUIRED)
 
 set(SRC "src")
-set(SRC_CORE "src/core")
+set(SRC_RSYS "src/rsys")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-set(HEADER_FILES ${SRC_CORE}/rsys.h
-                 ${SRC_CORE}/model.h
-                 ${SRC_CORE}/svd.h
-                 ${SRC_CORE}/rbm.h
-                 ${SRC_CORE}/item_score.h
+set(HEADER_FILES ${SRC_RSYS}/recommender.h
+                 ${SRC_RSYS}/model.h
+                 ${SRC_RSYS}/svd.h
+                 ${SRC_RSYS}/rbm.h
+                 ${SRC_RSYS}/item_score.h
 
-                 ${SRC_CORE}/config/config.h
-                 ${SRC_CORE}/config/svd_config.h
+                 ${SRC_RSYS}/config/config.h
+                 ${SRC_RSYS}/config/svd_config.h
 
-                 ${SRC_CORE}/ensemblers/ensembler.h
+                 ${SRC_RSYS}/ensemblers/ensembler.h
 
-                 ${SRC_CORE}/data_sources/data_source.h
-                 ${SRC_CORE}/data_sources/mvector.h
-                 ${SRC_CORE}/data_sources/imatrix.h
-                 ${SRC_CORE}/data_sources/matrix.h
-                 ${SRC_CORE}/data_sources/sparse_matrix.h
-                 ${SRC_CORE}/data_sources/mexception.h
+                 ${SRC_RSYS}/data_sources/data_source.h
+                 ${SRC_RSYS}/data_sources/mvector.h
+                 ${SRC_RSYS}/data_sources/imatrix.h
+                 ${SRC_RSYS}/data_sources/matrix.h
+                 ${SRC_RSYS}/data_sources/sparse_matrix.h
+                 ${SRC_RSYS}/data_sources/mexception.h
 
-                 ${SRC_CORE}/util/base_iterator.h
-                 ${SRC_CORE}/util/traits.h)
+                 ${SRC_RSYS}/util/base_iterator.h
+                 ${SRC_RSYS}/util/traits.h)
 
-set(SOURCE_FILES ${SRC_CORE}/data_sources/mexception.cc
-                 ${SRC}/main.cc)
-add_executable(rsys ${HEADER_FILES} ${SOURCE_FILES})
+set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
+                 ${SRC_RSYS}/core.cc)
+add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
+
+add_executable(rsystest ${SRC}/main.cc)
+target_link_libraries(rsystest rsys)
+
+
+set(VKRSYS ${SRC}/vkrsys)
+
+set(VK_HEADERS )
+set(VK_SOURCES ${VKRSYS}/main.cc)
+
+
+include_directories(${SRC_RSYS}/*)
+add_executable(vkrsys ${VK_HEADERS} ${VK_SOURCES})
+target_link_libraries(vkrsys rsys)

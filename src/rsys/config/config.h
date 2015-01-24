@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 
-namespace core {
+namespace rsys {
     template <typename M>
     class config {
     public:
@@ -11,6 +11,6 @@ namespace core {
     private:
 
     };
-}  // namespace core
+}  // namespace recommender
 
 #endif // CONFIG_H

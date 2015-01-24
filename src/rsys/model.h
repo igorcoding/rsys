@@ -3,7 +3,9 @@
 
 #include "item_score.h"
 
-namespace core {
+#include <deque>
+
+namespace rsys {
     template <typename T>
     class model {
     public:

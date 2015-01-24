@@ -7,7 +7,7 @@
 
 #include <assert.h>
 
-namespace core {
+namespace rsys {
     namespace ds {
 
         template<typename T>
@@ -420,7 +420,7 @@ namespace core {
         }
 
     } // namespace ds
-} // namespace core
+} // namespace recommender
 
 #endif // MATRIX_H
 

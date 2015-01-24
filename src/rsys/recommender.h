@@ -1,15 +1,16 @@
-#ifndef RSYS_H
-#define RSYS_H
+#ifndef RECOMMENDER_H
+#define RECOMMENDER_H
 
 #include "config/config.h"
 #include "item_score.h"
+#include "model.h"
 
 #include <deque>
 
-namespace core {
+namespace rsys {
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
-    class rsys {
+    class recommender : public model<T> {
     public:
         typedef DS<T> datasource_t;
         typedef MODEL<T,DS> model_t;
@@ -17,8 +18,8 @@ namespace core {
         typedef typename model_t::item_score_t item_score_t;
 
 
-        rsys(const config_t& conf);
-        ~rsys();
+        recommender(const config_t& conf);
+        ~recommender();
 
         const model_t& get_model() const { return *_model; }
         config_t& get_config() { return _model->get_config(); }
@@ -32,31 +33,31 @@ namespace core {
     };
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
-    rsys<T,DS,MODEL>::rsys(const config_t& conf)
+    recommender<T,DS,MODEL>::recommender(const config_t& conf)
             : _model(new model_t(conf)) {
 
     }
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
-    rsys<T,DS,MODEL>::~rsys() {
+    recommender<T,DS,MODEL>::~recommender() {
         delete _model;
     }
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
-    void rsys<T,DS,MODEL>::learn() noexcept {
+    void recommender<T,DS,MODEL>::learn() noexcept {
         _model->learn();
     }
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
-    T rsys<T,DS,MODEL>::predict(size_t user_id, size_t item_id) noexcept {
+    T recommender<T,DS,MODEL>::predict(size_t user_id, size_t item_id) noexcept {
         return _model->predict(user_id, item_id);
     }
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
-    std::deque<typename rsys<T,DS,MODEL>::item_score_t> rsys<T,DS,MODEL>::recommend(size_t user_id, int k) noexcept {
+    std::deque<typename recommender<T,DS,MODEL>::item_score_t> recommender<T,DS,MODEL>::recommend(size_t user_id, int k) noexcept {
         return _model->recommend(user_id, k);
     }
-} // namespace core
+} // namespace rsys
 
-#endif // RSYS_H
+#endif // RECOMMENDER_H
 

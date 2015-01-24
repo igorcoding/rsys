@@ -1,6 +1,6 @@
 #include "mexception.h"
 
-namespace core {
+namespace rsys {
     namespace ds {
 
         mexception::mexception() throw() {
@@ -38,4 +38,4 @@ namespace core {
         }
 
     } // namespace ds
-} // namespace core
+} // namespace recommender
