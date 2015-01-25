@@ -24,17 +24,16 @@ if __name__ == "__main__":
 
     config = rsys.SVDConfig(m, 4, 0.05)
 
-    m2 = config.features_count()
     svd = rsys.SVD(config)
     svd.learn()
 
-for i in xrange(0, m.rows):
-    for j in xrange(0, m.cols):
-        print "%d " % m.at(i, j),
+    for i in xrange(0, m.rows):
+        for j in xrange(0, m.cols):
+            print "%d " % m.at(i, j),
+        print
     print
-print
 
-for i in xrange(0, m.rows):
-    for j in xrange(0, m.cols):
-        print "%f " % svd.predict(i, j),
-    print
+    for i in xrange(0, m.rows):
+        for j in xrange(0, m.cols):
+            print "%f " % svd.predict(i, j),
+        print
