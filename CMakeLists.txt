@@ -42,6 +42,6 @@ set(VK_HEADERS )
 set(VK_SOURCES ${VKRSYS}/main.cc)
 
 
-include_directories(${SRC_RSYS}/*)
 add_executable(vkrsys ${VK_HEADERS} ${VK_SOURCES})
 target_link_libraries(vkrsys rsys)
+

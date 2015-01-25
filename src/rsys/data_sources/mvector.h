@@ -454,6 +454,6 @@ namespace rsys {
         }
 
     } // namespace ds
-} // namespace recommender
+} // namespace rsys
 
 #endif // MVECTOR_H

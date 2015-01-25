@@ -352,7 +352,7 @@ namespace rsys {
 
 
     } // namespace ds
-} // namespace recommender
+} // namespace rsys
 
 #endif // SPARSE_H
 

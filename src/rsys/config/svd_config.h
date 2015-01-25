@@ -104,6 +104,6 @@ namespace rsys {
     }
 
 
-}  // namespace recommender
+}  // namespace rsys
 
 #endif // SVD_CONFIG_H

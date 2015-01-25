@@ -11,6 +11,6 @@ namespace rsys {
     private:
 
     };
-}  // namespace recommender
+}  // namespace rsys
 
 #endif // CONFIG_H

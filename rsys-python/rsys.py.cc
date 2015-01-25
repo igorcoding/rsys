@@ -49,7 +49,7 @@ void export_data_sources() {
     const T& (t_matrix::*at1)(size_t, size_t) const = &t_matrix::at;
     void (t_matrix::*set1)(size_t, size_t, const T&) = &t_matrix::set;
 
-    class_<t_matrix>("matrix", init<size_t, size_t>())
+    class_<t_matrix>("matrix", init<size_t, size_t, T>())
            .add_property("rows", &t_matrix::rows)
            .add_property("cols", &t_matrix::cols)
            .def("at", at1, return_value_policy<copy_const_reference>(), (arg("row"), arg("col")))
@@ -87,6 +87,7 @@ void export_rsys() {
 
     class_<t_svd>("SVD", init<config_t>())
            .def("learn", &t_svd::learn)
+           .def("learn_online", &t_svd::learn_online, (arg("user_id"), arg("item_id"), arg("rating")))
            .def("predict", predict1, (arg("user_id"), arg("item_id")));
 }
 

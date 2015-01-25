@@ -420,7 +420,7 @@ namespace rsys {
         }
 
     } // namespace ds
-} // namespace recommender
+} // namespace rsys
 
 #endif // MATRIX_H
 

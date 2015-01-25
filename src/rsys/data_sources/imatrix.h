@@ -30,6 +30,6 @@ namespace rsys {
         };
 
     } // namespace ds
-} // namespace recommender
+} // namespace rsys
 
 #endif // IMATRIX_H

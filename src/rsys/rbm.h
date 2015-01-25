@@ -12,6 +12,6 @@ namespace rsys {
 
     };
 
-} // namespace recommender
+} // namespace rsys
 
 #endif // RBM_H

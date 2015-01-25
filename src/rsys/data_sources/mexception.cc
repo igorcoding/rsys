@@ -38,4 +38,4 @@ namespace rsys {
         }
 
     } // namespace ds
-} // namespace recommender
+} // namespace rsys
