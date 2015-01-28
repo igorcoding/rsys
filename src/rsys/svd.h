@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <queue>
+#include <rapidjson/document.h>
 
 using namespace rsys::ds;
 
@@ -23,6 +24,10 @@ namespace rsys {
         typedef item_score<T> item_score_t;
 
         svd(const config_t& conf);
+
+
+        void add_user();
+        void add_item();
 
         void learn() noexcept;
         void learn_online(size_t user_id, size_t item_id, T rating) noexcept;
@@ -89,6 +94,28 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
+    void svd<T, DS>::add_user() {
+        auto& new_row = _pU.add_row();
+        _bu.add_component();
+
+        double rand_max = static_cast <double> (RAND_MAX);
+        for (auto& elem : new_row) {
+            elem = static_cast <double> (rand()) / rand_max;
+        }
+    }
+
+    template<typename T, template<class> class DS>
+    void svd<T, DS>::add_item() {
+        auto& new_row = _pI.add_row();
+        _bi.add_component();
+
+        double rand_max = static_cast <double> (RAND_MAX);
+        for (auto& elem : new_row) {
+            elem = static_cast <double> (rand()) / rand_max;
+        }
+    }
+
+    template<typename T, template<class> class DS>
     void svd<T, DS>::learn() noexcept {
 
         auto lambda = _config.regularization();
@@ -110,7 +137,7 @@ namespace rsys {
             size_t total = 0;
             // auto user_it = _ratings.begin();
 
-            for (size_t user_id = 0; user_id < _pU.rows(); ++user_id) {
+            for (size_t user_id = 0; user_id < _ratings.rows(); ++user_id) {
                 auto& pu = _pU[user_id];
 
                 // auto items_it = user_it->begin();

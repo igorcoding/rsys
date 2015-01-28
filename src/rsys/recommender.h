@@ -24,6 +24,9 @@ namespace rsys {
         const model_t& get_model() const { return *_model; }
         config_t& get_config() { return _model->get_config(); }
 
+        void add_user();
+        void add_item();
+
         void learn() noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
         std::deque<item_score_t> recommend(size_t user_id, int k) noexcept;
@@ -41,6 +44,16 @@ namespace rsys {
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
     recommender<T,DS,MODEL>::~recommender() {
         delete _model;
+    }
+
+    template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
+    void recommender<T,DS,MODEL>::add_user() {
+        _model->add_user();
+    }
+
+    template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
+    void recommender<T,DS,MODEL>::add_item() {
+        _model->add_item();
     }
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>

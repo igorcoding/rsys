@@ -26,10 +26,13 @@ set(HEADER_FILES ${SRC_RSYS}/recommender.h
                  ${SRC_RSYS}/data_sources/mexception.h
 
                  ${SRC_RSYS}/util/base_iterator.h
-                 ${SRC_RSYS}/util/traits.h)
+                 ${SRC_RSYS}/util/traits.h
+                 ${SRC_RSYS}/util/util.h
+                 )
 
 set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
-                 ${SRC_RSYS}/core.cc)
+                 ${SRC_RSYS}/core.cc
+                 ${SRC_RSYS}/util/util.cc)
 add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
 add_executable(rsystest ${SRC}/main.cc)

@@ -4,8 +4,10 @@
 #include "imatrix.h"
 #include "mvector.h"
 #include "../util/base_iterator.h"
+#include "../util/util.h"
 
 #include <assert.h>
+//#include <vector>
 
 namespace rsys {
     namespace ds {
@@ -31,6 +33,7 @@ namespace rsys {
             size_t rows() const { return _rows; }
             size_t cols() const { return _cols; }
             size_t total() const { return _total; }
+            size_t capacity() const { return _capacity; }
             const T& get_def_value() const { return _def_value; }
 
             void set_default_value(const T& def_value);
@@ -43,6 +46,8 @@ namespace rsys {
 
             void set(size_t row_index, const mvector <T>& row);
             void set(size_t row, size_t col, const T& obj);
+
+            mvector<T>& add_row();
 
             matrix<T>& operator +=(const imatrix<T>& rhs);
             matrix<T>& operator -=(const imatrix<T>& rhs);
@@ -63,31 +68,43 @@ namespace rsys {
             const_iterator cend() const noexcept { return const_iterator(_m + _rows); }
 
         private:
-            void clean_up();
+            void resize(size_t new_capacity);
+            void clean_up(bool total = true);
 
         private:
             size_t _rows;
             size_t _cols;
             size_t _total;
             T _def_value;
-            mvector<T>* _m;
+            size_t _capacity;
+            mvector<T>** _m;
         };
 
         /***************** Implementation *****************/
 
-        template<typename T>
+        template <typename T> inline
+        void matrix<T>::resize(size_t new_capacity) {
+            if (new_capacity > _capacity) {
+                mvector<T>** m = new mvector<T>*[new_capacity];
+                for (size_t i = 0; i < _rows; ++i) {
+                    m[i] = new mvector<T>(*_m[i]);
+                }
+                clean_up(false);
+                _m = m;
+                _capacity = new_capacity;
+            }
+        }
+
+        template <typename T>
         matrix<T>::matrix(size_t rows, size_t cols, const T& default_value)
                 : _rows(rows),
                   _cols(cols),
                   _total(0),
                   _def_value(default_value),
-                  _m(new mvector<T>[_rows]) {
+                  _capacity(calc_nearest_pow_of_2(_rows)),
+                  _m(new mvector<T>*[_capacity]) {
             for (size_t i = 0; i < _rows; ++i) {
-                T* new_cols = new T[_cols];
-                for (size_t j = 0; j < _cols; ++j) {
-                    new_cols[j] = _def_value;
-                }
-                _m[i].set_new_data_own(new_cols, _cols);
+                _m[i] = new mvector<T>(_cols, _def_value);
             }
         }
 
@@ -98,25 +115,25 @@ namespace rsys {
             _rows = list.size();
             _cols = list.begin()->size();
 
-            _m = new mvector<T>[_rows];
-
-            size_t i = 0;
-            typename std::initializer_list<std::initializer_list<T>>::iterator it1;
-            typename std::initializer_list<T>::iterator it2;
-            for (it1 = list.begin(); it1 != list.end(); ++it1, ++i) {
-                T* new_cols = new T[_cols];
-
-                size_t j = 0;
-                for (it2 = it1->begin(); it2 != it1->end(); ++it2, ++j) {
-                    new_cols[j] = *it2;
-
-                    _m[i].set_new_data_own(new_cols, _cols);
-
-                    if (_m[i][j] != _def_value) {
-                        ++_total;
-                    }
-                }
-            }
+//            _m = new mvector<T>*[_rows];
+//
+//            size_t i = 0;
+//            typename std::initializer_list<std::initializer_list<T>>::iterator it1;
+//            typename std::initializer_list<T>::iterator it2;
+//            for (it1 = list.begin(); it1 != list.end(); ++it1, ++i) {
+//                T* new_cols = new T[_cols];
+//
+//                size_t j = 0;
+//                for (it2 = it1->begin(); it2 != it1->end(); ++it2, ++j) {
+//                    new_cols[j] = *it2;
+//
+//                    _m[i] = new mvector<T>(new_cols, _cols);
+//
+//                    if ((*_m[i])[j] != _def_value) {
+//                        ++_total;
+//                    }
+//                }
+//            }
         }
 
         template<typename T>
@@ -125,14 +142,11 @@ namespace rsys {
                   _cols(other._cols),
                   _total(other._total),
                   _def_value(other._def_value),
-                  _m(new mvector<T>[_rows]) {
-            std::cout << "matrix copy" << other._rows << other._cols << _rows << _cols << std::endl;
+                  _capacity(other._capacity),
+                  _m(new mvector<T>*[_rows]) {
+//            std::cout << "matrix copy" << other._rows << other._cols << _rows << _cols << std::endl;
             for (size_t i = 0; i < _rows; ++i) {
-                T* new_cols = new T[_cols];
-                for (size_t j = 0; j < _cols; ++j) {
-                    new_cols[j] = other._m[i].at(j, false);
-                }
-                _m[i].set_new_data_own(new_cols, _cols);
+                _m[i] = new mvector<T>(*other._m[i]);
             }
         }
 
@@ -142,17 +156,20 @@ namespace rsys {
                   _cols(0),
                   _total(0),
                   _def_value(T()),
+                  _capacity(0),
                   _m(nullptr) {
             _rows = other._rows;
             _cols = other._cols;
             _total = other._total;
             _def_value = other._def_value;
+            _capacity = other._capacity;
             _m = other._m;
 
             other._rows = 0;
             other._cols = 0;
             other._total = 0;
             other._def_value = T();
+            other._capacity = 0;
             other._m = nullptr;
         }
 
@@ -165,13 +182,10 @@ namespace rsys {
                 _total = other._total;
                 _def_value = other._def_value;
 
-                _m = new mvector<T>[_rows];
+                _capacity = other._capacity;
+                _m = new mvector<T>*[_rows];
                 for (size_t i = 0; i < _rows; ++i) {
-                    T* new_cols = new T[_cols];
-                    for (size_t j = 0; j < _cols; ++j) {
-                        new_cols[j] = other._m[i].at(j, false);
-                    }
-                    _m[i].set_new_data_own(new_cols, _cols);
+                    _m[i] = new mvector<T>(*other._m[i]);
                 }
             }
             return *this;
@@ -186,12 +200,14 @@ namespace rsys {
                 _cols = other._cols;
                 _total = other._total;
                 _def_value = other._def_value;
+                _capacity = other._capacity;
                 _m = other._m;
 
                 other._rows = 0;
                 other._cols = 0;
                 other._total = 0;
                 other._def_value = T();
+                other._capacity = 0;
                 other._m = nullptr;
             }
             return *this;
@@ -210,36 +226,36 @@ namespace rsys {
         template<typename T>
         mvector <T>& matrix<T>::operator [](int i) {
             assert(i >= 0 && i < _rows);
-            return _m[i];
+            return *_m[i];
         }
 
         template<typename T>
         const mvector <T>& matrix<T>::operator [](int i) const {
             assert(i >= 0 && i < _rows);
-            return _m[i];
+            return *_m[i];
         }
 
         template<typename T>
         const T& matrix<T>::at(size_t row, size_t col) const {
             assert(row >= 0 && row < _rows);
-            return _m[row][col];
+            return (*_m[row])[col];
         }
 
         template<typename T>
         T& matrix<T>::at(size_t row, size_t col) {
             assert(row >= 0 && row < _rows);
-            return _m[row][col];
+            return (*_m[row])[col];
         }
 
         template<typename T>
         void matrix<T>::set(size_t row, size_t col, const T& obj) {
-            const auto& old_v = _m[row][col];
+            const auto& old_v = (*_m[row])[col];
             if (old_v == _def_value && obj != _def_value) {
                 ++_total;
             } else if (old_v != _def_value && obj == _def_value) {
                 --_total;
             }
-            _m[row][col] = obj;
+            (*_m[row])[col] = obj;
         }
 
         template<typename T>
@@ -247,22 +263,31 @@ namespace rsys {
             assert(_cols == row.size());
 
             for (size_t j = 0; j < _cols; ++j) {
-                const auto& old_v = _m[row_index].at(j, false);
+                const auto& old_v = _m[row_index]->at(j, false);
                 const auto& v = row.at(j, false);
                 if (old_v == _def_value && v != _def_value) {
                     ++_total;
                 } else if (old_v != _def_value && v == _def_value) {
                     --_total;
                 }
-                _m[row_index].at(j, false) = v;
+                _m[row_index]->at(j, false) = v;
             }
+        }
+
+        template<typename T>
+        mvector<T>& matrix<T>::add_row() {
+            if (_rows == _capacity) {
+                resize(_capacity << 1);
+            }
+            _m[_rows++] = new mvector<T>(_cols, _def_value);
+            return *_m[_rows-1];
         }
 
         template<typename T>
         matrix<T>& matrix<T>::operator +=(const imatrix<T>& rhs) {
             for (size_t i = 0; i < _rows; ++i) {
                 for (size_t j = 0; j < _cols; ++j) {
-                    _m[i][j] += rhs.at(i, j);
+                    (*_m[i])[j] += rhs.at(i, j);
                 }
             }
             return *this;
@@ -272,7 +297,7 @@ namespace rsys {
         matrix<T>& matrix<T>::operator -=(const imatrix<T>& rhs) {
             for (size_t i = 0; i < _rows; ++i) {
                 for (size_t j = 0; j < _cols; ++j) {
-                    _m[i][j] -= rhs.at(i, j);
+                    (*_m[i])[j] -= rhs.at(i, j);
                 }
             }
             return *this;
@@ -282,7 +307,7 @@ namespace rsys {
         matrix<T>& matrix<T>::operator *=(const T& rhs) {
             for (size_t i = 0; i < _rows; ++i) {
                 for (size_t j = 0; j < _cols; ++j) {
-                    _m[i][j] *= rhs;
+                    (*_m[i])[j] *= rhs;
                 }
             }
             return *this;
@@ -292,7 +317,7 @@ namespace rsys {
         matrix<T>& matrix<T>::operator /=(const T& rhs) {
             for (size_t i = 0; i < _rows; ++i) {
                 for (size_t j = 0; j < _cols; ++j) {
-                    _m[i][j] /= rhs;
+                    (*_m[i])[j] /= rhs;
                 }
             }
             return *this;
@@ -303,7 +328,7 @@ namespace rsys {
         matrix<T>& matrix<T>::operator *=(const U& rhs) {
             for (size_t i = 0; i < _rows; ++i) {
                 for (size_t j = 0; j < _cols; ++j) {
-                    _m[i][j] *= static_cast<T>(rhs);
+                    (*_m[i])[j] *= static_cast<T>(rhs);
                 }
             }
             return *this;
@@ -314,7 +339,7 @@ namespace rsys {
         matrix<T>& matrix<T>::operator /=(const U& rhs) {
             for (size_t i = 0; i < _rows; ++i) {
                 for (size_t j = 0; j < _cols; ++j) {
-                    _m[i][j] /= static_cast<T>(rhs);
+                    (*_m[i])[j] /= static_cast<T>(rhs);
                 }
             }
             return *this;
@@ -325,7 +350,7 @@ namespace rsys {
             matrix<T> m(cols(), rows());
             for (size_t i = 0; i < m.rows(); ++i) {
                 for (size_t j = 0; j < m.cols(); ++j) {
-                    m._m[i][j] = _m[j][i];
+                    (*m._m[i])[j] = (*_m[j])[i];
                 }
             }
             return m;
@@ -337,7 +362,7 @@ namespace rsys {
             for (size_t i = 0; i < size; ++i) {
                 for (size_t j = 0; j < size; ++j) {
                     if (i == j) {
-                        m._m[i][j] = value;
+                        (*m._m[i])[j] = value;
                     }
                 }
             }
@@ -345,16 +370,20 @@ namespace rsys {
         }
 
         template<typename T>
-        void matrix<T>::clean_up() {
-//            for (size_t i = 0; i < _rows; ++i) {
-//                delete[] _m[i];
-//                _m[i] = nullptr;
-//            }
+        void matrix<T>::clean_up(bool total) {
+            for (size_t i = 0; i < _rows; ++i) {
+                delete _m[i];
+                _m[i] = nullptr;
+            }
             delete[] _m;
             _m = nullptr;
-            _rows = 0;
-            _cols = 0;
-            _total = 0;
+
+            if (total) {
+                _rows = 0;
+                _cols = 0;
+                _total = 0;
+                _capacity = 0;
+            }
         }
 
 /************* operator +, -, *, / *************/

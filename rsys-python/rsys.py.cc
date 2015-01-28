@@ -86,6 +86,8 @@ void export_rsys() {
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
 
     class_<t_svd>("SVD", init<config_t>())
+           .def("add_user", &t_svd::add_user)
+           .def("add_item", &t_svd::add_item)
            .def("learn", &t_svd::learn)
            .def("learn_online", &t_svd::learn_online, (arg("user_id"), arg("item_id"), arg("rating")))
            .def("predict", predict1, (arg("user_id"), arg("item_id")));

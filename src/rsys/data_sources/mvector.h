@@ -3,6 +3,7 @@
 
 #include "mexception.h"
 #include "../util/base_iterator.h"
+#include "../util/util.h"
 
 #include <cstdlib>
 #include <memory>
@@ -22,7 +23,7 @@ namespace rsys {
             typedef my_base_iterator<T*> iterator;
             typedef my_base_iterator<const T*> const_iterator;
 
-            explicit mvector(size_t size = 0, const T& default_value = T());
+            explicit mvector(size_t size, const T& default_value = T());
             mvector(const T* vec, size_t size);
             mvector(T* vec, size_t size, bool no_copy);
             mvector(T*&& vec, size_t size);
@@ -32,9 +33,6 @@ namespace rsys {
             mvector<T>& operator =(const mvector<T>& that);
             mvector<T>& operator =(mvector<T>&& that);
             ~mvector();
-
-            void set_new_data(const T* vec, size_t size);
-            void set_new_data_own(T* vec, size_t size);
 
             template<typename Y> mvector<Y> cast();
 
@@ -48,6 +46,7 @@ namespace rsys {
             const_iterator cend() const noexcept { return const_iterator(_vec + _size); }
 
             size_t size() const { return _size; }
+            size_t capacity() const { return _capacity; }
             const T* data() const { return _vec; }
 
             T& at(size_t i, bool check = true);
@@ -57,6 +56,8 @@ namespace rsys {
 
             T& operator [](size_t i);
             const T& operator [](size_t i) const;
+
+            void add_component(const T& default_value = T());
 
             mvector<T>& operator +=(const mvector<T>& other);
             template<typename U> mvector<T>& operator +=(const U& other);
@@ -71,6 +72,7 @@ namespace rsys {
 
         private:
             explicit mvector(size_t size, bool empty);
+            void resize(size_t new_capacity);
             void clean_up();
             void check_index(size_t i) const;
             void check_sizes(size_t size1, size_t size2) const;
@@ -78,24 +80,40 @@ namespace rsys {
         private:
             size_t _size;
             bool _no_copy;
+            size_t  _capacity;
             T* _vec;
         };
 
 
         /***************** Implementation *****************/
 
+        template <typename T> inline
+        void mvector<T>::resize(size_t new_capacity) {
+            if (new_capacity > _capacity) {
+                T* new_vec = new T[new_capacity];
+                for (size_t i = 0; i < _size; ++i) {
+                    new_vec[i] = _vec[i];
+                }
+                delete[] _vec;
+                _vec = new_vec;
+                _capacity = new_capacity;
+            }
+        }
+
         template<typename T>
         mvector<T>::mvector(size_t size, bool empty)
                 : _size(size),
                   _no_copy(false),
+                  _capacity(calc_nearest_pow_of_2(_size)),
                   _vec(nullptr) {
         }
 
         template<typename T>
         mvector<T>::mvector(size_t size, const T& default_value)
                 : _size(size),
-                  _no_copy(false) {
-            _vec = new T[_size];
+                  _no_copy(false),
+                  _capacity(calc_nearest_pow_of_2(_size)) {
+            _vec = new T[_capacity];
             for (size_t i = 0; i < _size; ++i) {
                 _vec[i] = default_value;
             }
@@ -104,8 +122,9 @@ namespace rsys {
         template<typename T>
         mvector<T>::mvector(const T* vec, size_t size)
                 : _size(size),
-                  _no_copy(false) {
-            _vec = new T[_size];
+                  _no_copy(false),
+                  _capacity(calc_nearest_pow_of_2(_size)) {
+            _vec = new T[_capacity];
             std::memcpy(_vec, vec, _size * sizeof(T));
         }
 
@@ -114,9 +133,11 @@ namespace rsys {
                 : _size(size),
                   _no_copy(no_copy) {
             if (no_copy) {
+                _capacity = _size;
                 _vec = vec;
             } else {
-                _vec = new T[_size];
+                _capacity = calc_nearest_pow_of_2(_size);
+                _vec = new T[_capacity];
                 std::memcpy(_vec, vec, _size * sizeof(T));
             }
         }
@@ -124,7 +145,8 @@ namespace rsys {
         template<typename T>
         mvector<T>::mvector(T*&& vec, size_t size)
                 : _size(size),
-                  _no_copy(false) {
+                  _no_copy(false),
+                  _capacity(_size) {
             _vec = vec;
             vec = nullptr;
         }
@@ -132,17 +154,19 @@ namespace rsys {
         template<typename T>
         mvector<T>::mvector(const std::vector<T>& vec)
                 : _size(vec.size()),
-                  _no_copy(false) {
-            _vec = new T[_size];
+                  _no_copy(false),
+                  _capacity(calc_nearest_pow_of_2(_size)) {
+            _vec = new T[_capacity];
             std::memcpy(_vec, vec.data(), _size * sizeof(T));
         }
 
         template<typename T>
         mvector<T>::mvector(const mvector<T>& that)
                 : _size(that.size()),
-                  _no_copy(false) {
-            std::cout << "mvector copy" << std::endl;
-            _vec = new T[_size];
+                  _no_copy(false),
+                  _capacity(that._capacity) {
+//            std::cout << "mvector copy" << std::endl;
+            _vec = new T[_capacity];
             for (size_t i = 0; i < _size; ++i) {
                 _vec[i] = that._vec[i];
             }
@@ -152,7 +176,7 @@ namespace rsys {
         template<typename Y>
         mvector<Y> mvector<T>::cast() {
             mvector<Y> mvec(_size, true);
-            mvec._vec = new T[_size];
+            mvec._vec = new T[mvec._capacity];
             for (size_t i = 0; i < _size; ++i) {
                 mvec._vec[i] = static_cast<Y>(_vec[i]);
             }
@@ -163,13 +187,16 @@ namespace rsys {
         mvector<T>::mvector(mvector<T>&& that)
                 : _size(0),
                   _no_copy(false),
+                  _capacity(0),
                   _vec(nullptr) {
             _size = that._size;
             _no_copy = that._no_copy;
+            _capacity = that._capacity;
             _vec = that._vec;
 
             that._size = 0;
             that._no_copy = false;
+            that._capacity = 0;
             that._vec = nullptr;
         }
 
@@ -182,7 +209,8 @@ namespace rsys {
 
                 _size = that.size();
                 _no_copy = false;
-                _vec = new T[_size];
+                _capacity = that._capacity;
+                _vec = new T[_capacity];
                 std::memcpy(_vec, that._vec, _size * sizeof(T));
             }
             return *this;
@@ -196,10 +224,12 @@ namespace rsys {
 
                 _size = that.size();
                 _no_copy = that._no_copy;
+                _capacity = that._capacity;
                 _vec = that._vec;
 
                 that._size = 0;
                 that._no_copy = false;
+                that._capacity = 0;
                 that._vec = nullptr;
             }
             return *this;
@@ -208,23 +238,6 @@ namespace rsys {
         template<typename T>
         mvector<T>::~mvector() {
             clean_up();
-        }
-
-        template<typename T>
-        void mvector<T>::set_new_data(const T* vec, size_t size) {
-            clean_up();
-
-            _size = size;
-            _vec = new T[_size];
-            std::memcpy(_vec, vec, _size * sizeof(T));
-        }
-
-        template<typename T>
-        void mvector<T>::set_new_data_own(T* vec, size_t size) {
-            clean_up();
-
-            _size = size;
-            _vec = vec;
         }
 
         template<typename T>
@@ -271,6 +284,14 @@ namespace rsys {
         const T& mvector<T>::operator [](size_t i) const {
             check_index(i);
             return _vec[i];
+        }
+
+        template<typename T> inline
+        void mvector<T>::add_component(const T& default_value) {
+            if (_size == _capacity) {
+                resize(_capacity << 1);
+            }
+            _vec[_size++] = default_value;
         }
 
         template<typename T>
@@ -423,6 +444,7 @@ namespace rsys {
             }
             _size = 0;
             _no_copy = false;
+            _capacity = 0;
         }
 
         template<typename T> inline
