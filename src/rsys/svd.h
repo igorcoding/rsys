@@ -50,14 +50,14 @@ namespace rsys {
         mvector<T> _bi;
         double _mu;
 
-        const DS<T>& _ratings;
+        const DS<T>* _ratings;
     };
 
     template<typename T, template<class> class DS>
     svd<T, DS>::svd(const config_t& conf)
             : _config(conf),
-              _users_count(_config.ratings().rows()),
-              _items_count(_config.ratings().cols()),
+              _users_count(_config.users_count()),
+              _items_count(_config.items_count()),
               _features_count(_config.features_count()),
               _pU(_users_count, _features_count),
               _pI(_items_count, _features_count),
@@ -65,7 +65,7 @@ namespace rsys {
               _bi(_items_count),
               _mu(0),
 
-              _ratings(_config.ratings()) {
+              _ratings(&_config.ratings()) {
         srand(static_cast<unsigned int>(time(nullptr)));
         double rand_max = static_cast <double> (RAND_MAX);
 
@@ -117,6 +117,10 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     void svd<T, DS>::learn() noexcept {
+        if (_ratings == nullptr) {
+            std::cout << "No ratnigs to process" << std::endl;
+            return;
+        }
 
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
@@ -137,14 +141,14 @@ namespace rsys {
             size_t total = 0;
             // auto user_it = _ratings.begin();
 
-            for (size_t user_id = 0; user_id < _ratings.rows(); ++user_id) {
+            for (size_t user_id = 0; user_id < _ratings->rows(); ++user_id) {
                 auto& pu = _pU[user_id];
 
                 // auto items_it = user_it->begin();
-                for (size_t item_id = 0; item_id < _ratings.cols(); ++item_id) {
+                for (size_t item_id = 0; item_id < _ratings->cols(); ++item_id) {
                     auto& qi = _pI[item_id];
-                    const auto& r = _ratings.at(user_id, item_id);
-                    if (r != _ratings.get_def_value()) {
+                    const auto& r = _ratings->at(user_id, item_id);
+                    if (r != _config.def_value()) {
                         auto e = predict(pu, qi, user_id, item_id) - r;
                         rmse += e * e;
 
@@ -215,7 +219,7 @@ namespace rsys {
 
             auto& qi = _pI[item_id];
 //            const auto& r = _ratings.at(user_id, item_id);
-            if (rating != _ratings.get_def_value()) {
+            if (rating != _config.def_value()) {
                 auto e = predict(pu, qi, user_id, item_id) - rating;
                 rmse += e * e;
 
@@ -267,8 +271,8 @@ namespace rsys {
 
         heap_t heap(comp);
 
-        for (size_t i = 0; i < _ratings.cols(); ++i) {
-            if (_ratings.at(user_id, i) == _ratings.get_def_value()) {
+        for (size_t i = 0; i < _items_count; ++i) {
+            if (_ratings == nullptr || _ratings->at(user_id, i) == _config.def_value()) {
                 auto score = predict(user_id, i);
                 item_score_t pair(i, score);
 

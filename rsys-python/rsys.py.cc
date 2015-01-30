@@ -1,6 +1,6 @@
-#include "../src/rsys/svd.h"
-#include "../src/rsys/data_sources/matrix.h"
-#include "../src/rsys/data_sources/mvector.h"
+#include "rsys/svd.h"
+#include "rsys/data_sources/matrix.h"
+#include "rsys/data_sources/mvector.h"
 
 
 
@@ -76,7 +76,13 @@ void export_rsys() {
     class_<config_t>("SVDConfig", init<t_matrix, size_t, float, int, bool, float>(
             (arg("dataset"), arg("features_count"), arg("regularization") = 0.0f, arg("max_iterations") = 0, arg("print_results") = true, arg("learning_rate") = 0.005)
     ))
+            .def(init<size_t, size_t, T, size_t, float, int, bool, float>(
+                    (arg("users_count"), arg("items_count"), arg("def_value"), arg("features_count"), arg("regularization") = 0.0f, arg("max_iterations") = 0, arg("print_results") = true, arg("learning_rate") = 0.005)
+            ))
             .def("ratings", &config_t::ratings, return_value_policy<copy_const_reference>())
+            .def("def_value", &config_t::def_value, return_value_policy<copy_const_reference>())
+            .def("users_count", &config_t::users_count)
+            .def("items_count", &config_t::items_count)
             .def("features_count", &config_t::features_count)
             .def("regularization", &config_t::regularization)
             .def("max_iterations", &config_t::max_iterations)

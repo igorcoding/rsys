@@ -5,12 +5,7 @@
 
 namespace rsys {
     template <typename M>
-    class config {
-    public:
-
-    private:
-
-    };
+    class config;
 }  // namespace rsys
 
 #endif // CONFIG_H

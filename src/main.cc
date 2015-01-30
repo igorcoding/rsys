@@ -55,7 +55,7 @@ int basic_example() {
 
     rsys_t r(c);
 
-    svd_t svd(c);
+//    svd_t svd(c);
 
 //    recommender::ensembler<double, mean_pred<double>> comb;
 //    comb.add_model(&r);
