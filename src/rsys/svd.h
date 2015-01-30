@@ -65,7 +65,7 @@ namespace rsys {
               _bi(_items_count),
               _mu(0),
 
-              _ratings(&_config.ratings()) {
+              _ratings(_config._ratings) {
         srand(static_cast<unsigned int>(time(nullptr)));
         double rand_max = static_cast <double> (RAND_MAX);
 

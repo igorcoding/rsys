@@ -51,7 +51,7 @@ int basic_example() {
 //        std::cout << std::endl;
 //    }
 
-    rsys_t::config_t c(m, 4, 0.005);
+    rsys_t::config_t c(15,16,-1, 4, 0.005);
 
     rsys_t r(c);
 

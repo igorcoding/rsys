@@ -110,7 +110,7 @@ namespace rsys {
               _max_iterations(other._max_iterations),
               _print_results(other._print_results)
     {
-        std::cout << "Copying config" << std::endl;
+//        std::cout << "Copying config" << std::endl;
     }
 
     template <typename T, template <class> class DS>
