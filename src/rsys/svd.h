@@ -31,7 +31,8 @@ namespace rsys {
         void add_items(size_t count);
 
         void learn() noexcept;
-        bool learn_online(size_t user_id, size_t item_id, T rating) noexcept;
+        bool learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
+        bool learn_online(const std::vector<item_score_t>& scores) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
         std::deque<item_score_t> recommend(size_t user_id, int k) noexcept;
 
@@ -210,7 +211,7 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
-    bool svd<T,DS>::learn_online(size_t user_id, size_t item_id, T rating) noexcept {
+    bool svd<T,DS>::learn_online(size_t user_id, size_t item_id, const T& rating) noexcept {
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
         auto print_results = _config.print_results();
@@ -230,9 +231,8 @@ namespace rsys {
             size_t total = 0;
 
             auto& pu = _pU[user_id];
-
             auto& qi = _pI[item_id];
-//            const auto& r = _ratings.at(user_id, item_id);
+
             if (rating != _config.def_value()) {
                 auto e = predict(pu, qi, user_id, item_id) - rating;
                 rmse += e * e;
@@ -279,6 +279,81 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
+    bool svd<T,DS>::learn_online(const std::vector<item_score_t>& scores) noexcept {
+        auto lambda = _config.regularization();
+        auto max_iterations = _config.max_iterations();
+        auto print_results = _config.print_results();
+
+        int iteration = 1;
+        float rmse = 1.0;
+        float old_rmse = 0.0;
+        float eps = 0.00001;
+        float learning_rate = _config.learning_rate();
+        float threshold = 0.01;
+
+        while (fabs(rmse - old_rmse) > eps) {
+//            std::cout << "Iteration #" << iteration << std::endl;
+            iteration++;
+            old_rmse = rmse;
+
+            size_t total = 0;
+
+            for (auto& s : scores) {
+                size_t user_id = s.user_id;
+                size_t item_id = s.item_id;
+                T rating = s.score;
+
+                auto& pu = _pU[user_id];
+                auto& qi = _pI[item_id];
+
+                if (rating != _config.def_value()) {
+                    auto e = predict(pu, qi, user_id, item_id) - rating;
+                    rmse += e * e;
+
+                    _bu[user_id] -= learning_rate * (e + lambda * _bu[user_id]);
+                    _bi[item_id] -= learning_rate * (e + lambda * _bi[item_id]);
+                    _mu -= learning_rate * e;
+
+                    for (size_t k = 0; k < _features_count; ++k) {
+                        _pU[user_id][k] -= learning_rate * (e * qi[k] + lambda * pu[k]);
+                        _pI[user_id][k] -= learning_rate * (e * pu[k] + lambda * qi[k]);
+                    }
+
+                    ++total;
+                }
+            }
+
+
+            rmse /= total;
+            rmse = std::sqrt(rmse);
+//            std::cout << "RMSE = " << rmse << std::endl;
+
+            if (old_rmse - rmse < threshold) {
+                learning_rate *= 0.8;
+                threshold *= 0.5;
+            }
+
+            if (max_iterations > 0 && iteration >= max_iterations) {
+                break;
+            }
+        }
+
+        if (print_results) {
+            std::cout << "\n=== Online Results ===" << "\n";
+            std::cout << "Iterations: " << iteration << "\n";
+            std::cout << "Users\' features:\n" << _pU << "\n\n";
+            std::cout << "Items\' features:\n" << _pI << "\n\n";
+            std::cout << "Baseline users predictors: " << _bu << "\n";
+            std::cout << "Baseline items predictors: " << _bi << "\n";
+            std::cout << "mu: " << _mu << "\n";
+            std::cout << "=== End of Results ===" << "\n\n";
+            std::cout << std::flush;
+        }
+
+        return true;
+    }
+
+    template<typename T, template<class> class DS>
     std::deque<typename svd<T, DS>::item_score_t> svd<T, DS>::recommend(size_t user_id, int k) noexcept {
         auto comp = [](const item_score_t& a, const item_score_t& b) {
             return a.score > b.score;
@@ -290,12 +365,12 @@ namespace rsys {
         for (size_t i = 0; i < _items_count; ++i) {
             if (_ratings == nullptr || _ratings->at(user_id, i) == _config.def_value()) {
                 auto score = predict(user_id, i);
-                item_score_t pair(i, score);
+                item_score_t s(user_id, i, score);
 
                 if (k > 0 && heap.size() == static_cast<size_t>(k)) {
                     heap.pop();
                 }
-                heap.push(pair);
+                heap.push(s);
             }
         }
 

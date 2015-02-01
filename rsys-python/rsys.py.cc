@@ -1,8 +1,7 @@
 #include "rsys/svd.h"
 #include "rsys/data_sources/matrix.h"
 #include "rsys/data_sources/mvector.h"
-
-
+#include "../src/rsys/svd.h"
 
 
 #include <boost/python.hpp>
@@ -72,6 +71,12 @@ void export_rsys() {
     typedef ds::matrix<T> t_matrix;
     typedef svd<T, ds::matrix> t_svd;
     typedef typename t_svd::config_t config_t;
+    typedef typename t_svd::item_score_t item_score_t;
+
+    class_<item_score_t>("ItemScore", init<size_t, size_t, T> ((arg("user_id"), arg("item_id"), arg("score"))))
+            .def_readwrite("user_id", &item_score_t::user_id)
+            .def_readwrite("item_id", &item_score_t::item_id)
+            .def_readwrite("score", &item_score_t::score);
 
     class_<config_t>("SVDConfig", init<t_matrix, size_t, float, int, bool, float>(
             (arg("dataset"), arg("features_count"), arg("regularization") = 0.0f, arg("max_iterations") = 0, arg("print_results") = true, arg("learning_rate") = 0.005)
@@ -90,13 +95,16 @@ void export_rsys() {
             .def("learning_rate", &config_t::learning_rate);
 
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
+    bool (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
+    bool (t_svd::*learn_online2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_online;
 
     class_<t_svd>("SVD", init<config_t>())
            .def("add_user", &t_svd::add_user)
            .def("add_item", &t_svd::add_item)
            .def("add_items", &t_svd::add_items, (arg("count")))
            .def("learn", &t_svd::learn)
-           .def("learn_online", &t_svd::learn_online, (arg("user_id"), arg("item_id"), arg("rating")))
+           .def("learn_online", learn_online1, (arg("user_id"), arg("item_id"), arg("rating")))
+           .def("learn_online", learn_online2, arg("scores"))
            .def("predict", predict1, (arg("user_id"), arg("item_id")));
 }
 
