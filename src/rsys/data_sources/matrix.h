@@ -7,7 +7,7 @@
 #include "../util/util.h"
 
 #include <assert.h>
-//#include <vector>
+#include <vector>
 
 namespace rsys {
     namespace ds {
@@ -48,6 +48,7 @@ namespace rsys {
             void set(size_t row, size_t col, const T& obj);
 
             mvector<T>& add_row();
+            std::vector<mvector<T>*> add_rows(size_t count);
 
             matrix<T>& operator +=(const imatrix<T>& rhs);
             matrix<T>& operator -=(const imatrix<T>& rhs);
@@ -281,6 +282,22 @@ namespace rsys {
             }
             _m[_rows++] = new mvector<T>(_cols, _def_value);
             return *_m[_rows-1];
+        }
+
+        template<typename T>
+        std::vector<mvector<T>*> matrix<T>::add_rows(size_t count) {
+            size_t new_rows_count = _rows + count;
+            if (new_rows_count > _capacity) {
+                resize(calc_nearest_pow_of_2(new_rows_count));
+            }
+
+            std::vector<mvector<T>*> new_rows;
+            for (size_t i = 0; i < count; ++i) {
+                _m[_rows + i] = new mvector<T>(_cols, _def_value);
+                new_rows.push_back(_m[_rows + i]);
+            }
+            _rows = new_rows_count;
+            return new_rows;
         }
 
         template<typename T>

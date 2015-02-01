@@ -43,6 +43,8 @@ int basic_example() {
 
     std::cout << m << std::endl;
 
+    m.add_rows(5);
+
     std::cout << std::endl;
 //    for (auto& row : m) {
 //        for (auto& val: row) {

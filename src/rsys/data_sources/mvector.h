@@ -58,6 +58,7 @@ namespace rsys {
             const T& operator [](size_t i) const;
 
             void add_component(const T& default_value = T());
+            void add_components(size_t count, const T& default_value = T());
 
             mvector<T>& operator +=(const mvector<T>& other);
             template<typename U> mvector<T>& operator +=(const U& other);
@@ -292,6 +293,18 @@ namespace rsys {
                 resize(_capacity << 1);
             }
             _vec[_size++] = default_value;
+        }
+
+        template<typename T> inline
+        void mvector<T>::add_components(size_t count, const T& default_value) {
+            size_t new_size = _size + count;
+            if (new_size > _capacity) {
+                resize(calc_nearest_pow_of_2(new_size));
+            }
+            for (size_t i = 0; i < count; ++i) {
+                _vec[_size + i] = default_value;
+            }
+            _size = new_size;
         }
 
         template<typename T>

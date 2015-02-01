@@ -38,13 +38,3 @@ add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
 add_executable(rsystest ${SRC}/main.cc)
 target_link_libraries(rsystest rsys)
 
-
-set(VKRSYS ${SRC}/vkrsys)
-
-set(VK_HEADERS )
-set(VK_SOURCES ${VKRSYS}/main.cc)
-
-
-add_executable(vkrsys ${VK_HEADERS} ${VK_SOURCES})
-target_link_libraries(vkrsys rsys)
-

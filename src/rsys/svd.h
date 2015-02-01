@@ -28,9 +28,10 @@ namespace rsys {
 
         void add_user();
         void add_item();
+        void add_items(size_t count);
 
         void learn() noexcept;
-        void learn_online(size_t user_id, size_t item_id, T rating) noexcept;
+        bool learn_online(size_t user_id, size_t item_id, T rating) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
         std::deque<item_score_t> recommend(size_t user_id, int k) noexcept;
 
@@ -116,6 +117,19 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
+    void svd<T, DS>::add_items(size_t count) {
+        auto new_row = _pI.add_rows(count);
+        _bi.add_components(count);
+
+        double rand_max = static_cast <double> (RAND_MAX);
+        for (auto& row : new_row) {
+            for (auto& elem : *row) {
+                elem = static_cast <double> (rand()) / rand_max;
+            }
+        }
+    }
+
+    template<typename T, template<class> class DS>
     void svd<T, DS>::learn() noexcept {
         if (_ratings == nullptr) {
             std::cout << "No ratnigs to process" << std::endl;
@@ -196,7 +210,7 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
-    void svd<T,DS>::learn_online(size_t user_id, size_t item_id, T rating) noexcept {
+    bool svd<T,DS>::learn_online(size_t user_id, size_t item_id, T rating) noexcept {
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
         auto print_results = _config.print_results();
@@ -260,6 +274,8 @@ namespace rsys {
             std::cout << "=== End of Results ===" << "\n\n";
             std::cout << std::flush;
         }
+
+        return true;
     }
 
     template<typename T, template<class> class DS>
