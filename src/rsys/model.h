@@ -14,7 +14,7 @@ namespace rsys {
         virtual void add_user() = 0;
         virtual void add_item() = 0;
 
-        virtual void learn() noexcept = 0;
+        virtual void learn_offline() noexcept = 0;
         virtual T predict(size_t user_id, size_t item_id) noexcept = 0;
         virtual std::deque<item_score_t> recommend(size_t user_id, int k) noexcept = 0;
     };

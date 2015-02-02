@@ -8,16 +8,126 @@
 
 #include <assert.h>
 #include <vector>
+#include <memory>
 
 namespace rsys {
     namespace ds {
 
+        template <typename T>
+        struct matrix_tuple {
+            size_t row;
+            size_t col;
+            const T& value;
+
+
+            matrix_tuple(size_t row_id, size_t col_id, const T& value)
+                    : row(row_id), col(col_id), value(value) {
+            }
+        };
+
         template<typename T>
         class matrix : public imatrix<T> {
             template <typename _IT> using my_base_iterator = base_iterator<_IT, matrix<T>>;
+
         public:
             typedef my_base_iterator<mvector<T>*> iterator;
             typedef my_base_iterator<const mvector<T>*> const_iterator;
+
+            template <typename _Cont>
+            class item_iterator {
+                friend class matrix<T>;
+            public:
+
+                typedef std::shared_ptr<_Cont> value_type;
+                typedef typename value_type::element_type element_type;
+
+                item_iterator(const item_iterator& that)
+                        : _m(that._m),
+                          _current_row(that._current_row),
+                          _current_col(that._current_col),
+                          _value(current()) {
+
+                }
+
+                value_type next() {
+                    ++_current_col;
+                    if (_current_col == _m._cols) {
+                        ++_current_row;
+                        if (_current_row != _m._rows) {
+                            _current_col = 0;
+                        }
+                    }
+                    if (_current_row == _m._rows) {
+                        return nullptr;
+                    }
+
+                    _value = current();
+                    return _value;
+                }
+
+                value_type current() {
+                    if (_current_row >= _m._rows || _current_col >= _m._cols) {
+                        return nullptr;
+                    }
+                    const T& val = (*_m._m[_current_row])[_current_col];
+                    auto t = std::make_shared<element_type>(_current_row, _current_col, val);
+                    return t;
+                }
+
+                item_iterator& operator++ () {
+                    _value = next();
+                    return *this;
+                }
+
+                item_iterator operator++ (int) {
+                    item_iterator old(*this);
+                    ++*this;
+                    return old;
+                }
+
+                element_type& operator *() {
+                    return *_value;
+                }
+
+                element_type* operator ->() {
+                    return &(*_value);
+                }
+
+                bool operator ==(const item_iterator& other) {
+                    return &_m == &other._m &&
+                           _current_row == other._current_row &&
+                           _current_col == other._current_col;
+                }
+
+                bool operator !=(const item_iterator& other) {
+                    return !(*this == other);
+                }
+
+            private:
+                item_iterator(const matrix<T>& m)
+                        : _m(m),
+                          _current_row(0),
+                          _current_col(0),
+                          _value(current()) {
+
+                }
+
+                item_iterator(const matrix<T>& m, size_t row, size_t col)
+                        : _m(m),
+                          _current_row(row),
+                          _current_col(col),
+                          _value(current()) {
+
+                }
+
+            private:
+                const matrix<T>& _m;
+
+                size_t _current_row;
+                size_t _current_col;
+
+                value_type _value;
+            };
 
 
             matrix(size_t rows, size_t cols, const T& default_value = T());
@@ -67,6 +177,12 @@ namespace rsys {
             const_iterator end() const noexcept { return const_iterator(_m + _rows); }
             const_iterator cbegin() const noexcept { return const_iterator(_m); }
             const_iterator cend() const noexcept { return const_iterator(_m + _rows); }
+
+            template <typename Cont>
+            item_iterator<Cont> item_iterator_begin() const { return item_iterator<Cont>(*this); }
+
+            template <typename Cont>
+            item_iterator<Cont> item_iterator_end() const { return item_iterator<Cont>(*this, _rows, _cols); }
 
         private:
             void resize(size_t new_capacity);

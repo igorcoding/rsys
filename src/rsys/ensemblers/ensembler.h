@@ -31,7 +31,7 @@ namespace rsys {
         ensembler(const PRED& predict_func = PRED());
 
         ensembler& add_model(model<T>* m);
-        void learn() noexcept;
+        void learn_offline() noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
         std::deque<item_score_t> recommend(size_t user_id, int k) noexcept;
 
@@ -53,9 +53,9 @@ namespace rsys {
     }
 
     template <typename T, typename PRED>
-    void ensembler<T,PRED>::learn() noexcept {
+    void ensembler<T,PRED>::learn_offline() noexcept {
         for (auto& m : _models) {
-            m->learn();
+            m->learn_offline();
         }
     }
 

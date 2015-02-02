@@ -43,9 +43,15 @@ int basic_example() {
 
     std::cout << m << std::endl;
 
-    m.add_rows(5);
 
-    std::cout << std::endl;
+    for (auto it = m.item_iterator_begin<matrix_tuple<double>>(); it != m.item_iterator_end<matrix_tuple<double>>(); ++it) {
+        std::cout << "<" << it->row << ":" << it->col << "> = " << it->value << std::endl;
+    }
+
+
+//    m.add_rows(5);
+
+//    std::cout << std::endl;
 //    for (auto& row : m) {
 //        for (auto& val: row) {
 //            std::cout << val << " ";
@@ -53,18 +59,19 @@ int basic_example() {
 //        std::cout << std::endl;
 //    }
 
-    rsys_t::config_t c(15,16,-1, 4, 0.005);
+    rsys_t::config_t c(m, 4, 0.005);
 
-    rsys_t r(c);
+//    rsys_t r(c);
 
-//    svd_t svd(c);
+    svd_t r(c);
 
 //    recommender::ensembler<double, mean_pred<double>> comb;
 //    comb.add_model(&r);
-//    comb.learn();
+//    comb.learn_offline();
 
-    r.learn();
+    r.learn_offline();
 
+    r.learn_online(2, 2, 5.0);
     std::cout << "Finished" << std::endl;
 
     std::cout << "Initial:" << std::endl << m << std::endl;
@@ -132,7 +139,7 @@ int movielens_example() {
     svd_t::config_t c(m, 4, 0.1, 200, false);
     svd_t svd(c);
 
-    svd.learn();
+    svd.learn_offline();
     std::cout << "Finished" << std::endl;
 
 //    fs.open(prefix + "initial.dat", ios_base::out);
