@@ -3,6 +3,7 @@
 #include "rsys/data_sources/mvector.h"
 #include "../src/rsys/svd.h"
 
+#include "vector_converter.h"
 
 #include <boost/python.hpp>
 using namespace boost::python;
@@ -73,6 +74,11 @@ void export_rsys() {
     typedef typename t_svd::config_t config_t;
     typedef typename t_svd::item_score_t item_score_t;
 
+    iterable_converter()
+            // Build-in type.
+            .from_python<std::vector<item_score_t> >()
+            ;
+
     class_<item_score_t>("ItemScore", init<size_t, size_t, T> ((arg("user_id"), arg("item_id"), arg("score"))))
             .def_readwrite("user_id", &item_score_t::user_id)
             .def_readwrite("item_id", &item_score_t::item_id)
@@ -111,6 +117,7 @@ void export_rsys() {
 BOOST_PYTHON_MODULE(rsys) {
     object package = scope();
     package.attr("__path__") = "rsys";
+
 
     export_data_sources<double>();
     export_rsys<double>();

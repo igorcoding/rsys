@@ -280,6 +280,11 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     bool svd<T,DS>::learn_online(const std::vector<item_score_t>& scores) noexcept {
+
+        for (auto& s : scores) {
+            std::cout << s << std::endl;
+        }
+
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
         auto print_results = _config.print_results();
