@@ -36,8 +36,8 @@ namespace rsys {
             template <typename _IT> using my_base_iterator = base_iterator<_IT, matrix<T>>;
 
         public:
-            typedef my_base_iterator<mvector<T>*> iterator;
-            typedef my_base_iterator<const mvector<T>*> const_iterator;
+            typedef my_base_iterator<mvector<T>**> iterator;
+            typedef my_base_iterator<const mvector<T>**> const_iterator;
 
             template <typename _Cont>
             class item_iterator {
@@ -182,9 +182,9 @@ namespace rsys {
             iterator begin() noexcept { return iterator(_m); }
             const_iterator begin() const noexcept { return const_iterator(_m); }
             iterator end() noexcept { return iterator(_m + _rows); }
-            const_iterator end() const noexcept { return const_iterator(_m + _rows); }
+            const_iterator end() const noexcept { return const_iterator((_m + _rows)); }
             const_iterator cbegin() const noexcept { return const_iterator(_m); }
-            const_iterator cend() const noexcept { return const_iterator(_m + _rows); }
+            const_iterator cend() const noexcept { return const_iterator((_m + _rows)); }
 
             template <typename Cont>
             item_iterator<Cont> item_iterator_begin() const { return item_iterator<Cont>(*this); }
@@ -350,13 +350,13 @@ namespace rsys {
 
         template<typename T>
         mvector <T>& matrix<T>::operator [](int i) {
-            assert(i >= 0 && i < _rows);
+            assert(i >= 0 && i < (int) _rows);
             return *_m[i];
         }
 
         template<typename T>
         const mvector <T>& matrix<T>::operator [](int i) const {
-            assert(i >= 0 && i < _rows);
+            assert(i >= 0 && i < (int) _rows);
             return *_m[i];
         }
 

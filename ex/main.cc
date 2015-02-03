@@ -48,7 +48,7 @@ int basic_example() {
 
 //    std::cout << std::endl;
 //    for (auto& row : m) {
-//        for (auto& val: row) {
+//        for (auto& val: *row) {
 //            std::cout << val << " ";
 //        }
 //        std::cout << std::endl;
