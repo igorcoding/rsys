@@ -17,11 +17,17 @@ namespace rsys {
         struct matrix_tuple {
             size_t row;
             size_t col;
-            const T& value;
+            T value;
 
 
             matrix_tuple(size_t row_id, size_t col_id, const T& value)
                     : row(row_id), col(col_id), value(value) {
+            }
+
+            void set(size_t row_id, size_t col_id, const T& value) {
+                this->row = row_id;
+                this->col = col_id;
+                this->value = value;
             }
         };
 
@@ -45,8 +51,8 @@ namespace rsys {
                         : _m(that._m),
                           _current_row(that._current_row),
                           _current_col(that._current_col),
-                          _value(current()) {
-
+                          _value(that._value) {
+//                    std::cout << "copied item_iterator\n";
                 }
 
                 value_type next() {
@@ -61,17 +67,20 @@ namespace rsys {
                         return nullptr;
                     }
 
-                    _value = current();
-                    return _value;
+                    return current(_value);
                 }
 
-                value_type current() {
+                value_type current(value_type value = nullptr) {
                     if (_current_row >= _m._rows || _current_col >= _m._cols) {
                         return nullptr;
                     }
                     const T& val = (*_m._m[_current_row])[_current_col];
-                    auto t = std::make_shared<element_type>(_current_row, _current_col, val);
-                    return t;
+                    if (value == nullptr) {
+                        return std::make_shared<element_type>(_current_row, _current_col, val);
+                    } else {
+                        _value->set(_current_row, _current_col, val);
+                    }
+                    return _value;
                 }
 
                 item_iterator& operator++ () {
@@ -108,7 +117,7 @@ namespace rsys {
                         : _m(m),
                           _current_row(0),
                           _current_col(0),
-                          _value(current()) {
+                          _value(current(nullptr)) {
 
                 }
 
@@ -116,7 +125,7 @@ namespace rsys {
                         : _m(m),
                           _current_row(row),
                           _current_col(col),
-                          _value(current()) {
+                          _value(current(nullptr)) {
 
                 }
 

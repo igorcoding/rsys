@@ -12,11 +12,17 @@ namespace rsys {
         size_t item_id;
         T score;
 
-        item_score(size_t user_id, size_t item_id, T score)
+        item_score(size_t user_id, size_t item_id, const T& score)
                 : user_id(user_id),
                   item_id(item_id),
                   score(score) {
 
+        }
+
+        void set(size_t user_id, size_t item_id, const T& score) {
+            this->user_id = user_id;
+            this->item_id = item_id;
+            this->score = score;
         }
     };
 

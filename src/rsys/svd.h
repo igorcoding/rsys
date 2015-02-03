@@ -24,15 +24,16 @@ namespace rsys {
     public:
         typedef config<svd<T, DS>> config_t;
         typedef item_score<T> item_score_t;
+        typedef typename DS<T>::template item_iterator<item_score_t> DS_item_iterator;
 
         svd(const config_t& conf);
+        ~svd();
 
 
         void add_user();
         void add_item();
         void add_items(size_t count);
 
-        void learn(std::function<void(float&, const float&, float&, size_t&)> fitter) noexcept;
         void learn_offline() noexcept;
         void learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
         void learn_online(const std::vector<item_score_t>& scores) noexcept;
@@ -44,6 +45,7 @@ namespace rsys {
     private:
         T predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept;
 
+        void learn(std::function<void(float&, const float&, float&, size_t&)> fitter) noexcept;
         template <typename Iter> void fit(Iter begin, Iter end, float& learning_rate, const float& lambda, float& rmse, size_t& total);
         void fit(size_t user_id, size_t item_id, const T& rating, float& learning_rate, const float& lambda, float& rmse, size_t& total);
 
@@ -59,6 +61,8 @@ namespace rsys {
         double _mu;
 
         const DS<T>* _ratings;
+        DS_item_iterator* _ratings_begin;
+        DS_item_iterator* _ratings_end;
     };
 
     template<typename T, template<class> class DS>
@@ -73,7 +77,9 @@ namespace rsys {
               _bi(_items_count),
               _mu(0),
 
-              _ratings(_config._ratings) {
+              _ratings(_config._ratings),
+              _ratings_begin(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_begin<item_score_t>()) : nullptr),
+              _ratings_end(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_end<item_score_t>()) : nullptr) {
         srand(static_cast<unsigned int>(time(nullptr)));
         double rand_max = static_cast <double> (RAND_MAX);
 
@@ -88,6 +94,14 @@ namespace rsys {
                 _pI.set(i, j, static_cast <double> (rand()) / rand_max);
             }
         }
+    }
+
+    template<typename T, template<class> class DS>
+    svd<T,DS>::~svd() {
+        delete _ratings_begin;
+        _ratings_begin = nullptr;
+        delete _ratings_end;
+        _ratings_end = nullptr;
     }
 
     template<typename T, template<class> class DS>
@@ -173,11 +187,6 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     void svd<T, DS>::learn(std::function<void(float&, const float&, float&, size_t&)> fitter) noexcept {
-        if (_ratings == nullptr) {
-            std::cout << "No ratnigs to process" << std::endl;
-            return;
-        }
-
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
         auto print_results = _config.print_results();
@@ -190,7 +199,7 @@ namespace rsys {
         float threshold = 0.01;
 
         while (fabs(rmse - old_rmse) > eps) {
-//            std::cout << "Iteration #" << iteration << std::endl;
+            // std::cout << "Iteration #" << iteration << std::endl;
             iteration++;
             old_rmse = rmse;
 
@@ -199,7 +208,7 @@ namespace rsys {
 
             rmse /= total;
             rmse = std::sqrt(rmse);
-//            std::cout << "RMSE = " << rmse << std::endl;
+            // std::cout << "RMSE = " << rmse << std::endl;
 
             if (old_rmse - rmse < threshold) {
                 learning_rate *= 0.8;
@@ -227,9 +236,14 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     void svd<T,DS>::learn_offline() noexcept {
+        if (_ratings == nullptr) {
+            std::cout << "No ratnigs to process" << std::endl;
+            return;
+        }
+
         auto fitter = [this](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
-            this->fit(_ratings->template item_iterator_begin<item_score_t>(),
-                      _ratings->template item_iterator_end<item_score_t>(),
+            this->fit(*_ratings_begin,
+                      *_ratings_end,
                       learning_rate,
                       lambda,
                       rmse,
