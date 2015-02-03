@@ -28,6 +28,8 @@ namespace rsys {
         void add_item();
 
         void learn_offline() noexcept;
+        void learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
+        void learn_online(const std::vector<item_score_t>& scores) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
         std::deque<item_score_t> recommend(size_t user_id, int k) noexcept;
 
@@ -59,6 +61,16 @@ namespace rsys {
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
     void recommender<T,DS,MODEL>::learn_offline() noexcept {
         _model->learn_offline();
+    }
+
+    template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
+    void recommender<T,DS,MODEL>::learn_online(size_t user_id, size_t item_id, const T& rating) noexcept {
+        _model->learn_online(user_id, item_id, rating);
+    }
+
+    template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
+    void recommender<T,DS,MODEL>::learn_online(const std::vector<item_score_t>& scores) noexcept {
+        _model->learn_online(scores);
     }
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>

@@ -15,9 +15,9 @@ namespace rsys {
         typedef typename traits<_IT>::const_pointer const_pointer;
 
         base_iterator();
-        base_iterator(const base_iterator<raw_pointer, FRIEND>& other);
-        base_iterator(const base_iterator<const_pointer, FRIEND>& other);
-        base_iterator& operator =(const base_iterator& other);
+        base_iterator(const base_iterator<raw_pointer, FRIEND>& rhs);
+        base_iterator(const base_iterator<const_pointer, FRIEND>& rhs);
+        base_iterator& operator =(const base_iterator& rhs);
 
         base_iterator& operator ++();
         base_iterator operator ++(int);
@@ -54,22 +54,22 @@ namespace rsys {
 
     
     template<typename _IT, typename FRIEND>
-    base_iterator<_IT,FRIEND>::base_iterator(const base_iterator<raw_pointer, FRIEND>& other)
-            : _data(other.data()) {
+    base_iterator<_IT,FRIEND>::base_iterator(const base_iterator<raw_pointer, FRIEND>& rhs)
+            : _data(rhs.data()) {
     }
 
     
     template<typename _IT, typename FRIEND>
-    base_iterator<_IT,FRIEND>::base_iterator(const base_iterator<const_pointer, FRIEND>& other)
-            : _data(other.data()) {
+    base_iterator<_IT,FRIEND>::base_iterator(const base_iterator<const_pointer, FRIEND>& rhs)
+            : _data(rhs.data()) {
     }
 
     
     template<typename _IT, typename FRIEND>
     inline
-    base_iterator<_IT,FRIEND>& base_iterator<_IT,FRIEND>::operator =(const base_iterator<_IT,FRIEND>& other) {
-        if (this != &other) {
-            _data = other._data;
+    base_iterator<_IT,FRIEND>& base_iterator<_IT,FRIEND>::operator =(const base_iterator<_IT,FRIEND>& rhs) {
+        if (this != &rhs) {
+            _data = rhs._data;
         }
         return *this;
     }

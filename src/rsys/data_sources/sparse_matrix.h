@@ -82,11 +82,11 @@ namespace rsys {
                 typedef typename traits<V>::pointer pointer;
 
                 explicit hashmap_base_iterator(ITER data = nullptr) : __hashmap_base_iterator<K,V,ITER>(data) { }
-                hashmap_base_iterator(const hashmap_base_iterator& other) : __hashmap_base_iterator<K,V,ITER>(other._data) { }
+                hashmap_base_iterator(const hashmap_base_iterator& rhs) : __hashmap_base_iterator<K,V,ITER>(rhs._data) { }
 
-                hashmap_base_iterator& operator =(const hashmap_base_iterator& other) {
-                    if (this != &other) {
-                        this->_data = other._data;
+                hashmap_base_iterator& operator =(const hashmap_base_iterator& rhs) {
+                    if (this != &rhs) {
+                        this->_data = rhs._data;
                     }
                     return *this;
                 }
@@ -333,7 +333,7 @@ namespace rsys {
             return *this;
         }
 
-/************* Other methods *************/
+/************* rhs methods *************/
         template<typename T>
         std::ostream& operator <<(std::ostream& os, const sparse_matrix<T>& s) {
             for (size_t i = 0; i < s.rows(); ++i) {

@@ -47,12 +47,11 @@ namespace rsys {
                 typedef std::shared_ptr<_Cont> value_type;
                 typedef typename value_type::element_type element_type;
 
-                item_iterator(const item_iterator& that)
-                        : _m(that._m),
-                          _current_row(that._current_row),
-                          _current_col(that._current_col),
-                          _value(that._value) {
-//                    std::cout << "copied item_iterator\n";
+                item_iterator(const item_iterator& rhs)
+                        : _m(rhs._m),
+                          _current_row(rhs._current_row),
+                          _current_col(rhs._current_col),
+                          _value(rhs._value) {
                 }
 
                 value_type next() {
@@ -102,14 +101,14 @@ namespace rsys {
                     return &(*_value);
                 }
 
-                bool operator ==(const item_iterator& other) {
-                    return &_m == &other._m &&
-                           _current_row == other._current_row &&
-                           _current_col == other._current_col;
+                bool operator ==(const item_iterator& rhs) {
+                    return &_m == &rhs._m &&
+                           _current_row == rhs._current_row &&
+                           _current_col == rhs._current_col;
                 }
 
-                bool operator !=(const item_iterator& other) {
-                    return !(*this == other);
+                bool operator !=(const item_iterator& rhs) {
+                    return !(*this == rhs);
                 }
 
             private:
@@ -141,11 +140,11 @@ namespace rsys {
 
             matrix(size_t rows, size_t cols, const T& default_value = T());
             matrix(std::initializer_list<std::initializer_list<T>> list, const T& default_value = T());
-            matrix(const matrix<T>& other);
-            matrix(matrix<T>&& other);
+            matrix(const matrix<T>& rhs);
+            matrix(matrix<T>&& rhs);
 
-            matrix& operator =(const matrix<T>& other);
-            matrix& operator =(matrix<T>&& other);
+            matrix& operator =(const matrix<T>& rhs);
+            matrix& operator =(matrix<T>&& rhs);
 
             virtual ~matrix();
 
@@ -263,78 +262,78 @@ namespace rsys {
         }
 
         template<typename T>
-        matrix<T>::matrix(const matrix<T>& other)
-                : _rows(other._rows),
-                  _cols(other._cols),
-                  _total(other._total),
-                  _def_value(other._def_value),
-                  _capacity(other._capacity),
+        matrix<T>::matrix(const matrix<T>& rhs)
+                : _rows(rhs._rows),
+                  _cols(rhs._cols),
+                  _total(rhs._total),
+                  _def_value(rhs._def_value),
+                  _capacity(rhs._capacity),
                   _m(new mvector<T>*[_rows]) {
-//            std::cout << "matrix copy" << other._rows << other._cols << _rows << _cols << std::endl;
+//            std::cout << "matrix copy" << rhs._rows << rhs._cols << _rows << _cols << std::endl;
             for (size_t i = 0; i < _rows; ++i) {
-                _m[i] = new mvector<T>(*other._m[i]);
+                _m[i] = new mvector<T>(*rhs._m[i]);
             }
         }
 
         template<typename T>
-        matrix<T>::matrix(matrix<T>&& other)
+        matrix<T>::matrix(matrix<T>&& rhs)
                 : _rows(0),
                   _cols(0),
                   _total(0),
                   _def_value(T()),
                   _capacity(0),
                   _m(nullptr) {
-            _rows = other._rows;
-            _cols = other._cols;
-            _total = other._total;
-            _def_value = other._def_value;
-            _capacity = other._capacity;
-            _m = other._m;
+            _rows = rhs._rows;
+            _cols = rhs._cols;
+            _total = rhs._total;
+            _def_value = rhs._def_value;
+            _capacity = rhs._capacity;
+            _m = rhs._m;
 
-            other._rows = 0;
-            other._cols = 0;
-            other._total = 0;
-            other._def_value = T();
-            other._capacity = 0;
-            other._m = nullptr;
+            rhs._rows = 0;
+            rhs._cols = 0;
+            rhs._total = 0;
+            rhs._def_value = T();
+            rhs._capacity = 0;
+            rhs._m = nullptr;
         }
 
         template<typename T>
-        matrix<T>& matrix<T>::operator =(const matrix<T>& other) {
-            if (this != &other) {
+        matrix<T>& matrix<T>::operator =(const matrix<T>& rhs) {
+            if (this != &rhs) {
                 clean_up();
-                _rows = other._rows;
-                _cols = other._cols;
-                _total = other._total;
-                _def_value = other._def_value;
+                _rows = rhs._rows;
+                _cols = rhs._cols;
+                _total = rhs._total;
+                _def_value = rhs._def_value;
 
-                _capacity = other._capacity;
+                _capacity = rhs._capacity;
                 _m = new mvector<T>*[_rows];
                 for (size_t i = 0; i < _rows; ++i) {
-                    _m[i] = new mvector<T>(*other._m[i]);
+                    _m[i] = new mvector<T>(*rhs._m[i]);
                 }
             }
             return *this;
         }
 
         template<typename T>
-        matrix<T>& matrix<T>::operator =(matrix<T>&& other) {
-            if (this != &other) {
+        matrix<T>& matrix<T>::operator =(matrix<T>&& rhs) {
+            if (this != &rhs) {
                 clean_up();
 
-                _rows = other._rows;
-                _cols = other._cols;
-                _total = other._total;
-                _def_value = other._def_value;
-                _capacity = other._capacity;
-                _m = other._m;
+                _rows = rhs._rows;
+                _cols = rhs._cols;
+                _total = rhs._total;
+                _def_value = rhs._def_value;
+                _capacity = rhs._capacity;
+                _m = rhs._m;
 
-                other._rows = 0;
-                other._cols = 0;
-                other._total = 0;
-                other._def_value = T();
-                other._capacity = 0;
-                other._m = nullptr;
+                rhs._rows = 0;
+                rhs._cols = 0;
+                rhs._total = 0;
+                rhs._def_value = T();
+                rhs._capacity = 0;
+                rhs._m = nullptr;
             }
             return *this;
         }
@@ -573,7 +572,7 @@ namespace rsys {
         }
 
 
-/************* Other methods *************/
+/************* rhs methods *************/
         template<typename T>
         std::ostream& operator <<(std::ostream& os, const matrix<T>& m) {
             for (size_t i = 0; i < m.rows(); ++i) {

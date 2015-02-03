@@ -254,7 +254,7 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     void svd<T,DS>::learn_online(size_t user_id, size_t item_id, const T& rating) noexcept {
-        auto fitter = [this, user_id, item_id, rating](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+        auto fitter = [this, user_id, item_id, &rating](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
             this->fit(user_id, item_id, rating,
                       learning_rate,
                       lambda,
@@ -266,7 +266,7 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     void svd<T,DS>::learn_online(const std::vector<item_score_t>& scores) noexcept {
-        auto fitter = [this, scores](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+        auto fitter = [this, &scores](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
             this->fit(scores.begin(),
                       scores.end(),
                       learning_rate,
@@ -286,12 +286,14 @@ namespace rsys {
 
         heap_t heap(comp);
 
+        auto ik = static_cast<size_t>(k);
+
         for (size_t i = 0; i < _items_count; ++i) {
             if (_ratings == nullptr || _ratings->at(user_id, i) == _config.def_value()) {
                 auto score = predict(user_id, i);
                 item_score_t s(user_id, i, score);
 
-                if (k > 0 && heap.size() == static_cast<size_t>(k)) {
+                if (k > 0 && heap.size() == ik) {
                     heap.pop();
                 }
                 heap.push(s);

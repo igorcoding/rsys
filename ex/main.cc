@@ -44,11 +44,6 @@ int basic_example() {
     std::cout << m << std::endl;
 
 
-    for (auto it = m.item_iterator_begin<matrix_tuple<double>>(); it != m.item_iterator_end<matrix_tuple<double>>(); ++it) {
-        std::cout << "<" << it->row << ":" << it->col << "> = " << it->value << std::endl;
-    }
-
-
 //    m.add_rows(5);
 
 //    std::cout << std::endl;

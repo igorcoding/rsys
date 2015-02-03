@@ -28,10 +28,10 @@ namespace rsys {
             mvector(T* vec, size_t size, bool no_copy);
             mvector(T*&& vec, size_t size);
             explicit mvector(const std::vector<T>& vec);
-            mvector(const mvector<T>& that);
-            mvector(mvector&& that);
-            mvector<T>& operator =(const mvector<T>& that);
-            mvector<T>& operator =(mvector<T>&& that);
+            mvector(const mvector<T>& rhs);
+            mvector(mvector&& rhs);
+            mvector<T>& operator =(const mvector<T>& rhs);
+            mvector<T>& operator =(mvector<T>&& rhs);
             ~mvector();
 
             template<typename Y> mvector<Y> cast();
@@ -60,12 +60,12 @@ namespace rsys {
             void add_component(const T& default_value = T());
             void add_components(size_t count, const T& default_value = T());
 
-            mvector<T>& operator +=(const mvector<T>& other);
-            template<typename U> mvector<T>& operator +=(const U& other);
-            mvector<T>& operator -=(const mvector<T>& other);
-            template<typename U> mvector<T>& operator -=(const U& other);
-            template<typename U> mvector<T>& operator *=(const U& other);
-            template<typename U> mvector<T>& operator /=(const U& other);
+            mvector<T>& operator +=(const mvector<T>& rhs);
+            template<typename U> mvector<T>& operator +=(const U& rhs);
+            mvector<T>& operator -=(const mvector<T>& rhs);
+            template<typename U> mvector<T>& operator -=(const U& rhs);
+            template<typename U> mvector<T>& operator *=(const U& rhs);
+            template<typename U> mvector<T>& operator /=(const U& rhs);
 
             T dot(const mvector<T>& rhs) const;
             mvector<double> normalize() const;
@@ -162,14 +162,14 @@ namespace rsys {
         }
 
         template<typename T>
-        mvector<T>::mvector(const mvector<T>& that)
-                : _size(that.size()),
+        mvector<T>::mvector(const mvector<T>& rhs)
+                : _size(rhs.size()),
                   _no_copy(false),
-                  _capacity(that._capacity) {
+                  _capacity(rhs._capacity) {
 //            std::cout << "mvector copy" << std::endl;
             _vec = new T[_capacity];
             for (size_t i = 0; i < _size; ++i) {
-                _vec[i] = that._vec[i];
+                _vec[i] = rhs._vec[i];
             }
         }
 
@@ -185,53 +185,53 @@ namespace rsys {
         }
 
         template<typename T>
-        mvector<T>::mvector(mvector<T>&& that)
+        mvector<T>::mvector(mvector<T>&& rhs)
                 : _size(0),
                   _no_copy(false),
                   _capacity(0),
                   _vec(nullptr) {
-            _size = that._size;
-            _no_copy = that._no_copy;
-            _capacity = that._capacity;
-            _vec = that._vec;
+            _size = rhs._size;
+            _no_copy = rhs._no_copy;
+            _capacity = rhs._capacity;
+            _vec = rhs._vec;
 
-            that._size = 0;
-            that._no_copy = false;
-            that._capacity = 0;
-            that._vec = nullptr;
+            rhs._size = 0;
+            rhs._no_copy = false;
+            rhs._capacity = 0;
+            rhs._vec = nullptr;
         }
 
         template<typename T>
         inline
-        mvector<T>& mvector<T>::operator =(const mvector<T>& that) {
+        mvector<T>& mvector<T>::operator =(const mvector<T>& rhs) {
 //    std::cout << "mvector operator=" << std::endl;
-            if (this != &that) {
+            if (this != &rhs) {
                 clean_up();
 
-                _size = that.size();
+                _size = rhs.size();
                 _no_copy = false;
-                _capacity = that._capacity;
+                _capacity = rhs._capacity;
                 _vec = new T[_capacity];
-                std::memcpy(_vec, that._vec, _size * sizeof(T));
+                std::memcpy(_vec, rhs._vec, _size * sizeof(T));
             }
             return *this;
         }
 
         template<typename T>
         inline
-        mvector<T>& mvector<T>::operator =(mvector<T>&& that) {
-            if (this != &that) {
+        mvector<T>& mvector<T>::operator =(mvector<T>&& rhs) {
+            if (this != &rhs) {
                 clean_up();
 
-                _size = that.size();
-                _no_copy = that._no_copy;
-                _capacity = that._capacity;
-                _vec = that._vec;
+                _size = rhs.size();
+                _no_copy = rhs._no_copy;
+                _capacity = rhs._capacity;
+                _vec = rhs._vec;
 
-                that._size = 0;
-                that._no_copy = false;
-                that._capacity = 0;
-                that._vec = nullptr;
+                rhs._size = 0;
+                rhs._no_copy = false;
+                rhs._capacity = 0;
+                rhs._vec = nullptr;
             }
             return *this;
         }
@@ -308,55 +308,55 @@ namespace rsys {
         }
 
         template<typename T>
-        mvector<T>& mvector<T>::operator +=(const mvector<T>& other) {
-            check_sizes(_size, other.size());
+        mvector<T>& mvector<T>::operator +=(const mvector<T>& rhs) {
+            check_sizes(_size, rhs.size());
             for (size_t i = 0; i < _size; ++i) {
-                _vec[i] += other._vec[i];
+                _vec[i] += rhs._vec[i];
             }
             return *this;
         }
 
         template<typename T>
         template<typename U>
-        mvector<T>& mvector<T>::operator +=(const U& other) {
+        mvector<T>& mvector<T>::operator +=(const U& rhs) {
             for (size_t i = 0; i < _size; ++i) {
-                _vec[i] += other;
+                _vec[i] += rhs;
             }
             return *this;
         }
 
         template<typename T>
-        mvector<T>& mvector<T>::operator -=(const mvector<T>& other) {
-            check_sizes(_size, other.size());
+        mvector<T>& mvector<T>::operator -=(const mvector<T>& rhs) {
+            check_sizes(_size, rhs.size());
             for (size_t i = 0; i < _size; ++i) {
-                _vec[i] -= other._vec[i];
-            }
-            return *this;
-        }
-
-        template<typename T>
-        template<typename U>
-        mvector<T>& mvector<T>::operator -=(const U& other) {
-            for (size_t i = 0; i < _size; ++i) {
-                _vec[i] -= other;
+                _vec[i] -= rhs._vec[i];
             }
             return *this;
         }
 
         template<typename T>
         template<typename U>
-        mvector<T>& mvector<T>::operator *=(const U& other) {
+        mvector<T>& mvector<T>::operator -=(const U& rhs) {
             for (size_t i = 0; i < _size; ++i) {
-                _vec[i] *= other;
+                _vec[i] -= rhs;
             }
             return *this;
         }
 
         template<typename T>
         template<typename U>
-        mvector<T>& mvector<T>::operator /=(const U& other) {
+        mvector<T>& mvector<T>::operator *=(const U& rhs) {
             for (size_t i = 0; i < _size; ++i) {
-                _vec[i] /= other;
+                _vec[i] *= rhs;
+            }
+            return *this;
+        }
+
+        template<typename T>
+        template<typename U>
+        mvector<T>& mvector<T>::operator /=(const U& rhs) {
+            for (size_t i = 0; i < _size; ++i) {
+                _vec[i] /= rhs;
             }
             return *this;
         }
@@ -474,7 +474,7 @@ namespace rsys {
             }
         }
 
-/************* Other methods *************/
+/************* rhs methods *************/
         template<typename T>
         std::ostream& operator <<(std::ostream& os, const mvector<T>& mvec) {
             os << "[";

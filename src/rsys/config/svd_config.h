@@ -29,7 +29,7 @@ namespace rsys {
     public:
         config(const DS<T>& _ratings, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
         config(size_t users_count, size_t items_count, const T& def_value, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
-        config(const config& other);
+        config(const config& rhs);
         ~config();
 //        config(const DS<T>* _ratings, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
 
@@ -99,16 +99,16 @@ namespace rsys {
     }
 
     template <typename T, template <class> class DS>
-    config<svd<T,DS>>::config(const config<svd<T,DS>>& other)
-            : _ratings(other._ratings ? new DS<T>(*other._ratings) : nullptr),
-              _def_value(other._def_value),
-              _users_count(other._users_count),
-              _items_count(other._items_count),
-              _features_count(other._features_count),
-              _learning_rate(other._learning_rate),
-              _regularization(other._regularization),
-              _max_iterations(other._max_iterations),
-              _print_results(other._print_results)
+    config<svd<T,DS>>::config(const config<svd<T,DS>>& rhs)
+            : _ratings(rhs._ratings ? new DS<T>(*rhs._ratings) : nullptr),
+              _def_value(rhs._def_value),
+              _users_count(rhs._users_count),
+              _items_count(rhs._items_count),
+              _features_count(rhs._features_count),
+              _learning_rate(rhs._learning_rate),
+              _regularization(rhs._regularization),
+              _max_iterations(rhs._max_iterations),
+              _print_results(rhs._print_results)
     {
 //        std::cout << "Copying config" << std::endl;
     }
