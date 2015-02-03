@@ -9,6 +9,6 @@ int main() {
     Test::TextOutput output(Test::TextOutput::Verbose);
 
     Test::Suite ts;
-    ts.add(std::make_unique<matrix_test_suite<int>>());
+    ts.add(std::make_unique<matrix_test_suite>());
     return ts.run(output) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

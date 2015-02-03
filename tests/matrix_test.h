@@ -9,12 +9,11 @@ namespace rsys_tests {
 
     using namespace rsys;
 
-    template <typename T>
     class matrix_test_suite : public Test::Suite {
     public:
         matrix_test_suite() {
-            TEST_ADD(matrix_test_suite::creation_test);
-            TEST_ADD(matrix_test_suite::second_test);
+            TEST_ADD(matrix_test_suite::test_create);
+            TEST_ADD(matrix_test_suite::test_setting_value);
         }
 
     protected:
@@ -22,46 +21,61 @@ namespace rsys_tests {
         virtual void tear_down();
 
     private:
-        void creation_test();
-        void second_test();
+        void test_create();
+        void test_setting_value();
 
 
     private:
-        ds::matrix<T>* _m;
+        ds::matrix<double>* _m;
     };
 
-    template <typename T>
-    void matrix_test_suite<T>::setup() {
+    void matrix_test_suite::setup() {
+        size_t rows = 5, cols = 5;
+        _m = new ds::matrix<double>(rows, cols, -1);
 
+        _m->set(0, 0, 4);   _m->set(0, 1, 5);   _m->set(0, 2, 2);  _m->set(0, 3, -1);  _m->set(0, 4, -1);
+        _m->set(1, 0, -1);  _m->set(1, 1, 4);   _m->set(1, 2, 4);  _m->set(1, 3, 3);   _m->set(1, 4, -1);
+        _m->set(2, 0, -1);  _m->set(2, 1, 2);   _m->set(2, 2, -1); _m->set(2, 3, 5);  _m->set(2, 4, -1);
+        _m->set(3, 0, 5);   _m->set(3, 1, 4);   _m->set(3, 2, -1); _m->set(3, 3, 4);  _m->set(3, 4, -1);
+        _m->set(4, 0, -1);  _m->set(4, 1, -1);  _m->set(4, 2, -1); _m->set(4, 3, -1);  _m->set(4, 4, -1);
     }
 
-    template <typename T>
-    void matrix_test_suite<T>::tear_down() {
-
+    void matrix_test_suite::tear_down() {
+        delete _m;
     }
 
-    template <typename T>
-    void matrix_test_suite<T>::creation_test() {
+    void matrix_test_suite::test_create() {
         size_t rows = 10, cols = 10;
-        ds::matrix<T>* mp = new ds::matrix<T>(rows, cols, T());
-        ds::matrix<T>& m = *mp;
+        ds::matrix<double>* mp = new ds::matrix<double>(rows, cols, -1);
+        ds::matrix<double>& m = *mp;
         TEST_ASSERT(m.rows() == rows);
         TEST_ASSERT(m.cols() == cols);
-        TEST_ASSERT(m.get_def_value() == T());
+        TEST_ASSERT(m.get_def_value() == -1);
         TEST_ASSERT(m.capacity() >= rows);
 
         for (auto& row : m) {
             for (auto& v : *row) {
-                TEST_ASSERT(v == T());
+                TEST_ASSERT(v == -1);
             }
         }
 
         delete mp;
     }
 
-    template <typename T>
-    void matrix_test_suite<T>::second_test() {
+    void matrix_test_suite::test_setting_value() {
+        _m->set(0, 1, 42);
+        TEST_ASSERT(_m->at(0, 1) == 42);
 
+        _m->at(0, 1) = 34;
+        TEST_ASSERT(_m->at(0, 1) == 34);
+        
+        (*_m)[0][1] = 55;
+        TEST_ASSERT(_m->at(0, 1) == 55);
+
+        ds::mvector<double> mvec(_m->cols(), 2);
+
+        _m->set(0, mvec);
+        TEST_ASSERT((*_m)[0] == mvec);
     }
 
 }

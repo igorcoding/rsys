@@ -72,7 +72,7 @@ namespace rsys {
             double length() const;
 
         private:
-            explicit mvector(size_t size, bool empty);
+//            explicit mvector(size_t size, bool empty);
             void resize(size_t new_capacity);
             void clean_up();
             void check_index(size_t i) const;
@@ -101,13 +101,13 @@ namespace rsys {
             }
         }
 
-        template<typename T>
-        mvector<T>::mvector(size_t size, bool empty)
-                : _size(size),
-                  _no_copy(false),
-                  _capacity(calc_nearest_pow_of_2(_size)),
-                  _vec(nullptr) {
-        }
+//        template<typename T>
+//        mvector<T>::mvector(size_t size, bool empty)
+//                : _size(size),
+//                  _no_copy(false),
+//                  _capacity(calc_nearest_pow_of_2(_size)),
+//                  _vec(nullptr) {
+//        }
 
         template<typename T>
         mvector<T>::mvector(size_t size, const T& default_value)
@@ -388,7 +388,7 @@ namespace rsys {
             return mvec;
         }
 
-/************* operator +, -, *, / *************/
+/************* operator +, -, *, /, ==, != *************/
 
         template<typename T>
         mvector<T> operator +(const mvector<T>& l, const mvector<T>& r) {
@@ -446,6 +446,28 @@ namespace rsys {
             return mvec;
         }
 
+        template<typename T>
+        bool operator ==(const mvector<T>& l, const mvector<T>& r) {
+            if (l.size() != r.size()) {
+                return false;
+            }
+
+            bool eq = true;
+
+            for (size_t i = 0; i < l.size(); ++i) {
+                if (l.at(i, false) != r.at(i, false)) {
+                    eq = false;
+                    break;
+                }
+            }
+            return eq;
+        }
+
+        template<typename T>
+        bool operator !=(const mvector<T>& l, const mvector<T>& r) {
+            return !(l == r);
+        }
+
 
 /************* Private methods *************/
 
@@ -474,7 +496,7 @@ namespace rsys {
             }
         }
 
-/************* rhs methods *************/
+/************* other methods *************/
         template<typename T>
         std::ostream& operator <<(std::ostream& os, const mvector<T>& mvec) {
             os << "[";
