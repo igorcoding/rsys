@@ -79,14 +79,15 @@ int basic_example() {
         std::cout << std::endl;
     }
 
-//    auto recommendations = comb.recommend(4, 2);
-//
-//    std::cout << "[";
-//    for (const auto& v : recommendations) {
-//        std::cout << "\t" << v << ",\n";
-//    }
-//    std::cout << "]";
-//    std::cout << std::endl;
+    std::cout << std::endl << "Recommendations for (4, 100): \n";
+    auto recommendations = r.recommend(4, 100);
+
+    std::cout << "[\n";
+    for (const auto& v : recommendations) {
+        std::cout << "\t" << v << ",\n";
+    }
+    std::cout << "]";
+    std::cout << std::endl;
 
     return 0;
 }

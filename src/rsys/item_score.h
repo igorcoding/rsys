@@ -12,7 +12,7 @@ namespace rsys {
         size_t item_id;
         T score;
 
-        item_score(size_t user_id, size_t item_id, const T& score)
+        item_score(size_t user_id = size_t(-1), size_t item_id = size_t(-1), const T& score = T())
                 : user_id(user_id),
                   item_id(item_id),
                   score(score) {
@@ -23,6 +23,13 @@ namespace rsys {
             this->user_id = user_id;
             this->item_id = item_id;
             this->score = score;
+        }
+
+        item_score& operator =(const item_score& rhs) {
+            this->user_id = rhs.user_id;
+            this->item_id = rhs.item_id;
+            this->score = rhs.score;
+            return *this;
         }
     };
 

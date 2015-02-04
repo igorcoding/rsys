@@ -31,7 +31,7 @@ namespace rsys {
         void learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
         void learn_online(const std::vector<item_score_t>& scores) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
-        std::deque<item_score_t> recommend(size_t user_id, int k) noexcept;
+        std::vector<item_score_t> recommend(size_t user_id, int k) noexcept;
 
     private:
         model_t* _model;
@@ -79,7 +79,7 @@ namespace rsys {
     }
 
     template<typename T, template <typename> class DS, template <typename,template<class> class > class MODEL>
-    std::deque<typename recommender<T,DS,MODEL>::item_score_t> recommender<T,DS,MODEL>::recommend(size_t user_id, int k) noexcept {
+    std::vector<typename recommender<T,DS,MODEL>::item_score_t> recommender<T,DS,MODEL>::recommend(size_t user_id, int k) noexcept {
         return _model->recommend(user_id, k);
     }
 } // namespace rsys

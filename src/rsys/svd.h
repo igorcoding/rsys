@@ -38,7 +38,7 @@ namespace rsys {
         void learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
         void learn_online(const std::vector<item_score_t>& scores) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
-        std::deque<item_score_t> recommend(size_t user_id, int k) noexcept;
+        std::vector<item_score_t> recommend(size_t user_id, int k) noexcept;
 
         config_t& get_config() { return _config; }
 
@@ -278,7 +278,7 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
-    std::deque<typename svd<T, DS>::item_score_t> svd<T, DS>::recommend(size_t user_id, int k) noexcept {
+    std::vector<typename svd<T, DS>::item_score_t> svd<T, DS>::recommend(size_t user_id, int k) noexcept {
         auto comp = [](const item_score_t& a, const item_score_t& b) {
             return a.score > b.score;
         };
@@ -300,11 +300,11 @@ namespace rsys {
             }
         }
 
-        std::deque<item_score_t> ans;
-
         auto heap_size = heap.size();
+        std::vector<item_score_t> ans(heap_size);
+        auto ans_it = ans.rbegin();
         for (size_t i = 0; i < heap_size; ++i) {
-            ans.push_front(heap.top());
+            *(ans_it++) = heap.top();
             heap.pop();
         }
 
