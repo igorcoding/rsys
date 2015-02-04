@@ -1,9 +1,5 @@
 #include "matrix_test.h"
 
-#include <cstdlib>
-#include <memory>
-
-
 int main() {
     using namespace rsys_tests;
     Test::TextOutput output(Test::TextOutput::Verbose);

@@ -388,7 +388,7 @@ namespace rsys {
             return mvec;
         }
 
-/************* operator +, -, *, /, ==, != *************/
+        /************* operator +, -, *, /, ==, != *************/
 
         template<typename T>
         mvector<T> operator +(const mvector<T>& l, const mvector<T>& r) {
@@ -469,7 +469,7 @@ namespace rsys {
         }
 
 
-/************* Private methods *************/
+        /************* Private methods *************/
 
         template<typename T>
         void mvector<T>::clean_up() {
@@ -496,7 +496,7 @@ namespace rsys {
             }
         }
 
-/************* other methods *************/
+        /************* other methods *************/
         template<typename T>
         std::ostream& operator <<(std::ostream& os, const mvector<T>& mvec) {
             os << "[";

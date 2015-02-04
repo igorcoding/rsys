@@ -31,7 +31,20 @@ namespace rsys {
             this->score = rhs.score;
             return *this;
         }
+
     };
+
+    template<typename T>
+    bool operator ==(const item_score<T>& lhs, const item_score<T>& rhs) {
+        return lhs.user_id == rhs.user_id &&
+               lhs.item_id == rhs.item_id &&
+               lhs.score == rhs.score;
+    }
+
+    template<typename T>
+    bool operator !=(const item_score<T>& lhs, const item_score<T>& rhs) {
+        return !(lhs == rhs);
+    }
 
     template<typename T>
     std::ostream& operator <<(std::ostream& os, const item_score<T>& item) {

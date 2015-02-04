@@ -6,6 +6,7 @@
 #include "vector_converter.h"
 
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 using namespace boost::python;
 
 template <typename T>
@@ -66,6 +67,23 @@ void export_data_sources() {
 
 }
 
+template<class T>
+list std_vector_to_py_list(const std::vector<T>& v)
+{
+    list l;
+    typename std::vector<T>::const_iterator it;
+    for (it = v.begin(); it != v.end(); ++it)
+        l.append(*it);
+    return l;
+}
+
+
+template <typename T>
+list svd_recommend(rsys::svd<T, rsys::ds::matrix>& self, size_t user_id, int k) noexcept {
+    auto recs = self.recommend(user_id, k);
+    return std_vector_to_py_list(recs);
+}
+
 template <typename T>
 void export_rsys() {
     using namespace rsys;
@@ -73,6 +91,10 @@ void export_rsys() {
     typedef svd<T, ds::matrix> t_svd;
     typedef typename t_svd::config_t config_t;
     typedef typename t_svd::item_score_t item_score_t;
+
+    class_<std::vector<item_score_t> >("ItemScoreVec")
+            .def(vector_indexing_suite<std::vector<item_score_t> >())
+            ;
 
     iterable_converter()
             // Build-in type.
@@ -101,17 +123,18 @@ void export_rsys() {
             .def("learning_rate", &config_t::learning_rate);
 
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
-    bool (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
-    bool (t_svd::*learn_online2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_online;
+    void (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
+    void (t_svd::*learn_online2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_online;
 
     class_<t_svd>("SVD", init<config_t>())
            .def("add_user", &t_svd::add_user)
            .def("add_item", &t_svd::add_item)
            .def("add_items", &t_svd::add_items, (arg("count")))
-           .def("learn", &t_svd::learn)
+           .def("learn_offline", &t_svd::learn_offline)
            .def("learn_online", learn_online1, (arg("user_id"), arg("item_id"), arg("rating")))
            .def("learn_online", learn_online2, arg("scores"))
-           .def("predict", predict1, (arg("user_id"), arg("item_id")));
+           .def("predict", predict1, (arg("user_id"), arg("item_id")))
+           .def("recommend", &t_svd::recommend, (arg("user_id"), arg("count")));
 }
 
 BOOST_PYTHON_MODULE(rsys) {
