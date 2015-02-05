@@ -95,6 +95,9 @@ namespace rsys {
                 _pI.set(i, j, static_cast <double> (rand()) / rand_max);
             }
         }
+
+        std::cout << _pU << std::endl;
+        std::cout << _pI << std::endl;
     }
 
     template<typename T, template<class> class DS>

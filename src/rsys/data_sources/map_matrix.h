@@ -32,6 +32,9 @@ namespace rsys { namespace ds {
             mvector<T>& add_row(const K& row_key);
             std::vector<mvector<T>*> add_rows(const std::vector<K>& row_keys);
 
+            template <typename K1, typename T1>
+            friend std::ostream& operator <<(std::ostream& os, const map_matrix<K1, T1>& m);
+
         private:
             size_t _rows;
             size_t _cols;
@@ -153,18 +156,15 @@ namespace rsys { namespace ds {
         /************* other methods *************/
         template<typename K, typename T>
         std::ostream& operator <<(std::ostream& os, const map_matrix<K, T>& m) {
-            for (size_t i = 0; i < m.rows(); ++i) {
-                os << i << ": [";
+            for (auto it = m._m.begin(); it != m._m.end(); ++it) {
+                os << it->first << ": [";
                 for (size_t j = 0; j < m.cols(); ++j) {
-                    os << m[i][j];
+                    os << (*it->second)[j];
                     if (j < m.cols() - 1) {
                         os << " ";
                     }
                 }
-                os << "]";
-                if (i < m.rows() - 1) {
-                    os << "\n";
-                }
+                os << "]\n";
             }
             return os;
         }
