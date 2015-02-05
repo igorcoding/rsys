@@ -4,6 +4,7 @@
 #include "model.h"
 #include "data_sources/imatrix.h"
 #include "data_sources/matrix.h"
+#include "data_sources/map_matrix.h"
 #include "item_score.h"
 #include "config/svd_config.h"
 
@@ -30,9 +31,9 @@ namespace rsys {
         ~svd();
 
 
-        void add_user();
-        void add_item();
-        void add_items(size_t count);
+        void add_user(size_t user_id);
+        void add_item(size_t item_id);
+        void add_items(const std::vector<size_t>& items);
 
         void learn_offline() noexcept;
         void learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
@@ -54,8 +55,8 @@ namespace rsys {
         size_t _users_count;
         size_t _items_count;
         size_t _features_count;
-        matrix<T> _pU;
-        matrix<T> _pI;
+        map_matrix<size_t, T> _pU;
+        map_matrix<size_t, T> _pI;
         mvector<T> _bu;
         mvector<T> _bi;
         double _mu;
@@ -71,8 +72,8 @@ namespace rsys {
               _users_count(_config.users_count()),
               _items_count(_config.items_count()),
               _features_count(_config.features_count()),
-              _pU(_users_count, _features_count),
-              _pI(_items_count, _features_count),
+              _pU(conf.get_users_ids(), _features_count),
+              _pI(conf.get_items_ids(), _features_count),
               _bu(_users_count),
               _bi(_items_count),
               _mu(0),
@@ -83,13 +84,13 @@ namespace rsys {
         srand(static_cast<unsigned int>(time(nullptr)));
         double rand_max = static_cast <double> (RAND_MAX);
 
-        for (size_t i = 0; i < _users_count; ++i) {
+        for (auto& i : conf.get_users_ids()) {
             for (size_t j = 0; j < _features_count; ++j) {
                 _pU.set(i, j, static_cast <double> (rand()) / rand_max);
             }
         }
 
-        for (size_t i = 0; i < _items_count; ++i) {
+        for (auto& i : conf.get_items_ids()) {
             for (size_t j = 0; j < _features_count; ++j) {
                 _pI.set(i, j, static_cast <double> (rand()) / rand_max);
             }
@@ -116,8 +117,8 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
-    void svd<T, DS>::add_user() {
-        auto& new_row = _pU.add_row();
+    void svd<T, DS>::add_user(size_t user_id) {
+        auto& new_row = _pU.add_row(user_id);
         _bu.add_component();
 
         double rand_max = static_cast <double> (RAND_MAX);
@@ -127,8 +128,8 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
-    void svd<T, DS>::add_item() {
-        auto& new_row = _pI.add_row();
+    void svd<T, DS>::add_item(size_t item_id) {
+        auto& new_row = _pI.add_row(item_id);
         _bi.add_component();
 
         double rand_max = static_cast <double> (RAND_MAX);
@@ -138,9 +139,9 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
-    void svd<T, DS>::add_items(size_t count) {
-        auto new_row = _pI.add_rows(count);
-        _bi.add_components(count);
+    void svd<T, DS>::add_items(const std::vector<size_t>& items) {
+        auto new_row = _pI.add_rows(items);
+        _bi.add_components(1);
 
         double rand_max = static_cast <double> (RAND_MAX);
         for (auto& row : new_row) {
@@ -164,8 +165,8 @@ namespace rsys {
             _mu -= learning_rate * e;
 
             for (size_t k = 0; k < _features_count; ++k) {
-                _pU[user_id][k] -= learning_rate * (e * qi[k] + lambda * pu[k]);
-                _pI[user_id][k] -= learning_rate * (e * pu[k] + lambda * qi[k]);
+                pu[k] -= learning_rate * (e * qi[k] + lambda * pu[k]);
+                qi[k] -= learning_rate * (e * pu[k] + lambda * qi[k]);
             }
 
             ++total;

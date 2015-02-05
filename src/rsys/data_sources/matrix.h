@@ -162,7 +162,7 @@ namespace rsys {
             const T& at(size_t row, size_t col) const;
             T& at(size_t row, size_t col);
 
-            void set(size_t row_index, const mvector <T>& row);
+//            void set(size_t row_index, const mvector <T>& row);
             void set(size_t row, size_t col, const T& obj);
 
             mvector<T>& add_row();
@@ -383,21 +383,21 @@ namespace rsys {
             (*_m[row])[col] = obj;
         }
 
-        template<typename T>
-        void matrix<T>::set(size_t row_index, const mvector<T>& row) {
-            assert(_cols == row.size());
-
-            for (size_t j = 0; j < _cols; ++j) {
-                const auto& old_v = _m[row_index]->at(j, false);
-                const auto& v = row.at(j, false);
-                if (old_v == _def_value && v != _def_value) {
-                    ++_total;
-                } else if (old_v != _def_value && v == _def_value) {
-                    --_total;
-                }
-                _m[row_index]->at(j, false) = v;
-            }
-        }
+//        template<typename T>
+//        void matrix<T>::set(size_t row_index, const mvector<T>& row) {
+//            assert(_cols == row.size());
+//
+//            for (size_t j = 0; j < _cols; ++j) {
+//                const auto& old_v = _m[row_index]->at(j, false);
+//                const auto& v = row.at(j, false);
+//                if (old_v == _def_value && v != _def_value) {
+//                    ++_total;
+//                } else if (old_v != _def_value && v == _def_value) {
+//                    --_total;
+//                }
+//                _m[row_index]->at(j, false) = v;
+//            }
+//        }
 
         template<typename T>
         mvector<T>& matrix<T>::add_row() {
@@ -572,7 +572,7 @@ namespace rsys {
         }
 
 
-/************* rhs methods *************/
+/************* other methods *************/
         template<typename T>
         std::ostream& operator <<(std::ostream& os, const matrix<T>& m) {
             for (size_t i = 0; i < m.rows(); ++i) {

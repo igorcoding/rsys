@@ -42,6 +42,8 @@ namespace rsys {
         config& set_regularization(float regularization);
         config& set_max_iterations(int max_iterations);
         config& set_print_result(bool print_result);
+        config& set_users_ids(const std::vector<size_t>& users_ids);
+        config& set_items_ids(const std::vector<size_t>& items_ids);
 
         const DS<T>& ratings() const {
             if (!_ratings)
@@ -57,6 +59,18 @@ namespace rsys {
         float regularization() const { return _regularization; }
         int max_iterations() const { return _max_iterations; }
         bool print_results() const { return _print_results; }
+        const std::vector<size_t>& get_users_ids() const {
+            if (_users_ids.empty()) {
+                std::cout << "[warn] Fetched empty users ids" << std::endl;
+            }
+            return _users_ids;
+        }
+        const std::vector<size_t>& get_items_ids() const {
+            if (_items_ids.empty()) {
+                std::cout << "[warn] Fetched empty items ids" << std::endl;
+            }
+            return _items_ids;
+        }
 
     private:
         DS<T>* _ratings;
@@ -68,6 +82,8 @@ namespace rsys {
         float _regularization;
         int _max_iterations;
         bool _print_results;
+        std::vector<size_t> _users_ids;
+        std::vector<size_t> _items_ids;
     };
 
     template <typename T, template <class> class DS>
@@ -82,6 +98,13 @@ namespace rsys {
               _max_iterations(max_iterations),
               _print_results(print_results)
     {
+        for (size_t i = 0; i < _ratings->rows(); ++i) {
+            _users_ids.push_back(i);
+        }
+
+        for (size_t i = 0; i < _ratings->cols(); ++i) {
+            _items_ids.push_back(i);
+        }
     }
 
     template <typename T, template <class> class DS>
@@ -108,7 +131,9 @@ namespace rsys {
               _learning_rate(rhs._learning_rate),
               _regularization(rhs._regularization),
               _max_iterations(rhs._max_iterations),
-              _print_results(rhs._print_results)
+              _print_results(rhs._print_results),
+              _users_ids(rhs._users_ids),
+              _items_ids(rhs._items_ids)
     {
 //        std::cout << "Copying config" << std::endl;
     }
@@ -178,6 +203,18 @@ namespace rsys {
     template <typename T, template <class> class DS>
     config<svd<T,DS>>& config<svd<T,DS>>::set_print_result(bool print_result) {
         _print_results = print_result;
+        return *this;
+    }
+
+    template <typename T, template <class> class DS>
+    config<svd<T,DS>>& config<svd<T,DS>>::set_users_ids(const std::vector<size_t>& users_ids) {
+        _users_ids = users_ids;
+        return *this;
+    }
+
+    template <typename T, template <class> class DS>
+    config<svd<T,DS>>& config<svd<T,DS>>::set_items_ids(const std::vector<size_t>& items_ids) {
+        _items_ids = items_ids;
         return *this;
     }
 

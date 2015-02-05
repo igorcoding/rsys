@@ -11,8 +11,8 @@ namespace rsys {
     public:
         typedef item_score<T> item_score_t;
 
-        virtual void add_user() = 0;
-        virtual void add_item() = 0;
+//        virtual void add_user() = 0;
+//        virtual void add_item() = 0;
 
         virtual void learn_offline() noexcept = 0;
         virtual void learn_online(size_t user_id, size_t item_id, const T& rating) noexcept = 0;

@@ -17,6 +17,7 @@ set(HEADER_FILES ${SRC_RSYS}/recommender.h
                  ${SRC_RSYS}/data_sources/mvector.h
                  ${SRC_RSYS}/data_sources/imatrix.h
                  ${SRC_RSYS}/data_sources/matrix.h
+                 ${SRC_RSYS}/data_sources/map_matrix.h
                  ${SRC_RSYS}/data_sources/sparse_matrix.h
                  ${SRC_RSYS}/data_sources/mexception.h
 

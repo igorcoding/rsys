@@ -55,6 +55,8 @@ int basic_example() {
 //    }
 
     rsys_t::config_t c(m, 4, 0.005);
+//    c.set_users_ids({0, 1, 2, 3, 4});
+//    c.set_items_ids({0, 1, 2, 3, 4});
 
 //    rsys_t r(c);
 

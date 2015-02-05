@@ -67,21 +67,10 @@ void export_data_sources() {
 
 }
 
-template<class T>
-list std_vector_to_py_list(const std::vector<T>& v)
-{
-    list l;
-    typename std::vector<T>::const_iterator it;
-    for (it = v.begin(); it != v.end(); ++it)
-        l.append(*it);
-    return l;
-}
-
 
 template <typename T>
-list svd_recommend(rsys::svd<T, rsys::ds::matrix>& self, size_t user_id, int k) noexcept {
-    auto recs = self.recommend(user_id, k);
-    return std_vector_to_py_list(recs);
+void config_set_users_ids(typename rsys::template svd<T, rsys::ds::matrix>::config_t& self, const std::vector<size_t>& users_ids) {
+    self.set_users_ids(users_ids);
 }
 
 template <typename T>
@@ -98,8 +87,10 @@ void export_rsys() {
 
     iterable_converter()
             // Build-in type.
-            .from_python<std::vector<item_score_t> >()
-            ;
+            .from_python<std::vector<item_score_t>>();
+
+    iterable_converter()
+            .from_python<std::vector<size_t>>();
 
     class_<item_score_t>("ItemScore", init<size_t, size_t, T> ((arg("user_id"), arg("item_id"), arg("score"))))
             .def_readwrite("user_id", &item_score_t::user_id)
@@ -120,7 +111,10 @@ void export_rsys() {
             .def("regularization", &config_t::regularization)
             .def("max_iterations", &config_t::max_iterations)
             .def("print_results", &config_t::print_results)
-            .def("learning_rate", &config_t::learning_rate);
+            .def("learning_rate", &config_t::learning_rate)
+            .def("set_users_ids", &config_t::set_users_ids, return_value_policy<reference_existing_object>(), (arg("users_ids")))
+            .def("set_items_ids", &config_t::set_items_ids, return_value_policy<reference_existing_object>(), (arg("items_ids")))
+                    ;
 
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
     void (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
