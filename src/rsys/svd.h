@@ -57,8 +57,8 @@ namespace rsys {
         size_t _features_count;
         map_matrix<size_t, T> _pU;
         map_matrix<size_t, T> _pI;
-        mvector<T> _bu;
-        mvector<T> _bi;
+        map_matrix<size_t, T> _bu;
+        map_matrix<size_t, T> _bi;
         double _mu;
 
         const DS<T>* _ratings;
@@ -74,8 +74,8 @@ namespace rsys {
               _features_count(_config.features_count()),
               _pU(conf.get_users_ids(), _features_count),
               _pI(conf.get_items_ids(), _features_count),
-              _bu(_users_count),
-              _bi(_items_count),
+              _bu(conf.get_users_ids(), 1),
+              _bi(conf.get_items_ids(), 1),
               _mu(0),
 
               _ratings(_config._ratings),
@@ -96,8 +96,8 @@ namespace rsys {
             }
         }
 
-        std::cout << _pU << std::endl;
-        std::cout << _pI << std::endl;
+//        std::cout << _pU << std::endl;
+//        std::cout << _pI << std::endl;
     }
 
     template<typename T, template<class> class DS>
@@ -110,19 +110,19 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     T svd<T, DS>::predict(size_t user_id, size_t item_id) noexcept {
-        return _pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu;
+        return _pU[user_id].dot(_pI[item_id]) + _bu[user_id][0] + _bi[item_id][0] + _mu;
     }
 
     template<typename T, template<class> class DS>
     inline
     T svd<T, DS>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
-        return user.dot(item) + _bu[user_id] + _bi[item_id] + _mu;
+        return user.dot(item) + _bu[user_id][0] + _bi[item_id][0] + _mu;
     }
 
     template<typename T, template<class> class DS>
     void svd<T, DS>::add_user(size_t user_id) {
         auto& new_row = _pU.add_row(user_id);
-        _bu.add_component();
+        _bu.add_row(user_id);
 
         double rand_max = static_cast <double> (RAND_MAX);
         for (auto& elem : new_row) {
@@ -133,7 +133,7 @@ namespace rsys {
     template<typename T, template<class> class DS>
     void svd<T, DS>::add_item(size_t item_id) {
         auto& new_row = _pI.add_row(item_id);
-        _bi.add_component();
+        _bi.add_row(item_id);
 
         double rand_max = static_cast <double> (RAND_MAX);
         for (auto& elem : new_row) {
@@ -144,7 +144,7 @@ namespace rsys {
     template<typename T, template<class> class DS>
     void svd<T, DS>::add_items(const std::vector<size_t>& items) {
         auto new_row = _pI.add_rows(items);
-        _bi.add_components(1);
+        _bi.add_rows(items);
 
         double rand_max = static_cast <double> (RAND_MAX);
         for (auto& row : new_row) {
@@ -163,8 +163,8 @@ namespace rsys {
             auto e = predict(pu, qi, user_id, item_id) - rating;
             rmse += e * e;
 
-            _bu[user_id] -= learning_rate * (e + lambda * _bu[user_id]);
-            _bi[item_id] -= learning_rate * (e + lambda * _bi[item_id]);
+            _bu[user_id][0] -= learning_rate * (e + lambda * _bu[user_id][0]);
+            _bi[item_id][0] -= learning_rate * (e + lambda * _bi[item_id][0]);
             _mu -= learning_rate * e;
 
             for (size_t k = 0; k < _features_count; ++k) {
@@ -292,7 +292,8 @@ namespace rsys {
 
         auto ik = static_cast<size_t>(k);
 
-        for (size_t i = 0; i < _items_count; ++i) {
+        for (auto it : _pI.m()) {
+            size_t i = it.first;
             if (_ratings == nullptr || _ratings->at(user_id, i) == _config.def_value()) {
                 auto score = predict(user_id, i);
                 item_score_t s(user_id, i, score);

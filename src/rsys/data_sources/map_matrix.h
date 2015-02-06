@@ -16,6 +16,7 @@ namespace rsys { namespace ds {
             map_matrix(const std::vector<K>& rows_ids, size_t cols, const T& default_value = T());
             ~map_matrix();
 
+            const std::map<K, row_t*> m() const { return _m; }
             size_t rows() const { return _rows; }
             size_t cols() const { return _cols; }
             const T& get_def_value() const { return _def_value; }

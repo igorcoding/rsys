@@ -33,7 +33,7 @@ namespace rsys {
         ~config();
 //        config(const DS<T>* _ratings, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
 
-        config& set_ratings(const DS<T>& ratings);
+//        config& set_ratings(const DS<T>& ratings);
         config& set_def_value(const T& def_value);
         config& set_users_count(size_t users_count);
         config& set_items_count(size_t items_count);
@@ -152,11 +152,11 @@ namespace rsys {
 //    {
 //    }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_ratings(const DS<T>& ratings) {
-        _ratings = ratings;
-        return *this;
-    }
+//    template <typename T, template <class> class DS>
+//    config<svd<T,DS>>& config<svd<T,DS>>::set_ratings(const DS<T>& ratings) {
+//        _ratings = ratings;
+//        return *this;
+//    }
 
     template <typename T, template <class> class DS>
     config<svd<T,DS>>& config<svd<T,DS>>::set_def_value(const T& def_value) {
