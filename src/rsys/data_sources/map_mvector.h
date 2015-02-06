@@ -97,13 +97,8 @@ namespace rsys { namespace ds {
 
         template <typename K, typename T>
         T& map_mvector<K,T>::add_row(const K& row_key) {
-            auto it = _m.find(row_key);
-            if (it != _m.end()) {
-                delete it->second;
-            }
-
             _m[row_key] = _def_value;
-            return *_m[row_key];
+            return _m[row_key];
         }
 
         template <typename K, typename T>
@@ -111,12 +106,7 @@ namespace rsys { namespace ds {
             std::vector<T*> rows;
             rows.reserve(row_keys.size());
 
-            typename decltype(_m)::iterator it;
             for (auto& k : row_keys) {
-                it = _m.find(k);
-                if (it != _m.end()) {
-                    delete it->second;
-                }
                 _m[k] = _def_value;
                 rows.push_back(&_m[k]);
             }
