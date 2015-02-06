@@ -16,7 +16,7 @@ namespace rsys { namespace ds {
             map_matrix(const std::vector<K>& rows_ids, size_t cols, const T& default_value = T());
             ~map_matrix();
 
-            const std::map<K, row_t*> m() const { return _m; }
+            const std::map<K, row_t*>& m() const { return _m; }
             size_t rows() const { return _rows; }
             size_t cols() const { return _cols; }
             const T& get_def_value() const { return _def_value; }
@@ -29,7 +29,7 @@ namespace rsys { namespace ds {
 
             void set(const K& row_key, size_t col, const T& obj);
 
-            mvector<T>& add_key(const K& row_key, mvector<T>* row_data);
+            mvector<T>&add_row(const K &row_key, mvector<T> *row_data);
             mvector<T>& add_row(const K& row_key);
             std::vector<mvector<T>*> add_rows(const std::vector<K>& row_keys);
 
@@ -111,7 +111,7 @@ namespace rsys { namespace ds {
         }
 
         template <typename K, typename T>
-        mvector<T>& map_matrix<K,T>::add_key(const K& row_key, mvector<T>* row_data) {
+        mvector<T>& map_matrix<K,T>::add_row(const K &row_key, mvector<T> *row_data) {
             auto it = _m.find(row_key);
             if (it != _m.end()) {
                 delete it->second;

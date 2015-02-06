@@ -5,6 +5,7 @@
 #include "data_sources/imatrix.h"
 #include "data_sources/matrix.h"
 #include "data_sources/map_matrix.h"
+#include "data_sources/map_mvector.h"
 #include "item_score.h"
 #include "config/svd_config.h"
 
@@ -57,8 +58,8 @@ namespace rsys {
         size_t _features_count;
         map_matrix<size_t, T> _pU;
         map_matrix<size_t, T> _pI;
-        map_matrix<size_t, T> _bu;
-        map_matrix<size_t, T> _bi;
+        map_mvector<size_t, T> _bu;
+        map_mvector<size_t, T> _bi;
         double _mu;
 
         const DS<T>* _ratings;
@@ -74,8 +75,8 @@ namespace rsys {
               _features_count(_config.features_count()),
               _pU(conf.get_users_ids(), _features_count),
               _pI(conf.get_items_ids(), _features_count),
-              _bu(conf.get_users_ids(), 1),
-              _bi(conf.get_items_ids(), 1),
+              _bu(conf.get_users_ids()),
+              _bi(conf.get_items_ids()),
               _mu(0),
 
               _ratings(_config._ratings),
@@ -110,13 +111,13 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     T svd<T, DS>::predict(size_t user_id, size_t item_id) noexcept {
-        return _pU[user_id].dot(_pI[item_id]) + _bu[user_id][0] + _bi[item_id][0] + _mu;
+        return _pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu;
     }
 
     template<typename T, template<class> class DS>
     inline
     T svd<T, DS>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
-        return user.dot(item) + _bu[user_id][0] + _bi[item_id][0] + _mu;
+        return user.dot(item) + _bu[user_id] + _bi[item_id] + _mu;
     }
 
     template<typename T, template<class> class DS>
@@ -163,8 +164,8 @@ namespace rsys {
             auto e = predict(pu, qi, user_id, item_id) - rating;
             rmse += e * e;
 
-            _bu[user_id][0] -= learning_rate * (e + lambda * _bu[user_id][0]);
-            _bi[item_id][0] -= learning_rate * (e + lambda * _bi[item_id][0]);
+            _bu[user_id] -= learning_rate * (e + lambda * _bu[user_id]);
+            _bi[item_id] -= learning_rate * (e + lambda * _bi[item_id]);
             _mu -= learning_rate * e;
 
             for (size_t k = 0; k < _features_count; ++k) {
@@ -229,8 +230,8 @@ namespace rsys {
             std::cout << "Iterations: " << iteration << "\n";
             std::cout << "Users\' features:\n" << _pU << "\n\n";
             std::cout << "Items\' features:\n" << _pI << "\n\n";
-            std::cout << "Baseline users predictors: " << _bu << "\n";
-            std::cout << "Baseline items predictors: " << _bi << "\n";
+            std::cout << "Baseline users predictors: \n" << _bu << "\n";
+            std::cout << "Baseline items predictors: \n" << _bi << "\n";
             std::cout << "mu: " << _mu << "\n";
             std::cout << "=== End of Results ===" << "\n\n";
             std::cout << std::flush;
