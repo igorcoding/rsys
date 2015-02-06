@@ -33,10 +33,12 @@ namespace rsys {
 
 
         void add_user(size_t user_id);
+        void add_users(const std::vector<size_t>& users);
         void add_item(size_t item_id);
         void add_items(const std::vector<size_t>& items);
 
         void learn_offline() noexcept;
+        void learn_offline(const std::vector<item_score_t>& scores) noexcept;
         void learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
         void learn_online(const std::vector<item_score_t>& scores) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
@@ -128,6 +130,19 @@ namespace rsys {
         double rand_max = static_cast <double> (RAND_MAX);
         for (auto& elem : new_row) {
             elem = static_cast <double> (rand()) / rand_max;
+        }
+    }
+
+    template<typename T, template<class> class DS>
+    void svd<T, DS>::add_users(const std::vector<size_t>& users) {
+        auto new_row = _pU.add_rows(users);
+        _bu.add_rows(users);
+
+        double rand_max = static_cast <double> (RAND_MAX);
+        for (auto& row : new_row) {
+            for (auto& elem : *row) {
+                elem = static_cast <double> (rand()) / rand_max;
+            }
         }
     }
 
@@ -249,6 +264,19 @@ namespace rsys {
         auto fitter = [this](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
             this->fit(*_ratings_begin,
                       *_ratings_end,
+                      learning_rate,
+                      lambda,
+                      rmse,
+                      total);
+        };
+        learn(fitter);
+    }
+
+    template<typename T, template<class> class DS>
+    void svd<T,DS>::learn_offline(const std::vector<item_score_t>& scores) noexcept {
+        auto fitter = [this, &scores](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+            this->fit(scores.begin(),
+                      scores.end(),
                       learning_rate,
                       lambda,
                       rmse,

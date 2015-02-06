@@ -126,14 +126,19 @@ void export_rsys() {
                     ;
 
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
+    void (t_svd::*learn_offline1)() noexcept = &t_svd::learn_offline;
+    void (t_svd::*learn_offline2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_offline;
+
     void (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
     void (t_svd::*learn_online2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_online;
 
     class_<t_svd>("SVD", init<config_t>())
            .def("add_user", &t_svd::add_user)
+           .def("add_users", &t_svd::add_users, (arg("items")))
            .def("add_item", &t_svd::add_item)
-           .def("add_items", &t_svd::add_items, (arg("count")))
-           .def("learn_offline", &t_svd::learn_offline)
+           .def("add_items", &t_svd::add_items, (arg("items")))
+           .def("learn_offline", learn_offline1)
+           .def("learn_offline", learn_offline2, arg("scores"))
            .def("learn_online", learn_online1, (arg("user_id"), arg("item_id"), arg("rating")))
            .def("learn_online", learn_online2, arg("scores"))
            .def("predict", predict1, (arg("user_id"), arg("item_id")))
