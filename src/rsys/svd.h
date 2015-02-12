@@ -219,7 +219,7 @@ namespace rsys {
         float threshold = 0.01;
 
         while (fabs(rmse - old_rmse) > eps) {
-            // std::cout << "Iteration #" << iteration << std::endl;
+            std::cout << "Iteration #" << iteration << std::endl;
             iteration++;
             old_rmse = rmse;
 
@@ -228,7 +228,7 @@ namespace rsys {
 
             rmse /= total;
             rmse = std::sqrt(rmse);
-            // std::cout << "RMSE = " << rmse << std::endl;
+             std::cout << "RMSE = " << rmse << std::endl;
 
             if (old_rmse - rmse < threshold) {
                 learning_rate *= 0.8;

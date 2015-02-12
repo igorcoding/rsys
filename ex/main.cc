@@ -11,6 +11,8 @@
 #include "rsys/svd.h"
 #include "rsys/ensemblers/ensembler.h"
 
+#define DEBUG
+
 using namespace rsys;
 
 template <typename T> using data_holder = ds::matrix<T>;
@@ -24,8 +26,8 @@ int movielens_example();
 int main() {
     int basic = 0, mlens = 0;
 
-    basic = basic_example();
-//    mlens = movielens_example();
+//    basic = basic_example();
+    mlens = movielens_example();
     return basic + mlens;
 }
 
@@ -101,18 +103,30 @@ int to_int(const std::string& s) {
     return n;
 }
 
-int movielens_example() {
-    data_holder<double> m(6040, 3952, -1);
+float rand_max = static_cast <float> (RAND_MAX);
+float _rand() {
+    return static_cast <float> (rand()) / rand_max;
+}
 
-    std::string prefix = "/home/igor/Projects/cpp/recommender/datasets/ml-1m/";
+int movielens_example() {
+    srand((unsigned) time(nullptr));
+//    data_holder<double> m(6040, 3952, -1);
+    size_t users_count = 6040;
+    size_t items_count = 3952;
+
+    std::string prefix = "/home/igor/Projects/cpp/rsys/datasets/ml-1m/";
     std::string filename = prefix + "ratings.dat";
     std::fstream fs;
     fs.open(filename, std::ios_base::in);
     if (!fs.is_open()) {
+        std::cerr << "Couldn\'t open file" << std::endl;
         return 1;
     }
 
-    while (!fs.eof()) {
+    std::vector<svd_t::item_score_t> training_set;
+    std::vector<svd_t::item_score_t> test_set;
+    int k = 0;
+    while (!fs.eof() && k < 1000209) {
         std::string line;
         fs >> line;
         std::stringstream ss(line);
@@ -128,31 +142,69 @@ int movielens_example() {
         std::getline(ss, item, ':');
         std::getline(ss, item, ':');
         int rating = to_int(item);
-        m.set((size_t) user_id, (size_t) item_id, rating);
+
+        auto s = svd_t::item_score_t((size_t) user_id, (size_t) item_id, rating);
+        if (_rand() < 0.67) {
+            training_set.push_back(s);
+        } else {
+            test_set.push_back(s);
+        }
+        ++k;
     }
     fs.close();
-
+    std::cout << training_set.size() << " " << test_set.size() << std::endl;
     std::cout << "parsed" << std::endl;
 
-    svd_t::config_t c(m, 4, 0.1, 200, false);
+    svd_t::config_t c(users_count, items_count, -1, 4, 0.005, 100, false);
+    c.assign_seq_ids();
     svd_t svd(c);
 
-    svd.learn_offline();
+    svd.learn_online(training_set);
     std::cout << "Finished" << std::endl;
+
+    auto deltas = {
+            0.0,
+            0.1,
+            0.5,
+            0.7,
+            1.0,
+            1.2
+    };
+    for (auto& delta : deltas) {
+        size_t correct = 0;
+        for (size_t i = 0; i < test_set.size(); ++i) {
+            auto &t = test_set[i];
+
+            auto actual_score = t.score;
+            auto predicted_score = svd.predict(t.user_id, t.item_id);
+
+
+            if (actual_score - delta < predicted_score && predicted_score < actual_score + delta) {
+                correct += 1;
+            }
+        }
+
+        auto accuracy = ((float) correct) / ((float) test_set.size());
+
+
+        std::cout << "Delta = " << delta << "Accuracy: " << correct << " / " << test_set.size() << " = " << accuracy;
+    }
+//    std::cout << "Precision: " << correct << " / " << test_set.size() << " = " << accuracy;
+//    std::cout << "Recall: " << correct << " / " << test_set.size() << " = " << accuracy;
 
 //    fs.open(prefix + "initial.dat", ios_base::out);
 //    fs << "Initial:" << std::endl << m << std::endl;
 //    fs.close();
 
-    fs.open(prefix + "predictions.dat", std::ios_base::out);
-    for (size_t i = 0; i < m.rows(); ++i) {
-        for (size_t j = 0; j < m.cols(); ++j) {
-            fs << std::setprecision(3) << svd.predict(i, j) << " ";
-        }
-        fs << std::endl;
-    }
-
-    fs.close();
+//    fs.open(prefix + "predictions.dat", std::ios_base::out);
+//    for (size_t i = 0; i < users_count; ++i) {
+//        for (size_t j = 0; j < items_count; ++j) {
+//            fs << std::setprecision(3) << svd.predict(i, j) << " ";
+//        }
+//        fs << std::endl;
+//    }
+//
+//    fs.close();
 
     return 0;
 }

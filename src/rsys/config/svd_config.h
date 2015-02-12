@@ -44,6 +44,7 @@ namespace rsys {
         config& set_print_result(bool print_result);
         config& set_users_ids(const std::vector<size_t>& users_ids);
         config& set_items_ids(const std::vector<size_t>& items_ids);
+        config& assign_seq_ids();
 
         const DS<T>& ratings() const {
             if (!_ratings)
@@ -98,13 +99,7 @@ namespace rsys {
               _max_iterations(max_iterations),
               _print_results(print_results)
     {
-        for (size_t i = 0; i < _ratings->rows(); ++i) {
-            _users_ids.push_back(i);
-        }
-
-        for (size_t i = 0; i < _ratings->cols(); ++i) {
-            _items_ids.push_back(i);
-        }
+        assign_seq_ids();
     }
 
     template <typename T, template <class> class DS>
@@ -215,6 +210,18 @@ namespace rsys {
     template <typename T, template <class> class DS>
     config<svd<T,DS>>& config<svd<T,DS>>::set_items_ids(const std::vector<size_t>& items_ids) {
         _items_ids = items_ids;
+        return *this;
+    }
+
+    template <typename T, template <class> class DS> inline
+    config<svd<T,DS>>& config<svd<T,DS>>::assign_seq_ids() {
+        for (size_t i = 0; i < _users_count; ++i) {
+            _users_ids.push_back(i);
+        }
+
+        for (size_t i = 0; i < _items_count; ++i) {
+            _items_ids.push_back(i);
+        }
         return *this;
     }
 
