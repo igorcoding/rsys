@@ -14,6 +14,7 @@
 #include <iostream>
 #include <queue>
 #include <functional>
+#include <cmath>
 
 using namespace rsys::ds;
 
@@ -52,6 +53,8 @@ namespace rsys {
         void learn(std::function<void(float&, const float&, float&, size_t&)> fitter) noexcept;
         template <typename Iter> void fit(Iter begin, Iter end, float& learning_rate, const float& lambda, float& rmse, size_t& total);
         void fit(size_t user_id, size_t item_id, const T& rating, float& learning_rate, const float& lambda, float& rmse, size_t& total);
+
+        T sigma(const T& x);
 
     private:
         config_t _config;
@@ -113,13 +116,13 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     T svd<T, DS>::predict(size_t user_id, size_t item_id) noexcept {
-        return _pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu;
+        return sigma(_pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu);
     }
 
     template<typename T, template<class> class DS>
     inline
     T svd<T, DS>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
-        return user.dot(item) + _bu[user_id] + _bi[item_id] + _mu;
+        return sigma(user.dot(item) + _bu[user_id] + _bi[item_id] + _mu);
     }
 
     template<typename T, template<class> class DS>
@@ -203,6 +206,12 @@ namespace rsys {
 
             fit(user_id, item_id, r, learning_rate, lambda, rmse, total);
         }
+    }
+
+    template <typename T, template<class> class DS>
+    T svd<T,DS>::sigma(const T& x) {
+//        return x;
+        return 1.0 / (1.0 + std::exp(-x));
     }
 
     template<typename T, template<class> class DS>

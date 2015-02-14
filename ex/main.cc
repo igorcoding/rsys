@@ -21,14 +21,21 @@ typedef svd<double, data_holder> svd_t;
 
 
 int basic_example();
+int sigmoid_example();
 int movielens_example();
 
 int main() {
-    int basic = 0, mlens = 0;
+    int basic = 0, sigmoid = 0, mlens = 0;
 
 //    basic = basic_example();
-    mlens = movielens_example();
-    return basic + mlens;
+    sigmoid = sigmoid_example();
+//    mlens = movielens_example();
+    return basic + sigmoid + mlens;
+}
+
+float rand_max = static_cast <float> (RAND_MAX);
+float _rand() {
+    return static_cast <float> (rand()) / rand_max;
 }
 
 int basic_example() {
@@ -96,16 +103,54 @@ int basic_example() {
     return 0;
 }
 
+int sigmoid_example() {
+    rsys_t::datasource_t m(5, 5, -1);
+
+    m.set(0, 0, 0);   m.set(0, 1, 1);   m.set(0, 2, 0);  m.set(0, 3, -1);  m.set(0, 4, -1);
+    m.set(1, 0, -1);  m.set(1, 1, 1);   m.set(1, 2, 1);  m.set(1, 3, 0);   m.set(1, 4, -1);
+    m.set(2, 0, -1);  m.set(2, 1, 0);   m.set(2, 2, -1); m.set(2, 3, 0.2);  m.set(2, 4, -1);
+    m.set(3, 0, 1);   m.set(3, 1, 1);   m.set(3, 2, -1); m.set(3, 3, 0);  m.set(3, 4, -1);
+    m.set(4, 0, -1);  m.set(4, 1, 0);  m.set(4, 2, -1); m.set(4, 3, -1);  m.set(4, 4, -1);
+
+    std::cout << m << std::endl;
+
+    rsys_t::config_t c(m, 4, 0.005);
+
+    svd_t r(c);
+
+    r.learn_offline();
+
+//    r.learn_online(2, 2, 5.0);
+    std::cout << "Finished" << std::endl;
+
+    std::cout << "Initial:" << std::endl << m << std::endl;
+
+    std::cout << "Predictions:" << std::endl;
+    for (size_t i = 0; i < m.rows(); ++i) {
+        for (size_t j = 0; j < m.cols(); ++j) {
+            std::cout << std::setprecision(3) << r.predict(i, j) << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << std::endl << "Recommendations for (4, 100): \n";
+    auto recommendations = r.recommend(4, 100);
+
+    std::cout << "[\n";
+    for (const auto& v : recommendations) {
+        std::cout << "\t" << v << ",\n";
+    }
+    std::cout << "]";
+    std::cout << std::endl;
+
+    return 0;
+}
+
 int to_int(const std::string& s) {
     std::stringstream ss(s);
     int n = 0;
     ss >> n;
     return n;
-}
-
-float rand_max = static_cast <float> (RAND_MAX);
-float _rand() {
-    return static_cast <float> (rand()) / rand_max;
 }
 
 int movielens_example() {
@@ -176,7 +221,7 @@ int movielens_example() {
             auto &t = test_set[i];
 
             auto actual_score = t.score;
-            auto predicted_score = svd.predict(t.user_id, t.item_id);
+            auto predicted_score = std::round(svd.predict(t.user_id, t.item_id));
 
 
             if (actual_score - delta < predicted_score && predicted_score < actual_score + delta) {
