@@ -8,6 +8,7 @@
 #include "data_sources/map_mvector.h"
 #include "item_score.h"
 #include "config/svd_config.h"
+#include "exporters/svd_exporter.h"
 
 #include <ctime>
 #include <cstdlib>
@@ -23,7 +24,7 @@ namespace rsys {
     template<typename T = float, template<class> class DS = matrix>
     class svd : public model<T> {
 
-//    typedef void (svd<T,DS>::*fit_cb)(float&, const float&, float&, size_t&);
+        friend exporters::svd_exporter<T,DS>;
     public:
         typedef config<svd<T, DS>> config_t;
         typedef item_score<T> item_score_t;
@@ -67,6 +68,8 @@ namespace rsys {
         map_mvector<size_t, T> _bi;
         double _mu;
 
+        exporters::svd_exporter<T,DS>* _exporter;
+
         const DS<T>* _ratings;
         DS_item_iterator* _ratings_begin;
         DS_item_iterator* _ratings_end;
@@ -84,26 +87,34 @@ namespace rsys {
               _bi(conf.get_items_ids()),
               _mu(0),
 
+              _exporter(nullptr),
+
               _ratings(_config._ratings),
               _ratings_begin(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_begin<item_score_t>()) : nullptr),
               _ratings_end(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_end<item_score_t>()) : nullptr) {
-        srand(static_cast<unsigned int>(time(nullptr)));
-        double rand_max = static_cast <double> (RAND_MAX);
 
-        for (auto& i : conf.get_users_ids()) {
-            for (size_t j = 0; j < _features_count; ++j) {
-                _pU.set(i, j, static_cast <double> (rand()) / rand_max);
+//        if (_config.use_export()) {
+//            _exporter
+//        }
+
+        if (_exporter != nullptr) {
+            _exporter->import(*this);
+        } else {
+            srand(static_cast<unsigned int>(time(nullptr)));
+            double rand_max = static_cast <double> (RAND_MAX);
+
+            for (auto& i : conf.get_users_ids()) {
+                for (size_t j = 0; j < _features_count; ++j) {
+                    _pU.set(i, j, static_cast <double> (rand()) / rand_max);
+                }
+            }
+
+            for (auto& i : conf.get_items_ids()) {
+                for (size_t j = 0; j < _features_count; ++j) {
+                    _pI.set(i, j, static_cast <double> (rand()) / rand_max);
+                }
             }
         }
-
-        for (auto& i : conf.get_items_ids()) {
-            for (size_t j = 0; j < _features_count; ++j) {
-                _pI.set(i, j, static_cast <double> (rand()) / rand_max);
-            }
-        }
-
-//        std::cout << _pU << std::endl;
-//        std::cout << _pI << std::endl;
     }
 
     template<typename T, template<class> class DS>
@@ -259,6 +270,10 @@ namespace rsys {
             std::cout << "mu: " << _mu << "\n";
             std::cout << "=== End of Results ===" << "\n\n";
             std::cout << std::flush;
+        }
+
+        if (_exporter != nullptr) {
+            _exporter->export(*this);
         }
 
     }

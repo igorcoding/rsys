@@ -13,6 +13,10 @@ set(HEADER_FILES ${SRC_RSYS}/recommender.h
 
                  ${SRC_RSYS}/ensemblers/ensembler.h
 
+                 ${SRC_RSYS}/exporters/mysql_exporter.h
+                 ${SRC_RSYS}/exporters/svd_exporter.h
+                 ${SRC_RSYS}/exporters/svd_mysql_exporter.h
+
                  ${SRC_RSYS}/data_sources/data_source.h
                  ${SRC_RSYS}/data_sources/mvector.h
                  ${SRC_RSYS}/data_sources/imatrix.h
@@ -32,3 +36,4 @@ set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
                  ${SRC_RSYS}/util/util.cc)
 
 add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
+target_link_libraries(rsys mysqlcppconn)

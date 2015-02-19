@@ -10,6 +10,7 @@
 #include "rsys/recommender.h"
 #include "rsys/svd.h"
 #include "rsys/ensemblers/ensembler.h"
+#include "rsys/exporters/svd_mysql_exporter.h"
 
 #define DEBUG
 
