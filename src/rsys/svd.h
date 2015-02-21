@@ -21,16 +21,19 @@ using namespace rsys::ds;
 
 namespace rsys {
 
+//    template<typename T, template<class> class DS>
+//    class svd;
+
     template<typename T = float, template<class> class DS = matrix>
     class svd : public model<T> {
-
-        friend exporters::svd_exporter<T,DS>;
     public:
         typedef config<svd<T, DS>> config_t;
         typedef item_score<T> item_score_t;
+        typedef exporters::svd_exporter<svd<T,DS>> exporter_t;
         typedef typename DS<T>::template item_iterator<item_score_t> DS_item_iterator;
 
         svd(const config_t& conf);
+        svd(const config_t& conf, exporter_t* exporter);
         ~svd();
 
 
@@ -68,7 +71,7 @@ namespace rsys {
         map_mvector<size_t, T> _bi;
         double _mu;
 
-        exporters::svd_exporter<T,DS>* _exporter;
+        exporter_t* _exporter;
 
         const DS<T>* _ratings;
         DS_item_iterator* _ratings_begin;
@@ -77,6 +80,12 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     svd<T, DS>::svd(const config_t& conf)
+        : svd(conf, nullptr) {
+
+    }
+
+    template<typename T, template<class> class DS>
+    svd<T, DS>::svd(const config_t& conf, exporter_t* exporter)
             : _config(conf),
               _users_count(_config.users_count()),
               _items_count(_config.items_count()),
@@ -87,19 +96,17 @@ namespace rsys {
               _bi(conf.get_items_ids()),
               _mu(0),
 
-              _exporter(nullptr),
+              _exporter(exporter),
 
               _ratings(_config._ratings),
               _ratings_begin(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_begin<item_score_t>()) : nullptr),
               _ratings_end(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_end<item_score_t>()) : nullptr) {
 
-//        if (_config.use_export()) {
-//            _exporter
-//        }
-
+        bool import_res = false;
         if (_exporter != nullptr) {
-            _exporter->import(*this);
-        } else {
+            import_res = _exporter->import_model(*this);
+        }
+        if (!import_res) {
             srand(static_cast<unsigned int>(time(nullptr)));
             double rand_max = static_cast <double> (RAND_MAX);
 
@@ -119,6 +126,8 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     svd<T,DS>::~svd() {
+        delete _exporter;
+        _exporter = nullptr;
         delete _ratings_begin;
         _ratings_begin = nullptr;
         delete _ratings_end;
@@ -273,7 +282,7 @@ namespace rsys {
         }
 
         if (_exporter != nullptr) {
-            _exporter->export(*this);
+            _exporter->export_model(*this);
         }
 
     }

@@ -1,4 +1,4 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -std=c++14")
 
 set(SRC_RSYS rsys)
 
@@ -16,6 +16,7 @@ set(HEADER_FILES ${SRC_RSYS}/recommender.h
                  ${SRC_RSYS}/exporters/mysql_exporter.h
                  ${SRC_RSYS}/exporters/svd_exporter.h
                  ${SRC_RSYS}/exporters/svd_mysql_exporter.h
+                 ${SRC_RSYS}/exporters/errors.h
 
                  ${SRC_RSYS}/data_sources/data_source.h
                  ${SRC_RSYS}/data_sources/mvector.h
@@ -33,7 +34,11 @@ set(HEADER_FILES ${SRC_RSYS}/recommender.h
 
 set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
                  ${SRC_RSYS}/core.cc
-                 ${SRC_RSYS}/util/util.cc)
+                 ${SRC_RSYS}/util/util.cc
+
+                 ${SRC_RSYS}/exporters/mysql_exporter.cc
+                 ${SRC_RSYS}/exporters/svd_mysql_exporter.cc
+                 )
 
 add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
 target_link_libraries(rsys mysqlcppconn)

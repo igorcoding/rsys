@@ -1,15 +1,14 @@
 #ifndef SVD_EXPORTER_H
 #define SVD_EXPORTER_H
 
-#include "../svd.h"
-
 namespace rsys {
     namespace exporters {
-        template<typename T, template<class> class DS>
+        template <typename SVD>
         class svd_exporter {
         public:
-            virtual void export(const svd<T, DS> &m) = 0;
-            virtual void import(svd<T, DS> &m) = 0;
+            virtual ~svd_exporter() {}
+            virtual bool export_model(const SVD& m) = 0;
+            virtual bool import_model(SVD& m) = 0;
         };
 
     }

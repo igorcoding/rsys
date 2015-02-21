@@ -116,8 +116,9 @@ int sigmoid_example() {
     std::cout << m << std::endl;
 
     rsys_t::config_t c(m, 4, 0.005);
+    exporters::svd_mysql_config exp_conf;
 
-    svd_t r(c);
+    svd_t r(c, new exporters::svd_mysql_exporter<svd_t>(exp_conf));
 
     r.learn_offline();
 
