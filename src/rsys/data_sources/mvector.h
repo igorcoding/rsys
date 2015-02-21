@@ -277,13 +277,13 @@ namespace rsys {
 
         template<typename T> inline
         T& mvector<T>::operator [](size_t i) {
-            check_index(i);
+//            check_index(i);
             return _vec[i];
         }
 
         template<typename T> inline
         const T& mvector<T>::operator [](size_t i) const {
-            check_index(i);
+//            check_index(i);
             return _vec[i];
         }
 

@@ -36,6 +36,12 @@ namespace rsys {
         svd(const config_t& conf, exporter_t* exporter);
         ~svd();
 
+        const map_matrix<size_t, T>& users_features() const { return _pU; }
+        const map_matrix<size_t, T>& items_features() const { return _pI; }
+        const map_mvector<size_t, T>& users_baselines() const { return _bu; }
+        const map_mvector<size_t, T>& items_baselines() const { return _bi; }
+        double total_average() const { return _mu; }
+
 
         void add_user(size_t user_id);
         void add_users(const std::vector<size_t>& users);
@@ -49,7 +55,7 @@ namespace rsys {
         T predict(size_t user_id, size_t item_id) noexcept;
         std::vector<item_score_t> recommend(size_t user_id, int k) noexcept;
 
-        config_t& get_config() { return _config; }
+        const config_t& get_config() const { return _config; }
 
     private:
         T predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept;

@@ -215,11 +215,11 @@ namespace rsys {
 
     template <typename T, template <class> class DS> inline
     config<svd<T,DS>>& config<svd<T,DS>>::assign_seq_ids() {
-        for (size_t i = 0; i < _users_count; ++i) {
+        for (size_t i = 1; i <= _users_count; ++i) {
             _users_ids.push_back(i);
         }
 
-        for (size_t i = 0; i < _items_count; ++i) {
+        for (size_t i = 1; i <= _items_count; ++i) {
             _items_ids.push_back(i);
         }
         return *this;

@@ -11,8 +11,9 @@ template <typename T> using data_holder = ds::matrix<T>;
 typedef svd<double, data_holder> svd_t;
 
 int main() {
-    svd_t::config_t c(5, 5, -1, 4, 0.005);
+    svd_t::config_t c(1, 5, -1, 4, 0.005);
     c.set_print_result(false);
+    c.assign_seq_ids();
 
     svd_mysql_config exp_conf;
     exp_conf.db_name("vkrsys")
