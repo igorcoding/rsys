@@ -117,7 +117,6 @@ int sigmoid_example() {
 
     rsys_t::config_t c(m, 4, 0.005);
     c.set_max_iterations(1000);
-    exporters::svd_mysql_config exp_conf;
 
     svd_t r(c);
 

@@ -72,6 +72,8 @@ namespace rsys {
             bool export_model(const SVD& m);
             bool import_model(SVD& m);
 
+            void drop_all_tables();
+
         protected:
             virtual const svd_mysql_config* const config() const;
 
@@ -80,7 +82,6 @@ namespace rsys {
             bool check_table_exists(const std::string& table_name);
             void save_create_tables_queries();
             void create_all_tables();
-            void drop_all_tables();
 
             void export_features(const SVD& m, const svd_mysql_config* const conf);
             void export_users_features(const SVD& m, const svd_mysql_config* const conf);
@@ -182,6 +183,7 @@ namespace rsys {
                     prep_stmt->setInt(1, user_id);
                     prep_stmt->setInt(2, (int32_t) (feature_id + 1));
                     prep_stmt->setDouble(3, value);
+
                     if (!prep_stmt->executeUpdate()) {
                         std::cerr << "couldn\'t execute user feature export" << std::endl;
                     }

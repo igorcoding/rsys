@@ -384,11 +384,11 @@ namespace rsys {
 
         auto heap_size = heap.size();
         std::vector<item_score_t> ans(heap_size);
-//        auto ans_it = ans.rbegin();
-//        for (size_t i = 0; i < heap_size; ++i) {
-//            *(ans_it++) = heap.top();
-//            heap.pop();
-//        }
+        auto ans_it = ans.rbegin();
+        for (size_t i = 0; i < heap_size; ++i) {
+            *(ans_it++) = heap.top();
+            heap.pop();
+        }
 
         return ans;
     }
