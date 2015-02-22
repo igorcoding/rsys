@@ -27,10 +27,13 @@ namespace rsys { namespace ds {
             const T& at(const K& row_key, size_t col) const;
             T& at(const K& row_key, size_t col);
 
+            bool has_row(const K& row_key) const;
+
             void set(const K& row_key, size_t col, const T& obj);
 
-            mvector<T>&add_row(const K &row_key, mvector<T> *row_data);
+            mvector<T>& add_row(const K &row_key, mvector<T> *row_data);
             mvector<T>& add_row(const K& row_key);
+            bool add_row_if_not_exists(const K& row_key);
             std::vector<mvector<T>*> add_rows(const std::vector<K>& row_keys);
 
             template <typename K1, typename T1>
@@ -101,6 +104,16 @@ namespace rsys { namespace ds {
         }
 
         template <typename K, typename T>
+        bool map_matrix<K,T>::has_row(const K& row_key) const {
+            auto it = _m.find(row_key);
+            if (it != _m.end()) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        template <typename K, typename T>
         void map_matrix<K,T>::set(const K& row_key, size_t col, const T& obj) {
             auto it = _m.find(row_key);
             if (it != _m.end()) {
@@ -135,6 +148,16 @@ namespace rsys { namespace ds {
 
             _m[row_key] = new mvector<T>(_cols, _def_value);
             return *_m[row_key];
+        }
+
+        template <typename K, typename T>
+        bool map_matrix<K,T>::add_row_if_not_exists(const K& row_key) {
+            auto it = _m.find(row_key);
+            if (it == _m.end()) {
+                _m[row_key] = new mvector<T>(_cols, _def_value);
+                return true;
+            }
+            return false;
         }
 
         template <typename K, typename T>

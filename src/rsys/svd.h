@@ -37,10 +37,19 @@ namespace rsys {
         ~svd();
 
         const map_matrix<size_t, T>& users_features() const { return _pU; }
+        map_matrix<size_t, T>& users_features() { return _pU; }
+
         const map_matrix<size_t, T>& items_features() const { return _pI; }
+        map_matrix<size_t, T>& items_features() { return _pI; }
+
         const map_mvector<size_t, T>& users_baselines() const { return _bu; }
+        map_mvector<size_t, T>& users_baselines() { return _bu; }
+
         const map_mvector<size_t, T>& items_baselines() const { return _bi; }
+        map_mvector<size_t, T>& items_baselines() { return _bi; }
+
         double total_average() const { return _mu; }
+        double& total_average() { return _mu; }
 
 
         void add_user(size_t user_id);
@@ -362,7 +371,7 @@ namespace rsys {
 
         for (auto it : _pI.m()) {
             size_t i = it.first;
-            if (_ratings == nullptr || _ratings->at(user_id, i) == _config.def_value()) {
+            if (_ratings == nullptr || ((*_ratings)[user_id][i-1] == _config.def_value())) {
                 auto score = predict(user_id, i);
                 item_score_t s(user_id, i, score);
 
@@ -375,11 +384,11 @@ namespace rsys {
 
         auto heap_size = heap.size();
         std::vector<item_score_t> ans(heap_size);
-        auto ans_it = ans.rbegin();
-        for (size_t i = 0; i < heap_size; ++i) {
-            *(ans_it++) = heap.top();
-            heap.pop();
-        }
+//        auto ans_it = ans.rbegin();
+//        for (size_t i = 0; i < heap_size; ++i) {
+//            *(ans_it++) = heap.top();
+//            heap.pop();
+//        }
 
         return ans;
     }

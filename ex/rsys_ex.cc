@@ -116,9 +116,10 @@ int sigmoid_example() {
     std::cout << m << std::endl;
 
     rsys_t::config_t c(m, 4, 0.005);
+    c.set_max_iterations(1000);
     exporters::svd_mysql_config exp_conf;
 
-    svd_t r(c, new exporters::svd_mysql_exporter<svd_t>(exp_conf));
+    svd_t r(c);
 
     r.learn_offline();
 
@@ -128,8 +129,8 @@ int sigmoid_example() {
     std::cout << "Initial:" << std::endl << m << std::endl;
 
     std::cout << "Predictions:" << std::endl;
-    for (size_t i = 0; i < m.rows(); ++i) {
-        for (size_t j = 0; j < m.cols(); ++j) {
+    for (size_t i = 1; i <= m.rows(); ++i) {
+        for (size_t j = 1; j <= m.cols(); ++j) {
             std::cout << std::setprecision(3) << r.predict(i, j) << " ";
         }
         std::cout << std::endl;

@@ -16,6 +16,15 @@ namespace rsys {
             invalid_users_or_items_table(char const* msg) : basic_error(msg) { }
         };
 
+        class model_import_error : public basic_error {
+        public:
+            model_import_error() : basic_error() { }
+            model_import_error(std::string const& msg) : basic_error(msg) { }
+            model_import_error(char const* msg) : basic_error(msg) { }
+        };
+
+
+
         class svd_mysql_config : public mysql_config {
         public:
             svd_mysql_config();
@@ -80,6 +89,13 @@ namespace rsys {
             void export_items_baselines(const SVD& m, const svd_mysql_config* const conf);
             void export_mu(const SVD& m, const svd_mysql_config* const conf);
 
+            void import_features(SVD& m, const svd_mysql_config* const conf);
+            void import_users_features(SVD& m, const svd_mysql_config* const conf);
+            void import_items_features(SVD& m, const svd_mysql_config* const conf);
+            void import_users_baselines(SVD& m, const svd_mysql_config* const conf);
+            void import_items_baselines(SVD& m, const svd_mysql_config* const conf);
+            void import_mu(SVD& m, const svd_mysql_config* const conf);
+
 
             std::vector<std::string> _tables;
             std::map<std::string, std::string> _create_table_queries;
@@ -127,6 +143,10 @@ namespace rsys {
                 disconnect();
             } catch (sql::SQLException& e) {
                 std::cerr << e.what() << std::endl;
+                if (connected()) {
+                    disconnect();
+                }
+
                 return false;
             }
             return true;
@@ -136,17 +156,15 @@ namespace rsys {
         void svd_mysql_exporter<SVD>::export_features(const SVD& m, const svd_mysql_config* const conf) {
             size_t features_count = m.get_config().features_count();
 
-            sql::PreparedStatement* prep_stmt
-                    = _conn->prepareStatement("INSERT INTO " + conf->features_table() + " (id) VALUE (?)");
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->features_table() + " (id, feature) VALUE (?, ?)"));
 
-            for (size_t feature_id = 1; feature_id <= features_count; ++feature_id) {
-                prep_stmt->setInt(1, (int32_t) feature_id);
+            for (size_t feature_id = 0; feature_id < features_count; ++feature_id) {
+                prep_stmt->setInt(1, (int32_t) feature_id+1);
+                prep_stmt->setInt(2, (int32_t) feature_id);
                 if (!prep_stmt->executeUpdate()) {
                     std::cerr << "couldn\'t execute feature export" << std::endl;
                 }
             }
-
-            delete prep_stmt;
             std::cout << "Exported features" << std::endl;
         }
 
@@ -154,16 +172,15 @@ namespace rsys {
         void svd_mysql_exporter<SVD>::export_users_features(const SVD& m, const svd_mysql_config* const conf) {
             auto& pU = m.users_features();
 
-            sql::PreparedStatement* prep_stmt
-                    = _conn->prepareStatement("INSERT INTO " + conf->pU_table() + " (user_id, feature_id, value) VALUE (?,?,?)");
 
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->pU_table() + " (user_id, feature_id, value) VALUE (?,?,?)"));
             for (auto& t : pU.m()) {
                 auto user_id = t.first;
 
                 for (size_t feature_id = 0; feature_id < t.second->size(); ++feature_id) {
                     auto value = (*t.second)[feature_id];
                     prep_stmt->setInt(1, user_id);
-                    prep_stmt->setInt(2, (int32_t) (feature_id+1));
+                    prep_stmt->setInt(2, (int32_t) (feature_id + 1));
                     prep_stmt->setDouble(3, value);
                     if (!prep_stmt->executeUpdate()) {
                         std::cerr << "couldn\'t execute user feature export" << std::endl;
@@ -171,8 +188,6 @@ namespace rsys {
                 }
 
             }
-
-            delete prep_stmt;
             std::cout << "Exported user features" << std::endl;
         }
 
@@ -180,8 +195,7 @@ namespace rsys {
         void svd_mysql_exporter<SVD>::export_items_features(const SVD& m, const svd_mysql_config* const conf) {
             auto& pI = m.items_features();
 
-            sql::PreparedStatement* prep_stmt
-                    = _conn->prepareStatement("INSERT INTO " + conf->pI_table() + " (item_id, feature_id, value) VALUE (?,?,?)");
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->pI_table() + " (item_id, feature_id, value) VALUE (?,?,?)"));
 
             for (auto& t : pI.m()) {
                 auto item_id = t.first;
@@ -189,7 +203,7 @@ namespace rsys {
                 for (size_t feature_id = 0; feature_id < t.second->size(); ++feature_id) {
                     auto value = (*t.second)[feature_id];
                     prep_stmt->setInt(1, item_id);
-                    prep_stmt->setInt(2, (int32_t) (feature_id+1));
+                    prep_stmt->setInt(2, (int32_t) (feature_id + 1));
                     prep_stmt->setDouble(3, value);
                     if (!prep_stmt->executeUpdate()) {
                         std::cerr << "couldn\'t execute item feature export" << std::endl;
@@ -198,7 +212,6 @@ namespace rsys {
 
             }
 
-            delete prep_stmt;
             std::cout << "Exported items features" << std::endl;
         }
 
@@ -206,9 +219,7 @@ namespace rsys {
         void svd_mysql_exporter<SVD>::export_users_baselines(const SVD& m, const svd_mysql_config* const conf) {
             auto& bu = m.users_baselines();
 
-            sql::PreparedStatement* prep_stmt
-                    = _conn->prepareStatement("INSERT INTO " + conf->bU_table() + " (user_id, value) VALUE (?,?)");
-
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->bU_table() + " (user_id, value) VALUE (?,?)"));
             for (auto& t : bu.m()) {
                 auto user_id = t.first;
 
@@ -221,18 +232,16 @@ namespace rsys {
 
             }
 
-            delete prep_stmt;
             std::cout << "Exported user baselines" << std::endl;
         }
 
         template<typename SVD> inline
         void svd_mysql_exporter<SVD>::export_items_baselines(const SVD& m, const svd_mysql_config* const conf) {
-            auto& bu = m.users_baselines();
+            auto& bi = m.items_baselines();
 
-            sql::PreparedStatement* prep_stmt
-                    = _conn->prepareStatement("INSERT INTO " + conf->bI_table() + " (item_id, value) VALUE (?,?)");
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->bI_table() + " (item_id, value) VALUE (?,?)"));
 
-            for (auto& t : bu.m()) {
+            for (auto& t : bi.m()) {
                 auto item_id = t.first;
 
                 auto value = t.second;
@@ -244,7 +253,6 @@ namespace rsys {
 
             }
 
-            delete prep_stmt;
             std::cout << "Exported item baselines" << std::endl;
         }
 
@@ -252,27 +260,200 @@ namespace rsys {
         void svd_mysql_exporter<SVD>::export_mu(const SVD& m, const svd_mysql_config* const conf) {
             double mu = m.total_average();
 
-            sql::PreparedStatement* prep_stmt
-                    = _conn->prepareStatement("INSERT INTO " + conf->mu_table() + " (id, value) VALUE (?,?)");
-
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->mu_table() + " (id, value) VALUE (?,?)"));
             prep_stmt->setInt(1, 1);
             prep_stmt->setDouble(2, mu);
             if (!prep_stmt->executeUpdate()) {
                 std::cerr << "couldn\'t execute mu export" << std::endl;
             }
 
-            delete prep_stmt;
             std::cout << "Exported mu" << std::endl;
         }
 
         template<typename SVD>
         bool svd_mysql_exporter<SVD>::import_model(SVD& m) {
-            std::cout << "importing svd" << std::endl;
-            connect();
-            check_params();
+            try {
+                std::cout << "importing svd" << std::endl;
+                connect();
+                check_params();
 
-            disconnect();
-            return false;
+                const svd_mysql_config* const conf = config();
+                import_features(m, conf);
+                import_users_features(m, conf);
+                import_items_features(m, conf);
+                import_users_baselines(m, conf);
+                import_items_baselines(m, conf);
+                import_mu(m, conf);
+
+                disconnect();
+            } catch (sql::SQLException& e) {
+                std::cerr << e.what() << std::endl;
+                if (connected()) {
+                    disconnect();
+                }
+
+                return false;
+            }
+            return true;
+        }
+
+        template<typename SVD> inline
+        void svd_mysql_exporter<SVD>::import_features(SVD& m, const svd_mysql_config* const conf) {
+            int32_t features_count = m.get_config().features_count();
+
+            std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
+
+            std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(id) FROM " + conf->features_table()));
+            res->next();
+            int32_t count = res->getInt(1);
+
+            if (count != features_count) {
+                throw model_import_error("Invalid features count");
+            }
+
+            std::cout << "Imported features" << std::endl;
+
+        }
+
+        template<typename SVD> inline
+        void svd_mysql_exporter<SVD>::import_users_features(SVD& m, const svd_mysql_config* const conf) {
+            auto& pU = m.users_features();
+
+            std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
+
+            auto& pu = conf->pU_table();
+            auto& features = conf->features_table();
+
+            std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(DISTINCT user_id) FROM " + pu));
+            res->next();
+            int users_count = res->getInt(1);
+            if (users_count != (int) m.get_config().users_count()) {
+                throw model_import_error("Users counts don\'t match");
+            }
+
+
+            res.reset(stmt->executeQuery("SELECT user_id, feature, value FROM " + pu +
+                                         " JOIN " + features + " ON " + pu + ".feature_id=" + features + ".id"));
+
+            while (res->next()) {
+                int32_t user_id = res->getInt(1);
+                int32_t feature_id = res->getInt(2);
+                double value = (double) res->getDouble(3);
+
+                pU.add_row_if_not_exists(user_id);
+                pU.set(user_id, feature_id, value);
+            }
+
+
+            std::cout << "Imported user features" << std::endl;
+        }
+
+        template<typename SVD> inline
+        void svd_mysql_exporter<SVD>::import_items_features(SVD& m, const svd_mysql_config* const conf) {
+            auto& pI = m.items_features();
+
+            std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
+
+            auto& pi = conf->pI_table();
+            auto& features = conf->features_table();
+
+            std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(DISTINCT item_id) FROM " + pi));
+            res->next();
+            int items_count = res->getInt(1);
+            if (items_count != (int) m.get_config().items_count()) {
+                throw model_import_error("Items counts don\'t match");
+            }
+
+
+            res.reset(stmt->executeQuery("SELECT item_id, feature, value FROM " + pi +
+                    " JOIN " + features + " ON " + pi + ".feature_id=" + features + ".id"));
+
+            while (res->next()) {
+                int32_t item_id = res->getInt(1);
+                int32_t feature_id = res->getInt(2);
+                double value = (double) res->getDouble(3);
+
+                pI.add_row_if_not_exists(item_id);
+                pI.set(item_id, feature_id, value);
+            }
+
+            std::cout << "Imported items features" << std::endl;
+        }
+
+        template<typename SVD> inline
+        void svd_mysql_exporter<SVD>::import_users_baselines(SVD& m, const svd_mysql_config* const conf) {
+            auto& bU = m.users_baselines();
+
+            std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
+
+            auto& bu = conf->bU_table();
+
+            std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(DISTINCT user_id) FROM " + bu));
+            res->next();
+            int users_count = res->getInt(1);
+            if (users_count != (int) m.get_config().users_count()) {
+                throw model_import_error("Users counts don\'t match");
+            }
+
+            res.reset(stmt->executeQuery("SELECT user_id, value FROM " + bu));
+
+            while (res->next()) {
+                int32_t user_id = res->getInt(1);
+                double value = (double) res->getDouble(2);
+
+                bU.add_row(user_id, value);
+            }
+
+            std::cout << "Imported user baselines" << std::endl;
+        }
+
+        template<typename SVD> inline
+        void svd_mysql_exporter<SVD>::import_items_baselines(SVD& m, const svd_mysql_config* const conf) {
+            auto& bI = m.items_baselines();
+
+            std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
+
+            auto& bi = conf->bI_table();
+
+            std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(DISTINCT item_id) FROM " + bi));
+            res->next();
+            int items_count = res->getInt(1);
+            if (items_count != (int) m.get_config().items_count()) {
+                throw model_import_error("Items counts don\'t match");
+            }
+
+            res.reset(stmt->executeQuery("SELECT item_id, value FROM " + bi));
+
+            while (res->next()) {
+                int32_t item_id = res->getInt(1);
+                double value = (double) res->getDouble(2);
+
+                bI.add_row(item_id, value);
+            }
+
+            std::cout << "Imported item baselines" << std::endl;
+        }
+
+        template<typename SVD> inline
+        void svd_mysql_exporter<SVD>::import_mu(SVD& m, const svd_mysql_config* const conf) {
+            double& mu = m.total_average();
+
+            std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
+
+            auto& mu_table = conf->mu_table();
+            std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(id) FROM " + mu_table));
+            res->next();
+            int mu_count = res->getInt(1);
+            if (mu_count != 1) {
+                throw model_import_error("Mu should be 1");
+            }
+
+            res.reset(stmt->executeQuery("SELECT value FROM " + mu_table));
+            res->next();
+
+            mu = (double) res->getDouble(1);
+
+            std::cout << "Imported mu" << std::endl;
         }
 
 
@@ -314,7 +495,9 @@ namespace rsys {
             _create_table_queries[conf->features_table()]
                     = R"(CREATE TABLE )" + conf->features_table() + R"( (
                                id int(11) NOT NULL AUTO_INCREMENT,
-                               PRIMARY KEY (id)
+                               feature int(11) NOT NULL,
+                               PRIMARY KEY (id),
+                               KEY (feature)
                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8)";
 
             _create_table_queries[conf->pU_table()]

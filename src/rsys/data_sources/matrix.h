@@ -75,9 +75,9 @@ namespace rsys {
                     }
                     const T& val = (*_m._m[_current_row])[_current_col];
                     if (value == nullptr) {
-                        return std::make_shared<element_type>(_current_row, _current_col, val);
+                        return std::make_shared<element_type>(_current_row+1, _current_col+1, val);
                     } else {
-                        _value->set(_current_row, _current_col, val);
+                        _value->set(_current_row+1, _current_col+1, val);
                     }
                     return _value;
                 }
@@ -139,7 +139,7 @@ namespace rsys {
 
 
             matrix(size_t rows, size_t cols, const T& default_value = T());
-            matrix(std::initializer_list<std::initializer_list<T>> list, const T& default_value = T());
+//            matrix(std::initializer_list<std::initializer_list<T>> list, const T& default_value = T());
             matrix(const matrix<T>& rhs);
             matrix(matrix<T>&& rhs);
 
@@ -233,12 +233,12 @@ namespace rsys {
             }
         }
 
-        template<typename T>
-        matrix<T>::matrix(std::initializer_list<std::initializer_list<T>> list, const T& default_value)
-                : _total(0),
-                  _def_value(default_value) {
-            _rows = list.size();
-            _cols = list.begin()->size();
+//        template<typename T>
+//        matrix<T>::matrix(std::initializer_list<std::initializer_list<T>> list, const T& default_value)
+//                : _total(0),
+//                  _def_value(default_value) {
+//            _rows = list.size();
+//            _cols = list.begin()->size();
 
 //            _m = new mvector<T>*[_rows];
 //
@@ -259,7 +259,7 @@ namespace rsys {
 //                    }
 //                }
 //            }
-        }
+//        }
 
         template<typename T>
         matrix<T>::matrix(const matrix<T>& rhs)

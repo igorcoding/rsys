@@ -26,8 +26,15 @@ int main() {
     svd_t r(c);
 
     svd_exporter<svd_t>* exporter = new svd_mysql_exporter<svd_t>(&exp_conf);
-    exporter->export_model(r);
 
+//    exporter->export_model(r);
+    exporter->import_model(r);
+
+    std::cout << r.users_features() << std::endl;
+    std::cout << r.items_features() << std::endl;
+    std::cout << r.users_baselines() << std::endl;
+    std::cout << r.items_baselines() << std::endl;
+    std::cout << r.total_average() << std::endl;
 
     delete exporter;
 }

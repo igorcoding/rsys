@@ -28,6 +28,7 @@ namespace rsys { namespace ds {
             void set(const K& row_key, const T& obj);
 
             T& add_row(const K& row_key);
+            T& add_row(const K& row_key, const T& value);
             std::vector<T*> add_rows(const std::vector<K>& row_keys);
 
             template <typename K1, typename T1>
@@ -98,6 +99,12 @@ namespace rsys { namespace ds {
         template <typename K, typename T>
         T& map_mvector<K,T>::add_row(const K& row_key) {
             _m[row_key] = _def_value;
+            return _m[row_key];
+        }
+
+        template <typename K, typename T>
+        T& map_mvector<K,T>::add_row(const K& row_key, const T& value) {
+            _m[row_key] = value;
             return _m[row_key];
         }
 
