@@ -33,7 +33,6 @@ namespace rsys {
         typedef typename DS<T>::template item_iterator<item_score_t> DS_item_iterator;
 
         svd(const config_t& conf);
-        svd(const config_t& conf, exporter_t* exporter);
         ~svd();
 
         const map_matrix<size_t, T>& users_features() const { return _pU; }
@@ -95,12 +94,6 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     svd<T, DS>::svd(const config_t& conf)
-        : svd(conf, nullptr) {
-
-    }
-
-    template<typename T, template<class> class DS>
-    svd<T, DS>::svd(const config_t& conf, exporter_t* exporter)
             : _config(conf),
               _users_count(_config.users_count()),
               _items_count(_config.items_count()),
@@ -111,7 +104,7 @@ namespace rsys {
               _bi(conf.get_items_ids()),
               _mu(0),
 
-              _exporter(exporter),
+              _exporter(_config.exporter()),
 
               _ratings(_config._ratings),
               _ratings_begin(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_begin<item_score_t>()) : nullptr),
@@ -141,8 +134,6 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     svd<T,DS>::~svd() {
-        delete _exporter;
-        _exporter = nullptr;
         delete _ratings_begin;
         _ratings_begin = nullptr;
         delete _ratings_end;

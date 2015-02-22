@@ -63,7 +63,7 @@ namespace rsys {
         template<typename SVD>
         class svd_mysql_exporter : public mysql_exporter, public svd_exporter<SVD> {
         public:
-            svd_mysql_exporter(svd_mysql_config* conf);
+            svd_mysql_exporter(const svd_mysql_config& conf);
 
             virtual void on_connected();
             virtual void on_disconnected();
@@ -75,7 +75,7 @@ namespace rsys {
             void drop_all_tables();
 
         protected:
-            virtual const svd_mysql_config* const config() const;
+            virtual const svd_mysql_config& config() const;
 
         private:
             void check_params();
@@ -83,19 +83,19 @@ namespace rsys {
             void save_create_tables_queries();
             void create_all_tables();
 
-            void export_features(const SVD& m, const svd_mysql_config* const conf);
-            void export_users_features(const SVD& m, const svd_mysql_config* const conf);
-            void export_items_features(const SVD& m, const svd_mysql_config* const conf);
-            void export_users_baselines(const SVD& m, const svd_mysql_config* const conf);
-            void export_items_baselines(const SVD& m, const svd_mysql_config* const conf);
-            void export_mu(const SVD& m, const svd_mysql_config* const conf);
+            void export_features(const SVD& m, const svd_mysql_config& conf);
+            void export_users_features(const SVD& m, const svd_mysql_config& conf);
+            void export_items_features(const SVD& m, const svd_mysql_config& conf);
+            void export_users_baselines(const SVD& m, const svd_mysql_config& conf);
+            void export_items_baselines(const SVD& m, const svd_mysql_config& conf);
+            void export_mu(const SVD& m, const svd_mysql_config& conf);
 
-            void import_features(SVD& m, const svd_mysql_config* const conf);
-            void import_users_features(SVD& m, const svd_mysql_config* const conf);
-            void import_items_features(SVD& m, const svd_mysql_config* const conf);
-            void import_users_baselines(SVD& m, const svd_mysql_config* const conf);
-            void import_items_baselines(SVD& m, const svd_mysql_config* const conf);
-            void import_mu(SVD& m, const svd_mysql_config* const conf);
+            void import_features(SVD& m, const svd_mysql_config& conf);
+            void import_users_features(SVD& m, const svd_mysql_config& conf);
+            void import_items_features(SVD& m, const svd_mysql_config& conf);
+            void import_users_baselines(SVD& m, const svd_mysql_config& conf);
+            void import_items_baselines(SVD& m, const svd_mysql_config& conf);
+            void import_mu(SVD& m, const svd_mysql_config& conf);
 
 
             std::vector<std::string> _tables;
@@ -104,15 +104,15 @@ namespace rsys {
 
 
         template<typename SVD>
-        svd_mysql_exporter<SVD>::svd_mysql_exporter(svd_mysql_config* conf)
+        svd_mysql_exporter<SVD>::svd_mysql_exporter(const svd_mysql_config& conf)
                 : mysql_exporter(conf) {
-            _tables = { conf->features_table(), conf->pU_table(), conf->pI_table(),
-                        conf->bU_table(), conf->bI_table(), conf->mu_table() };
+            _tables = { conf.features_table(), conf.pU_table(), conf.pI_table(),
+                        conf.bU_table(), conf.bI_table(), conf.mu_table() };
             save_create_tables_queries();
         }
 
         template<typename SVD>
-        const svd_mysql_config* const svd_mysql_exporter<SVD>::config() const { return dynamic_cast<svd_mysql_config*>(_conf); }
+        const svd_mysql_config& svd_mysql_exporter<SVD>::config() const { return static_cast<const svd_mysql_config&>(_conf); }
 
         template<typename SVD>
         void svd_mysql_exporter<SVD>::on_connected() {
@@ -133,7 +133,7 @@ namespace rsys {
                 drop_all_tables();
                 create_all_tables();
 
-                const svd_mysql_config* const conf = config();
+                const svd_mysql_config& conf = config();
                 export_features(m, conf);
                 export_users_features(m, conf);
                 export_items_features(m, conf);
@@ -154,10 +154,10 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::export_features(const SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::export_features(const SVD& m, const svd_mysql_config& conf) {
             size_t features_count = m.get_config().features_count();
 
-            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->features_table() + " (id, feature) VALUE (?, ?)"));
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.features_table() + " (id, feature) VALUE (?, ?)"));
 
             for (size_t feature_id = 0; feature_id < features_count; ++feature_id) {
                 prep_stmt->setInt(1, (int32_t) feature_id+1);
@@ -170,11 +170,11 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::export_users_features(const SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::export_users_features(const SVD& m, const svd_mysql_config& conf) {
             auto& pU = m.users_features();
 
 
-            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->pU_table() + " (user_id, feature_id, value) VALUE (?,?,?)"));
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.pU_table() + " (user_id, feature_id, value) VALUE (?,?,?)"));
             for (auto& t : pU.m()) {
                 auto user_id = t.first;
 
@@ -194,10 +194,10 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::export_items_features(const SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::export_items_features(const SVD& m, const svd_mysql_config& conf) {
             auto& pI = m.items_features();
 
-            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->pI_table() + " (item_id, feature_id, value) VALUE (?,?,?)"));
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.pI_table() + " (item_id, feature_id, value) VALUE (?,?,?)"));
 
             for (auto& t : pI.m()) {
                 auto item_id = t.first;
@@ -218,10 +218,10 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::export_users_baselines(const SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::export_users_baselines(const SVD& m, const svd_mysql_config& conf) {
             auto& bu = m.users_baselines();
 
-            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->bU_table() + " (user_id, value) VALUE (?,?)"));
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.bU_table() + " (user_id, value) VALUE (?,?)"));
             for (auto& t : bu.m()) {
                 auto user_id = t.first;
 
@@ -238,10 +238,10 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::export_items_baselines(const SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::export_items_baselines(const SVD& m, const svd_mysql_config& conf) {
             auto& bi = m.items_baselines();
 
-            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->bI_table() + " (item_id, value) VALUE (?,?)"));
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.bI_table() + " (item_id, value) VALUE (?,?)"));
 
             for (auto& t : bi.m()) {
                 auto item_id = t.first;
@@ -259,10 +259,10 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::export_mu(const SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::export_mu(const SVD& m, const svd_mysql_config& conf) {
             double mu = m.total_average();
 
-            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf->mu_table() + " (id, value) VALUE (?,?)"));
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.mu_table() + " (id, value) VALUE (?,?)"));
             prep_stmt->setInt(1, 1);
             prep_stmt->setDouble(2, mu);
             if (!prep_stmt->executeUpdate()) {
@@ -279,7 +279,7 @@ namespace rsys {
                 connect();
                 check_params();
 
-                const svd_mysql_config* const conf = config();
+                const svd_mysql_config& conf = config();
                 import_features(m, conf);
                 import_users_features(m, conf);
                 import_items_features(m, conf);
@@ -300,12 +300,12 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::import_features(SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::import_features(SVD& m, const svd_mysql_config& conf) {
             int32_t features_count = m.get_config().features_count();
 
             std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
 
-            std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(id) FROM " + conf->features_table()));
+            std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(id) FROM " + conf.features_table()));
             res->next();
             int32_t count = res->getInt(1);
 
@@ -318,13 +318,13 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::import_users_features(SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::import_users_features(SVD& m, const svd_mysql_config& conf) {
             auto& pU = m.users_features();
 
             std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
 
-            auto& pu = conf->pU_table();
-            auto& features = conf->features_table();
+            auto& pu = conf.pU_table();
+            auto& features = conf.features_table();
 
             std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(DISTINCT user_id) FROM " + pu));
             res->next();
@@ -351,13 +351,13 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::import_items_features(SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::import_items_features(SVD& m, const svd_mysql_config& conf) {
             auto& pI = m.items_features();
 
             std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
 
-            auto& pi = conf->pI_table();
-            auto& features = conf->features_table();
+            auto& pi = conf.pI_table();
+            auto& features = conf.features_table();
 
             std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(DISTINCT item_id) FROM " + pi));
             res->next();
@@ -383,12 +383,12 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::import_users_baselines(SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::import_users_baselines(SVD& m, const svd_mysql_config& conf) {
             auto& bU = m.users_baselines();
 
             std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
 
-            auto& bu = conf->bU_table();
+            auto& bu = conf.bU_table();
 
             std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(DISTINCT user_id) FROM " + bu));
             res->next();
@@ -410,12 +410,12 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::import_items_baselines(SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::import_items_baselines(SVD& m, const svd_mysql_config& conf) {
             auto& bI = m.items_baselines();
 
             std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
 
-            auto& bi = conf->bI_table();
+            auto& bi = conf.bI_table();
 
             std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(DISTINCT item_id) FROM " + bi));
             res->next();
@@ -437,12 +437,12 @@ namespace rsys {
         }
 
         template<typename SVD> inline
-        void svd_mysql_exporter<SVD>::import_mu(SVD& m, const svd_mysql_config* const conf) {
+        void svd_mysql_exporter<SVD>::import_mu(SVD& m, const svd_mysql_config& conf) {
             double& mu = m.total_average();
 
             std::unique_ptr<sql::Statement> stmt(_conn->createStatement());
 
-            auto& mu_table = conf->mu_table();
+            auto& mu_table = conf.mu_table();
             std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT COUNT(id) FROM " + mu_table));
             res->next();
             int mu_count = res->getInt(1);
@@ -462,8 +462,8 @@ namespace rsys {
         template<typename SVD>
         void svd_mysql_exporter<SVD>::check_params() {
             auto conf = config();
-            if (conf->users_table() == "" || conf->items_table() == ""
-                    || !check_table_exists(conf->users_table()) || !check_table_exists(conf->items_table())) {
+            if (conf.users_table() == "" || conf.items_table() == ""
+                    || !check_table_exists(conf.users_table()) || !check_table_exists(conf.items_table())) {
                 throw invalid_users_or_items_table();
             }
         }
@@ -479,7 +479,7 @@ namespace rsys {
                         AND table_name = ?)";
 
             sql::PreparedStatement* prep_stmt = _conn->prepareStatement(q);
-            prep_stmt->setString(1, _conf->db_name());
+            prep_stmt->setString(1, _conf.db_name());
             prep_stmt->setString(2, table_name);
             sql::ResultSet* res = prep_stmt->executeQuery();
             res->next();
@@ -494,56 +494,56 @@ namespace rsys {
         void svd_mysql_exporter<SVD>::save_create_tables_queries() {
             auto conf = config();
 
-            _create_table_queries[conf->features_table()]
-                    = R"(CREATE TABLE )" + conf->features_table() + R"( (
+            _create_table_queries[conf.features_table()]
+                    = R"(CREATE TABLE )" + conf.features_table() + R"( (
                                id int(11) NOT NULL AUTO_INCREMENT,
                                feature int(11) NOT NULL,
                                PRIMARY KEY (id),
                                KEY (feature)
                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8)";
 
-            _create_table_queries[conf->pU_table()]
-                    = "CREATE TABLE " + conf->pU_table() + R"( (
+            _create_table_queries[conf.pU_table()]
+                    = "CREATE TABLE " + conf.pU_table() + R"( (
                                id int(11) NOT NULL AUTO_INCREMENT,
                                user_id int(11) NOT NULL,
                                feature_id int(11) NOT NULL,
                                value double NOT NULL,
                                PRIMARY KEY (id),
-                               CONSTRAINT )" + conf->pU_table() + "_user_id_fk FOREIGN KEY (user_id) REFERENCES " + conf->users_table() + R"( (id),
-                               CONSTRAINT )" + conf->pU_table() + "_feature_id_fk FOREIGN KEY (feature_id) REFERENCES " + conf->features_table() + R"( (id)
+                               CONSTRAINT )" + conf.pU_table() + "_user_id_fk FOREIGN KEY (user_id) REFERENCES " + conf.users_table() + R"( (id),
+                               CONSTRAINT )" + conf.pU_table() + "_feature_id_fk FOREIGN KEY (feature_id) REFERENCES " + conf.features_table() + R"( (id)
                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8)";
 
-            _create_table_queries[conf->pI_table()]
-                    = "CREATE TABLE " + conf->pI_table() + R"( (
+            _create_table_queries[conf.pI_table()]
+                    = "CREATE TABLE " + conf.pI_table() + R"( (
                                id int(11) NOT NULL AUTO_INCREMENT,
                                item_id int(11) NOT NULL,
                                feature_id int(11) NOT NULL,
                                value double NOT NULL,
                                PRIMARY KEY (id),
-                               CONSTRAINT )" + conf->pI_table() + "_item_id_fk FOREIGN KEY (item_id) REFERENCES " + conf->items_table() + R"( (id),
-                               CONSTRAINT )" + conf->pI_table() + "_feature_id_fk FOREIGN KEY (feature_id) REFERENCES " + conf->features_table() + R"( (id)
+                               CONSTRAINT )" + conf.pI_table() + "_item_id_fk FOREIGN KEY (item_id) REFERENCES " + conf.items_table() + R"( (id),
+                               CONSTRAINT )" + conf.pI_table() + "_feature_id_fk FOREIGN KEY (feature_id) REFERENCES " + conf.features_table() + R"( (id)
                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8)";
 
-            _create_table_queries[conf->bU_table()]
-                    = "CREATE TABLE " + conf->bU_table() + R"( (
+            _create_table_queries[conf.bU_table()]
+                    = "CREATE TABLE " + conf.bU_table() + R"( (
                                id int(11) NOT NULL AUTO_INCREMENT,
                                user_id int(11) NOT NULL,
                                value double NOT NULL,
                                PRIMARY KEY (id),
-                               CONSTRAINT )" + conf->bU_table() + "_user_id_fk FOREIGN KEY (user_id) REFERENCES " + conf->users_table() + R"( (id)
+                               CONSTRAINT )" + conf.bU_table() + "_user_id_fk FOREIGN KEY (user_id) REFERENCES " + conf.users_table() + R"( (id)
                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8)";
 
-            _create_table_queries[conf->bI_table()]
-                    = "CREATE TABLE " + conf->bI_table() + R"( (
+            _create_table_queries[conf.bI_table()]
+                    = "CREATE TABLE " + conf.bI_table() + R"( (
                                id int(11) NOT NULL AUTO_INCREMENT,
                                item_id int(11) NOT NULL,
                                value double NOT NULL,
                                PRIMARY KEY (id),
-                               CONSTRAINT )" + conf->bI_table() + "_item_id_fk FOREIGN KEY (item_id) REFERENCES " + conf->items_table() + R"( (id)
+                               CONSTRAINT )" + conf.bI_table() + "_item_id_fk FOREIGN KEY (item_id) REFERENCES " + conf.items_table() + R"( (id)
                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8)";
 
-            _create_table_queries[conf->mu_table()]
-                    = "CREATE TABLE " + conf->mu_table() + R"( (
+            _create_table_queries[conf.mu_table()]
+                    = "CREATE TABLE " + conf.mu_table() + R"( (
                                id int(11) NOT NULL AUTO_INCREMENT,
                                value double NOT NULL,
                                PRIMARY KEY (id)
@@ -571,12 +571,12 @@ namespace rsys {
             auto conf = config();
 
             auto fk_drops = {
-                    std::make_pair("ALTER TABLE " + conf->pU_table() + " DROP FOREIGN KEY " + conf->pU_table() + "_user_id_fk", conf->pU_table()),
-                    std::make_pair("ALTER TABLE " + conf->pU_table() + " DROP FOREIGN KEY " + conf->pU_table() + "_feature_id_fk", conf->pU_table()),
-                    std::make_pair("ALTER TABLE " + conf->pI_table() + " DROP FOREIGN KEY " + conf->pI_table() + "_item_id_fk", conf->pI_table()),
-                    std::make_pair("ALTER TABLE " + conf->pI_table() + " DROP FOREIGN KEY " + conf->pI_table() + "_feature_id_fk", conf->pI_table()),
-                    std::make_pair("ALTER TABLE " + conf->bU_table() + " DROP FOREIGN KEY " + conf->bU_table() + "_user_id_fk", conf->bU_table()),
-                    std::make_pair("ALTER TABLE " + conf->bI_table() + " DROP FOREIGN KEY " + conf->bI_table() + "_item_id_fk", conf->bI_table())
+                    std::make_pair("ALTER TABLE " + conf.pU_table() + " DROP FOREIGN KEY " + conf.pU_table() + "_user_id_fk", conf.pU_table()),
+                    std::make_pair("ALTER TABLE " + conf.pU_table() + " DROP FOREIGN KEY " + conf.pU_table() + "_feature_id_fk", conf.pU_table()),
+                    std::make_pair("ALTER TABLE " + conf.pI_table() + " DROP FOREIGN KEY " + conf.pI_table() + "_item_id_fk", conf.pI_table()),
+                    std::make_pair("ALTER TABLE " + conf.pI_table() + " DROP FOREIGN KEY " + conf.pI_table() + "_feature_id_fk", conf.pI_table()),
+                    std::make_pair("ALTER TABLE " + conf.bU_table() + " DROP FOREIGN KEY " + conf.bU_table() + "_user_id_fk", conf.bU_table()),
+                    std::make_pair("ALTER TABLE " + conf.bI_table() + " DROP FOREIGN KEY " + conf.bI_table() + "_item_id_fk", conf.bI_table())
             };
 
             std::map<std::string, bool> table_existance;

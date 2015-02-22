@@ -2,6 +2,7 @@
 #define SVD_CONFIG_H
 
 #include "config.h"
+#include "../exporters/svd_exporter.h"
 
 #include <exception>
 #include <string>
@@ -45,6 +46,8 @@ namespace rsys {
         config& set_users_ids(const std::vector<size_t>& users_ids);
         config& set_items_ids(const std::vector<size_t>& items_ids);
         config& assign_seq_ids();
+        config& set_exporter(exporters::svd_exporter<svd<T, DS>>& e);
+        config& set_exporter(exporters::svd_exporter<svd<T, DS>>* e);
 
         const DS<T>& ratings() const {
             if (!_ratings)
@@ -72,6 +75,7 @@ namespace rsys {
             }
             return _items_ids;
         }
+        exporters::svd_exporter<svd<T,DS>>* exporter() { return _exporter; }
 
     private:
         DS<T>* _ratings;
@@ -85,6 +89,7 @@ namespace rsys {
         bool _print_results;
         std::vector<size_t> _users_ids;
         std::vector<size_t> _items_ids;
+        exporters::svd_exporter<svd<T,DS>>* _exporter;
     };
 
     template <typename T, template <class> class DS>
@@ -97,7 +102,8 @@ namespace rsys {
               _learning_rate(learning_rate),
               _regularization(regularization),
               _max_iterations(max_iterations),
-              _print_results(print_results)
+              _print_results(print_results),
+              _exporter(nullptr)
     {
         assign_seq_ids();
     }
@@ -112,7 +118,8 @@ namespace rsys {
               _learning_rate(learning_rate),
               _regularization(regularization),
               _max_iterations(max_iterations),
-              _print_results(print_results)
+              _print_results(print_results),
+              _exporter(nullptr)
     {
     }
 
@@ -128,7 +135,8 @@ namespace rsys {
               _max_iterations(rhs._max_iterations),
               _print_results(rhs._print_results),
               _users_ids(rhs._users_ids),
-              _items_ids(rhs._items_ids)
+              _items_ids(rhs._items_ids),
+              _exporter(rhs._exporter)
     {
 //        std::cout << "Copying config" << std::endl;
     }
@@ -222,6 +230,17 @@ namespace rsys {
         for (size_t i = 1; i <= _items_count; ++i) {
             _items_ids.push_back(i);
         }
+        return *this;
+    }
+
+    template <typename T, template <class> class DS>
+    config<svd<T,DS>>& config<svd<T,DS>>::set_exporter(exporters::svd_exporter<svd<T, DS>>& e) {
+        return set_exporter(&e);
+    }
+
+    template <typename T, template <class> class DS>
+    config<svd<T,DS>>& config<svd<T,DS>>::set_exporter(exporters::svd_exporter<svd<T, DS>>* e) {
+        _exporter = e;
         return *this;
     }
 

@@ -44,9 +44,9 @@ namespace rsys {
 
         class mysql_exporter {
         public:
-            mysql_exporter(mysql_config* conf);
+            mysql_exporter(const mysql_config& conf);
             mysql_exporter(const mysql_exporter& rhs);
-            ~mysql_exporter();
+            virtual ~mysql_exporter();
 
             void connect();
             void disconnect();
@@ -55,13 +55,13 @@ namespace rsys {
 
 
 
-            virtual void on_connected() = 0;
-            virtual void on_disconnected() = 0;
+            virtual void on_connected() {};
+            virtual void on_disconnected() {};
 
         protected:
-            virtual const mysql_config* const config() const;
+            virtual const mysql_config& config() const;
 
-            mysql_config* _conf;
+            const mysql_config& _conf;
             sql::Connection* _conn;
 
         private:

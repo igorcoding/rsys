@@ -16,19 +16,21 @@ int main() {
     c.assign_seq_ids();
 
     svd_mysql_config exp_conf;
-    exp_conf.db_name("vkrsys")
-            .user("vkrsys_user")
-            .password("vkrsys_password");
+    exp_conf.db_name("vkrsys");
+    exp_conf.user("vkrsys_user");
+    exp_conf.password("vkrsys_password");
 
     exp_conf.users_table("auth_user")
             .items_table("app_song");
 
+    svd_mysql_exporter<svd_t> exporter(exp_conf);
+    c.set_exporter(exporter);
+
+
     svd_t r(c);
 
-    svd_exporter<svd_t>* exporter = new svd_mysql_exporter<svd_t>(&exp_conf);
-
-//    exporter->export_model(r);
-    exporter->import_model(r);
+//    exporter.export_model(r);
+//    exporter.import_model(r);
 
     std::cout << r.users_features() << std::endl;
     std::cout << r.items_features() << std::endl;
@@ -36,5 +38,5 @@ int main() {
     std::cout << r.items_baselines() << std::endl;
     std::cout << r.total_average() << std::endl;
 
-    delete exporter;
+//    delete exporter;
 }
