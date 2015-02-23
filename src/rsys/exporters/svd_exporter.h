@@ -3,6 +3,13 @@
 
 namespace rsys {
     namespace exporters {
+
+        class svd_config {
+        public:
+            virtual ~svd_config() {}
+        };
+
+
         template <typename SVD>
         class svd_exporter {
         public:

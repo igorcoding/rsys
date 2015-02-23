@@ -5,6 +5,7 @@
 #include "svd_exporter.h"
 
 #include <string>
+#include <cppconn/exception.h>
 
 namespace rsys {
     namespace exporters {
@@ -25,7 +26,7 @@ namespace rsys {
 
 
 
-        class svd_mysql_config : public mysql_config {
+        class svd_mysql_config : public mysql_config, public svd_config {
         public:
             svd_mysql_config();
             virtual ~svd_mysql_config() {};
@@ -63,6 +64,7 @@ namespace rsys {
         template<typename SVD>
         class svd_mysql_exporter : public mysql_exporter, public svd_exporter<SVD> {
         public:
+            svd_mysql_exporter(const svd_config& conf);
             svd_mysql_exporter(const svd_mysql_config& conf);
 
             virtual void on_connected();
@@ -104,6 +106,12 @@ namespace rsys {
 
 
         template<typename SVD>
+        svd_mysql_exporter<SVD>::svd_mysql_exporter(const svd_config& conf)
+                : svd_mysql_exporter(static_cast<const svd_mysql_config&>(conf)) {
+        }
+
+
+        template<typename SVD>
         svd_mysql_exporter<SVD>::svd_mysql_exporter(const svd_mysql_config& conf)
                 : mysql_exporter(conf) {
             _tables = { conf.features_table(), conf.pU_table(), conf.pI_table(),
@@ -129,6 +137,7 @@ namespace rsys {
             try {
                 std::cout << "exporting svd" << std::endl;
                 connect();
+                _conn->setAutoCommit(false);
                 check_params();
                 drop_all_tables();
                 create_all_tables();
@@ -143,7 +152,11 @@ namespace rsys {
 
                 disconnect();
             } catch (sql::SQLException& e) {
-                std::cerr << e.what() << std::endl;
+                std::cerr << "# ERR: SQLException in " << __FILE__;
+                std::cerr << "(" << __FUNCTION__ << ") on line " << __LINE__ << std::endl;
+                std::cerr << "# ERR: " << e.what();
+                std::cerr << " (MySQL error code: " << e.getErrorCode();
+                std::cerr << ", SQLState: " << e.getSQLState() << " )" << std::endl;
                 if (connected()) {
                     disconnect();
                 }
@@ -166,6 +179,7 @@ namespace rsys {
                     std::cerr << "couldn\'t execute feature export" << std::endl;
                 }
             }
+            _conn->commit();
             std::cout << "Exported features" << std::endl;
         }
 
@@ -175,7 +189,9 @@ namespace rsys {
 
 
             std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.pU_table() + " (user_id, feature_id, value) VALUE (?,?,?)"));
+            int count = 0;
             for (auto& t : pU.m()) {
+
                 auto user_id = t.first;
 
                 for (size_t feature_id = 0; feature_id < t.second->size(); ++feature_id) {
@@ -188,8 +204,13 @@ namespace rsys {
                         std::cerr << "couldn\'t execute user feature export" << std::endl;
                     }
                 }
+                count += t.second->size();
 
+                if (count % 800 == 0) {
+                    _conn->commit();
+                }
             }
+            _conn->commit();
             std::cout << "Exported user features" << std::endl;
         }
 
@@ -199,6 +220,7 @@ namespace rsys {
 
             std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.pI_table() + " (item_id, feature_id, value) VALUE (?,?,?)"));
 
+            int count = 0;
             for (auto& t : pI.m()) {
                 auto item_id = t.first;
 
@@ -211,6 +233,11 @@ namespace rsys {
                         std::cerr << "couldn\'t execute item feature export" << std::endl;
                     }
                 }
+                count += t.second->size();
+
+                if (count % 800 == 0) {
+                    _conn->commit();
+                }
 
             }
 
@@ -222,7 +249,10 @@ namespace rsys {
             auto& bu = m.users_baselines();
 
             std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.bU_table() + " (user_id, value) VALUE (?,?)"));
+
+            int count = 0;
             for (auto& t : bu.m()) {
+                ++count;
                 auto user_id = t.first;
 
                 auto value = t.second;
@@ -230,6 +260,10 @@ namespace rsys {
                 prep_stmt->setDouble(2, value);
                 if (!prep_stmt->executeUpdate()) {
                     std::cerr << "couldn\'t execute user baselines export" << std::endl;
+                }
+
+                if (count % 800 == 0) {
+                    _conn->commit();
                 }
 
             }
@@ -243,7 +277,9 @@ namespace rsys {
 
             std::unique_ptr<sql::PreparedStatement> prep_stmt(_conn->prepareStatement("INSERT INTO " + conf.bI_table() + " (item_id, value) VALUE (?,?)"));
 
+            int count = 0;
             for (auto& t : bi.m()) {
+                ++count;
                 auto item_id = t.first;
 
                 auto value = t.second;
@@ -251,6 +287,10 @@ namespace rsys {
                 prep_stmt->setDouble(2, value);
                 if (!prep_stmt->executeUpdate()) {
                     std::cerr << "couldn\'t execute item baselines export" << std::endl;
+                }
+
+                if (count % 800 == 0) {
+                    _conn->commit();
                 }
 
             }
@@ -268,6 +308,7 @@ namespace rsys {
             if (!prep_stmt->executeUpdate()) {
                 std::cerr << "couldn\'t execute mu export" << std::endl;
             }
+            _conn->commit();
 
             std::cout << "Exported mu" << std::endl;
         }
@@ -289,7 +330,11 @@ namespace rsys {
 
                 disconnect();
             } catch (sql::SQLException& e) {
-                std::cerr << e.what() << std::endl;
+                std::cerr << "# ERR: SQLException in " << __FILE__;
+                std::cerr << "(" << __FUNCTION__ << ") on line " << __LINE__ << std::endl;
+                std::cerr << "# ERR: " << e.what();
+                std::cerr << " (MySQL error code: " << e.getErrorCode();
+                std::cerr << ", SQLState: " << e.getSQLState() << " )" << std::endl;
                 if (connected()) {
                     disconnect();
                 }
@@ -578,6 +623,8 @@ namespace rsys {
                     std::make_pair("ALTER TABLE " + conf.bU_table() + " DROP FOREIGN KEY " + conf.bU_table() + "_user_id_fk", conf.bU_table()),
                     std::make_pair("ALTER TABLE " + conf.bI_table() + " DROP FOREIGN KEY " + conf.bI_table() + "_item_id_fk", conf.bI_table())
             };
+
+            std::cout << "_tables.size() = " << _tables.size() << std::endl;
 
             std::map<std::string, bool> table_existance;
             for (auto& t : _tables) {

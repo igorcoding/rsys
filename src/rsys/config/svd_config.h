@@ -6,6 +6,7 @@
 
 #include <exception>
 #include <string>
+#include <memory>
 
 namespace rsys {
 
@@ -46,8 +47,8 @@ namespace rsys {
         config& set_users_ids(const std::vector<size_t>& users_ids);
         config& set_items_ids(const std::vector<size_t>& items_ids);
         config& assign_seq_ids();
-        config& set_exporter(exporters::svd_exporter<svd<T, DS>>& e);
-        config& set_exporter(exporters::svd_exporter<svd<T, DS>>* e);
+//        config& set_exporter(exporters::svd_exporter<svd<T, DS>>* e);
+        template <template <class> class EXPORTER_TYPE> config& set_exporter(const exporters::svd_config& e);
 
         const DS<T>& ratings() const {
             if (!_ratings)
@@ -75,7 +76,7 @@ namespace rsys {
             }
             return _items_ids;
         }
-        exporters::svd_exporter<svd<T,DS>>* exporter() { return _exporter; }
+        std::shared_ptr<exporters::svd_exporter<svd<T,DS>>> exporter() { return _exporter; }
 
     private:
         DS<T>* _ratings;
@@ -89,7 +90,7 @@ namespace rsys {
         bool _print_results;
         std::vector<size_t> _users_ids;
         std::vector<size_t> _items_ids;
-        exporters::svd_exporter<svd<T,DS>>* _exporter;
+        std::shared_ptr<exporters::svd_exporter<svd<T,DS>>> _exporter;
     };
 
     template <typename T, template <class> class DS>
@@ -143,23 +144,9 @@ namespace rsys {
 
     template <typename T, template <class> class DS>
     config<svd<T,DS>>::~config() {
-        if (_ratings != nullptr) {
-            delete _ratings;
-            _ratings = nullptr;
-        }
+        delete _ratings;
+        _ratings = nullptr;
     }
-//
-//    template <typename T, template <class> class DS>
-//    config<svd<T,DS>>::config(const DS<T>* ratings, size_t features_count, float regularization, int max_iterations, bool print_results, float learning_rate)
-//            : config(*ratings, features_count, regularization, max_iterations, print_results, learning_rate)
-//    {
-//    }
-
-//    template <typename T, template <class> class DS>
-//    config<svd<T,DS>>& config<svd<T,DS>>::set_ratings(const DS<T>& ratings) {
-//        _ratings = ratings;
-//        return *this;
-//    }
 
     template <typename T, template <class> class DS>
     config<svd<T,DS>>& config<svd<T,DS>>::set_def_value(const T& def_value) {
@@ -233,14 +220,17 @@ namespace rsys {
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_exporter(exporters::svd_exporter<svd<T, DS>>& e) {
-        return set_exporter(&e);
-    }
+//    template <typename T, template <class> class DS>
+//    config<svd<T,DS>>& config<svd<T,DS>>::set_exporter(exporters::svd_exporter<svd<T, DS>>* e) {
+//        _exporter.reset(e);
+//        return *this;
+//    }
 
     template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_exporter(exporters::svd_exporter<svd<T, DS>>* e) {
-        _exporter = e;
+    template <template <class> class EXPORTER_TYPE>
+    config<svd<T,DS>>& config<svd<T,DS>>::set_exporter(const exporters::svd_config& conf) {
+        static_assert(std::is_base_of<exporters::svd_exporter<svd<T, DS>>, EXPORTER_TYPE<svd<T,DS>>>::value, "");
+        _exporter = std::make_shared<EXPORTER_TYPE<svd<T,DS>>>(conf);
         return *this;
     }
 

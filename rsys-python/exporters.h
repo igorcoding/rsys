@@ -9,9 +9,7 @@ using namespace rsys::exporters;
 using namespace boost::python;
 
 template <typename SVD>
-class svd_exporter_wrapper : public svd_exporter<SVD>, public wrapper<svd_exporter<SVD>> {
-public:
-
+struct svd_exporter_wrapper : public svd_exporter<SVD>, public wrapper<svd_exporter<SVD>> {
     virtual bool export_model(const SVD& m) {
         return this->get_override("export_model")(m);
     }
@@ -20,5 +18,7 @@ public:
         return this->get_override("import_model")(m);
     }
 };
+
+
 
 #endif // EXPORTERS_H

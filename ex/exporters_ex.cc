@@ -24,12 +24,13 @@ int main() {
             .items_table("app_song");
 
     svd_mysql_exporter<svd_t> exporter(exp_conf);
-    c.set_exporter(exporter);
+//    c.set_exporter(exporter);
+//    c.set_exporter<svd_mysql_exporter>(exp_conf);
 
 
     svd_t r(c);
 
-//    exporter.export_model(r);
+    exporter.export_model(r);
 //    exporter.import_model(r);
 
     std::cout << r.users_features() << std::endl;

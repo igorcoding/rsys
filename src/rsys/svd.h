@@ -85,7 +85,7 @@ namespace rsys {
         map_mvector<size_t, T> _bi;
         double _mu;
 
-        exporter_t* _exporter;
+        std::shared_ptr<exporter_t> _exporter;
 
         const DS<T>* _ratings;
         DS_item_iterator* _ratings_begin;
@@ -113,6 +113,8 @@ namespace rsys {
         bool import_res = false;
         if (_exporter != nullptr) {
             import_res = _exporter->import_model(*this);
+        } else {
+            std::cout << "_exporter == nullptr" << std::endl;
         }
         if (!import_res) {
             srand(static_cast<unsigned int>(time(nullptr)));
@@ -254,7 +256,7 @@ namespace rsys {
         float threshold = 0.01;
 
         while (fabs(rmse - old_rmse) > eps) {
-            std::cout << "Iteration #" << iteration << std::endl;
+//            std::cout << "Iteration #" << iteration << std::endl;
             iteration++;
             old_rmse = rmse;
 
@@ -263,7 +265,7 @@ namespace rsys {
 
             rmse /= total;
             rmse = std::sqrt(rmse);
-             std::cout << "RMSE = " << rmse << std::endl;
+//             std::cout << "RMSE = " << rmse << std::endl;
 
             if (old_rmse - rmse < threshold) {
                 learning_rate *= 0.8;

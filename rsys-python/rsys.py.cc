@@ -7,6 +7,18 @@
 #include "vector_converter.h"
 #include "exporters.h"
 
+namespace boost {
+    template<class T> const T* get_pointer(const std::shared_ptr<T>& p)
+    {
+        return p.get();
+    }
+
+    template<class T> T* get_pointer(std::shared_ptr<T>& p)
+    {
+        return p.get();
+    }
+} // namespace boost
+
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 using namespace boost::python;
@@ -75,10 +87,23 @@ void config_set_users_ids(typename rsys::template svd<T, rsys::ds::matrix>::conf
     self.set_users_ids(users_ids);
 }
 
+
+template <typename SVD>
+std::shared_ptr<rsys::exporters::svd_mysql_exporter<SVD>> newSVDMySQLExporter(const rsys::exporters::svd_mysql_config& conf) {
+    return std::make_shared<rsys::exporters::svd_mysql_exporter<SVD>>(conf);
+}
+
 template <typename T>
 void export_exporters() {
     using namespace rsys;
     using namespace rsys::exporters;
+
+    // make "from mypackage.Util import <whatever>" work
+    object exporters_module(handle<>(borrowed(PyImport_AddModule("rsys.exporters"))));
+    // make "from mypackage import Util" work
+    scope().attr("exporters") = exporters_module;
+    // set the current scope to the new sub-module
+    scope exporters_scope = exporters_module;
 
     typedef svd<T, ds::matrix> t_svd;
 
@@ -110,14 +135,16 @@ void export_exporters() {
                                       make_function(db_name_set, return_value_policy<reference_existing_object>()))
                     ;
 
-
-    class_<mysql_exporter>("MySQLExporter", init<mysql_config>())
+    class_<svd_config>("SVDConfig", init<>())
             ;
 
-    class_<svd_exporter_wrapper<t_svd>, boost::noncopyable>("SVDExporter", no_init)
-            .def("export_model", pure_virtual(&svd_exporter_wrapper<t_svd>::export_model), (arg("svd_model")))
-            .def("import_model", pure_virtual(&svd_exporter_wrapper<t_svd>::import_model), (arg("svd_model")))
-            ;
+//    class_<mysql_exporter>("MySQLExporter", init<mysql_config>())
+//            ;
+//
+//    class_<svd_exporter<t_svd>, svd_exporter_wrapper<t_svd>, boost::noncopyable>("SVDExporter", no_init)
+//            .def("export_model", pure_virtual(&svd_exporter_wrapper<t_svd>::export_model), (arg("svd_model")))
+//            .def("import_model", pure_virtual(&svd_exporter_wrapper<t_svd>::import_model), (arg("svd_model")))
+//            ;
 
 
     const std::string& (svd_mysql_config::*users_table_get)() const = &svd_mysql_config::users_table;
@@ -145,28 +172,51 @@ void export_exporters() {
     svd_mysql_config& (svd_mysql_config::*mu_table_set)(const std::string&) = &svd_mysql_config::mu_table;
 
 
-    class_<svd_mysql_config, bases<mysql_config>>("MySQLConfig", init<>())
-            .add_property("users_table", make_function(users_table_get, return_value_policy<copy_const_reference>()),
-                                         make_function(users_table_set, return_value_policy<reference_existing_object>()))
-            .add_property("items_table", make_function(items_table_get, return_value_policy<copy_const_reference>()),
-                                         make_function(items_table_set, return_value_policy<reference_existing_object>()))
+    class_<svd_mysql_config, bases<mysql_config, svd_config>>("SVDMySQLConfig", init<>())
+            .add_property("users_table",    make_function(users_table_get,    return_value_policy<copy_const_reference>()),
+                                            make_function(users_table_set,    return_value_policy<reference_existing_object>()))
+            .add_property("items_table",    make_function(items_table_get,    return_value_policy<copy_const_reference>()),
+                                            make_function(items_table_set,    return_value_policy<reference_existing_object>()))
             .add_property("features_table", make_function(features_table_get, return_value_policy<copy_const_reference>()),
                                             make_function(features_table_set, return_value_policy<reference_existing_object>()))
-            .add_property("pU_table", make_function(pU_table_get, return_value_policy<copy_const_reference>()),
-                                      make_function(pU_table_set, return_value_policy<reference_existing_object>()))
-            .add_property("pI_table", make_function(pI_table_get, return_value_policy<copy_const_reference>()),
-                                      make_function(pI_table_set, return_value_policy<reference_existing_object>()))
-            .add_property("bU_table", make_function(bU_table_get, return_value_policy<copy_const_reference>()),
-                                      make_function(bU_table_set, return_value_policy<reference_existing_object>()))
-            .add_property("bI_table", make_function(bI_table_get, return_value_policy<copy_const_reference>()),
-                                      make_function(bI_table_set, return_value_policy<reference_existing_object>()))
-            .add_property("mu_table", make_function(mu_table_get, return_value_policy<copy_const_reference>()),
-                                      make_function(mu_table_set, return_value_policy<reference_existing_object>()))
+            .add_property("pU_table",       make_function(pU_table_get,       return_value_policy<copy_const_reference>()),
+                                            make_function(pU_table_set,       return_value_policy<reference_existing_object>()))
+            .add_property("pI_table",       make_function(pI_table_get,       return_value_policy<copy_const_reference>()),
+                                            make_function(pI_table_set,       return_value_policy<reference_existing_object>()))
+            .add_property("bU_table",       make_function(bU_table_get,       return_value_policy<copy_const_reference>()),
+                                            make_function(bU_table_set,       return_value_policy<reference_existing_object>()))
+            .add_property("bI_table",       make_function(bI_table_get,       return_value_policy<copy_const_reference>()),
+                                            make_function(bI_table_set,       return_value_policy<reference_existing_object>()))
+            .add_property("mu_table",       make_function(mu_table_get,       return_value_policy<copy_const_reference>()),
+                                            make_function(mu_table_set,       return_value_policy<reference_existing_object>()))
 
             ;
 
-    class_<svd_mysql_exporter<t_svd>>("SVDMySQLExporter", init<svd_mysql_config>())
-            ;
+//    class_<svd_mysql_exporter<t_svd>,
+//           std::shared_ptr<svd_mysql_exporter<t_svd>>,
+//           bases<mysql_exporter, svd_exporter<t_svd>>>("SVDMySQLExporter", init<svd_mysql_config>())
+//            ;
+
+//    def("newSVDMySQLExporter", &newSVDMySQLExporter<t_svd>);
+}
+
+//template <typename SVD>
+//typename SVD::config_t& set_exporter(typename SVD::config_t& self, boost::python::str type, const svd_config& conf) {
+//    if (type == "mysql") {
+//        self.set_exporter<svd_mysql_exporter>(conf);
+//    }
+//    return self;
+//}
+
+//template <typename SVD, typename CONF_T, typename EXPORTER_T>
+//typename SVD::config_t& set_exporter(typename SVD::config_t& self, const CONF_T& conf) {
+////    self.set_exporter<EXPORTER_T>(conf);
+//    return self;
+//}
+
+template <typename T>
+void set_exporter(typename rsys::template svd<T, rsys::ds::matrix>::config_t& self, const svd_mysql_config& conf) {
+    self.set_exporter<svd_mysql_exporter>(conf);
 }
 
 template <typename T>
@@ -189,8 +239,6 @@ void export_rsys() {
             .from_python<std::vector<size_t>>();
 
 
-    export_exporters<T>();
-
 
 
     class_<item_score_t>("ItemScore", init<size_t, size_t, T> ((arg("user_id"), arg("item_id"), arg("score"))))
@@ -198,7 +246,8 @@ void export_rsys() {
             .def_readwrite("item_id", &item_score_t::item_id)
             .def_readwrite("score", &item_score_t::score);
 
-//    config_t& (config_t::*set_exporter_ref)(exporters::svd_exporter<t_svd>&) = &config_t::set_exporter;
+    register_ptr_to_python<std::shared_ptr<exporters::svd_exporter<t_svd>>>();
+//    config_t& (config_t::*set_exporter_ref)(const std::shared_ptr<exporters::svd_exporter<t_svd>>&) = &config_t::set_exporter;
 
     class_<config_t>("SVDConfig", init<t_matrix, size_t, float, int, bool, float>(
             (arg("dataset"), arg("features_count"), arg("regularization") = 0.0f, arg("max_iterations") = 0, arg("print_results") = true, arg("learning_rate") = 0.005)
@@ -215,7 +264,6 @@ void export_rsys() {
             .def("max_iterations", &config_t::max_iterations)
             .def("print_results", &config_t::print_results)
             .def("learning_rate", &config_t::learning_rate)
-//            .def("set_ratings", &config_t::set_ratings, return_value_policy<reference_existing_object>(), (arg("users_ids")))
             .def("set_def_value", &config_t::set_def_value, return_value_policy<reference_existing_object>(), (arg("def_value")))
             .def("set_users_count", &config_t::set_users_count, return_value_policy<reference_existing_object>(), (arg("users_count")))
             .def("set_items_count", &config_t::set_items_count, return_value_policy<reference_existing_object>(), (arg("items_count")))
@@ -226,7 +274,8 @@ void export_rsys() {
             .def("set_print_result", &config_t::set_print_result, return_value_policy<reference_existing_object>(), (arg("print_result")))
             .def("set_users_ids", &config_t::set_users_ids, return_value_policy<reference_existing_object>(), (arg("users_ids")))
             .def("set_items_ids", &config_t::set_items_ids, return_value_policy<reference_existing_object>(), (arg("items_ids")))
-//            .def("set_exporter", &set_exporter_ref, return_value_policy<reference_existing_object>(), (arg("exporter")))
+//            .def("set_mysql_exporter", &set_exporter<t_svd, svd_mysql_config, svd_mysql_exporter>, return_value_policy<reference_existing_object>(), (arg("exporter_conf")))
+            .def("set_mysql_exporter", &set_exporter<T>, with_custodian_and_ward<1, 2>(), (arg("exporter_conf")))
                     ;
 
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
@@ -255,5 +304,6 @@ BOOST_PYTHON_MODULE(rsys) {
 
 
     export_data_sources<double>();
+    export_exporters<double>();
     export_rsys<double>();
 }

@@ -43,18 +43,25 @@ namespace rsys {
         }
 
         mysql_exporter::~mysql_exporter() {
-            disconnect();
+            if (_conn && !_conn->isClosed()) {
+                disconnect();
+            }
         }
 
         const mysql_config& mysql_exporter::config() const { return _conf; }
 
         void mysql_exporter::connect() {
             _driver = get_driver_instance();
+            std::cout << _conf.conn_string() << std::endl;
+            std::cout << _conf.user() << std::endl;
+            std::cout << _conf.password() << std::endl;
+            std::cout << _conf.db_name() << std::endl;
             _conn = _driver->connect(_conf.conn_string(), _conf.user(), _conf.password());
             _conn->setSchema(_conf.db_name());
         }
 
         void mysql_exporter::disconnect() {
+            _conn->close();
             delete _conn;
             _conn = nullptr;
         }
