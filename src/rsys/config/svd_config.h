@@ -29,19 +29,19 @@ namespace rsys {
     class config<svd<T,DS>> {
         friend class svd<T,DS>;
     public:
-        config(const DS<T>& _ratings, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
-        config(size_t users_count, size_t items_count, const T& def_value, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
+        config(const DS<T>& _ratings, size_t _features_count, double regularization = 0.0f, int max_iterations = 0, bool print_results = true, double learning_rate = 0.005);
+        config(size_t users_count, size_t items_count, const T& def_value, size_t _features_count, double regularization = 0.0f, int max_iterations = 0, bool print_results = true, double learning_rate = 0.005);
         config(const config& rhs);
         ~config();
-//        config(const DS<T>* _ratings, size_t _features_count, float regularization = 0.0f, int max_iterations = 0, bool print_results = true, float learning_rate = 0.005);
+//        config(const DS<T>* _ratings, size_t _features_count, double regularization = 0.0f, int max_iterations = 0, bool print_results = true, double learning_rate = 0.005);
 
 //        config& set_ratings(const DS<T>& ratings);
         config& set_def_value(const T& def_value);
         config& set_users_count(size_t users_count);
         config& set_items_count(size_t items_count);
         config& set_features_count(size_t features_count);
-        config& set_learning_rate(float learning_rate);
-        config& set_regularization(float regularization);
+        config& set_learning_rate(double learning_rate);
+        config& set_regularization(double regularization);
         config& set_max_iterations(int max_iterations);
         config& set_print_result(bool print_result);
         config& set_users_ids(const std::vector<size_t>& users_ids);
@@ -60,8 +60,8 @@ namespace rsys {
         size_t users_count() const { return _users_count; }
         size_t items_count() const { return _items_count; }
         size_t features_count() const { return _features_count; }
-        float learning_rate() const { return _learning_rate; }
-        float regularization() const { return _regularization; }
+        double learning_rate() const { return _learning_rate; }
+        double regularization() const { return _regularization; }
         int max_iterations() const { return _max_iterations; }
         bool print_results() const { return _print_results; }
         const std::vector<size_t>& get_users_ids() const {
@@ -84,8 +84,8 @@ namespace rsys {
         size_t _users_count;
         size_t _items_count;
         size_t _features_count;
-        float _learning_rate;
-        float _regularization;
+        double _learning_rate;
+        double _regularization;
         int _max_iterations;
         bool _print_results;
         std::vector<size_t> _users_ids;
@@ -94,7 +94,7 @@ namespace rsys {
     };
 
     template <typename T, template <class> class DS>
-    config<svd<T,DS>>::config(const DS<T>& ratings, size_t features_count, float regularization, int max_iterations, bool print_results, float learning_rate)
+    config<svd<T,DS>>::config(const DS<T>& ratings, size_t features_count, double regularization, int max_iterations, bool print_results, double learning_rate)
             : _ratings(new DS<T>(ratings)),
               _def_value(_ratings->get_def_value()),
               _users_count(_ratings->rows()),
@@ -110,7 +110,7 @@ namespace rsys {
     }
 
     template <typename T, template <class> class DS>
-    config<svd<T,DS>>::config(size_t users_count, size_t items_count, const T& def_value, size_t features_count, float regularization, int max_iterations, bool print_results, float learning_rate)
+    config<svd<T,DS>>::config(size_t users_count, size_t items_count, const T& def_value, size_t features_count, double regularization, int max_iterations, bool print_results, double learning_rate)
             : _ratings(nullptr),
               _def_value(def_value),
               _users_count(users_count),
@@ -173,13 +173,13 @@ namespace rsys {
     }
 
     template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_learning_rate(float learning_rate) {
+    config<svd<T,DS>>& config<svd<T,DS>>::set_learning_rate(double learning_rate) {
         _learning_rate = learning_rate;
         return *this;
     }
 
     template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_regularization(float regularization) {
+    config<svd<T,DS>>& config<svd<T,DS>>::set_regularization(double regularization) {
         _regularization = regularization;
         return *this;
     }

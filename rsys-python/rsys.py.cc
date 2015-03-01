@@ -276,14 +276,15 @@ void export_rsys() {
             .def("set_items_ids", &config_t::set_items_ids, return_value_policy<reference_existing_object>(), (arg("items_ids")))
 //            .def("set_mysql_exporter", &set_exporter<t_svd, svd_mysql_config, svd_mysql_exporter>, return_value_policy<reference_existing_object>(), (arg("exporter_conf")))
             .def("set_mysql_exporter", &set_exporter<T>, with_custodian_and_ward<1, 2>(), (arg("exporter_conf")))
+            .def("assign_seq_ids", &config_t::assign_seq_ids, return_value_policy<reference_existing_object>())
                     ;
 
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
-    void (t_svd::*learn_offline1)() noexcept = &t_svd::learn_offline;
-    void (t_svd::*learn_offline2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_offline;
+    double (t_svd::*learn_offline1)() noexcept = &t_svd::learn_offline;
+    double (t_svd::*learn_offline2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_offline;
 
-    void (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
-    void (t_svd::*learn_online2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_online;
+    double (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
+    double (t_svd::*learn_online2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_online;
 
     class_<t_svd>("SVD", init<config_t>())
            .def("add_user", &t_svd::add_user)

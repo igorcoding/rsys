@@ -28,7 +28,7 @@ namespace rsys {
 //    template<typename T, template<class> class DS>
 //    class svd;
 
-    template<typename T = float, template<class> class DS = matrix>
+    template<typename T = double, template<class> class DS = matrix>
     class svd : public model<T> {
     public:
         typedef config<svd<T, DS>> config_t;
@@ -60,10 +60,10 @@ namespace rsys {
         void add_item(size_t item_id);
         void add_items(const std::vector<size_t>& items);
 
-        void learn_offline() noexcept;
-        void learn_offline(const std::vector<item_score_t>& scores) noexcept;
-        void learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
-        void learn_online(const std::vector<item_score_t>& scores) noexcept;
+        double learn_offline() noexcept;
+        double learn_offline(const std::vector<item_score_t>& scores) noexcept;
+        double learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
+        double learn_online(const std::vector<item_score_t>& scores) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
         std::vector<item_score_t> recommend(size_t user_id, int k) noexcept;
 
@@ -72,9 +72,9 @@ namespace rsys {
     private:
         T predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept;
 
-        void learn(std::function<void(float&, const float&, float&, size_t&)> fitter) noexcept;
-        template <typename Iter> void fit(Iter begin, Iter end, float& learning_rate, const float& lambda, float& rmse, size_t& total);
-        void fit(size_t user_id, size_t item_id, const T& rating, float& learning_rate, const float& lambda, float& rmse, size_t& total);
+        double learn(std::function<void(double&, const double&, double&, size_t&)> fitter) noexcept;
+        template <typename Iter> void fit(Iter begin, Iter end, double& learning_rate, const double& lambda, double& rmse, size_t& total);
+        void fit(size_t user_id, size_t item_id, const T& rating, double& learning_rate, const double& lambda, double& rmse, size_t& total);
 
         T sigma(const T& x);
 
@@ -157,13 +157,13 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     T svd<T, DS>::predict(size_t user_id, size_t item_id) noexcept {
-        return sigma(_pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu);
+        return (_pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu);
     }
 
     template<typename T, template<class> class DS>
     inline
     T svd<T, DS>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
-        return sigma(user.dot(item) + _bu[user_id] + _bi[item_id] + _mu);
+        return (user.dot(item) + _bu[user_id] + _bi[item_id] + _mu);
     }
 
     template<typename T, template<class> class DS>
@@ -215,7 +215,7 @@ namespace rsys {
     }
 
     template <typename T, template<class> class DS> inline
-    void svd<T,DS>::fit(size_t user_id, size_t item_id, const T& rating, float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+    void svd<T,DS>::fit(size_t user_id, size_t item_id, const T& rating, double& learning_rate, const double& lambda, double& rmse, size_t& total) {
         auto& pu = _pU[user_id];
         auto& qi = _pI[item_id];
 
@@ -238,7 +238,7 @@ namespace rsys {
 
     template <typename T, template<class> class DS>
     template <typename Iter>
-    void svd<T,DS>::fit(Iter begin, Iter end, float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+    void svd<T,DS>::fit(Iter begin, Iter end, double& learning_rate, const double& lambda, double& rmse, size_t& total) {
         for (auto it = begin; it != end; ++it) {
 //            std::cout << ".";
             size_t user_id = it->user_id;
@@ -257,17 +257,17 @@ namespace rsys {
     }
 
     template<typename T, template<class> class DS>
-    void svd<T, DS>::learn(std::function<void(float&, const float&, float&, size_t&)> fitter) noexcept {
+    double svd<T, DS>::learn(std::function<void(double&, const double&, double&, size_t&)> fitter) noexcept {
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
         auto print_results = _config.print_results();
 
         int iteration = 1;
-        float rmse = 1.0;
-        float old_rmse = 0.0;
-        float eps = 0.00001;
-        float learning_rate = _config.learning_rate();
-        float threshold = 0.01;
+        double rmse = 1.0;
+        double old_rmse = 0.0;
+        double eps = 0.00001;
+        double learning_rate = _config.learning_rate();
+        double threshold = 0.01;
 
         while (fabs(rmse - old_rmse) > eps) {
             std::cout << "Iteration #" << iteration << std::endl;
@@ -307,17 +307,19 @@ namespace rsys {
             _exporter->export_model(*this);
         }
 
+        return rmse;
+
     }
 
     template<typename T, template<class> class DS>
-    void svd<T,DS>::learn_offline() noexcept {
+    double svd<T,DS>::learn_offline() noexcept {
         if (_ratings == nullptr) {
             std::cout << "No ratnigs to process" << std::endl;
-            return;
+            return -1.0;
         }
         generate_rand_values();
 
-        auto fitter = [this](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+        auto fitter = [this](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
             this->fit(*_ratings_begin,
                       *_ratings_end,
                       learning_rate,
@@ -325,14 +327,14 @@ namespace rsys {
                       rmse,
                       total);
         };
-        learn(fitter);
+        return learn(fitter);
     }
 
     template<typename T, template<class> class DS>
-    void svd<T,DS>::learn_offline(const std::vector<item_score_t>& scores) noexcept {
+    double svd<T,DS>::learn_offline(const std::vector<item_score_t>& scores) noexcept {
         generate_rand_values();
 
-        auto fitter = [this, &scores](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+        auto fitter = [this, &scores](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
             this->fit(scores.begin(),
                       scores.end(),
                       learning_rate,
@@ -340,30 +342,30 @@ namespace rsys {
                       rmse,
                       total);
         };
-        learn(fitter);
+        return learn(fitter);
     }
 
     template<typename T, template<class> class DS>
-    void svd<T,DS>::learn_online(size_t user_id, size_t item_id, const T& rating) noexcept {
-        auto fitter = [this, user_id, item_id, &rating](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+    double svd<T,DS>::learn_online(size_t user_id, size_t item_id, const T& rating) noexcept {
+        auto fitter = [this, user_id, item_id, &rating](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
             this->fit(user_id, item_id, rating,
                       learning_rate,
                       lambda,
                       rmse,
                       total);
         };
-        learn(fitter);
+        return learn(fitter);
     }
 
     template<typename T, template<class> class DS>
-    void svd<T,DS>::learn_online(const std::vector<item_score_t>& scores) noexcept {
+    double svd<T,DS>::learn_online(const std::vector<item_score_t>& scores) noexcept {
 //        std::cout << "LEARNING. SIZE = " << scores.size() << std::endl;
 //        auto max = std::min(100, (int) scores.size());
 //        for (int i = 0; i < max; ++i) {
 //            std::cout << scores[i] << std::endl;
 //        }
 
-        auto fitter = [this, &scores](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
+        auto fitter = [this, &scores](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
             this->fit(scores.begin(),
                       scores.end(),
                       learning_rate,
@@ -371,7 +373,7 @@ namespace rsys {
                       rmse,
                       total);
         };
-        learn(fitter);
+        return learn(fitter);
     }
 
     template<typename T, template<class> class DS>

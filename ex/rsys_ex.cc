@@ -31,14 +31,14 @@ int main() {
 
 //    basic = basic_example();
 //    sigmoid = sigmoid_example();
-//    mlens = movielens_example();
-    my_data = my_data_example();
+    mlens = movielens_example();
+//    my_data = my_data_example();
     return basic + sigmoid + mlens + my_data;
 }
 
-float rand_max = static_cast <float> (RAND_MAX);
-float _rand() {
-    return static_cast <float> (rand()) / rand_max;
+double rand_max = static_cast <double> (RAND_MAX);
+double _rand() {
+    return static_cast <double> (rand()) / rand_max;
 }
 
 int basic_example() {
@@ -248,7 +248,7 @@ int movielens_example() {
             }
         }
 
-        auto accuracy = ((float) correct) / ((float) test_set.size());
+        auto accuracy = ((double) correct) / ((double) test_set.size());
 
 
         std::cout << "Delta = " << delta << "Accuracy: " << correct << " / " << test_set.size() << " = " << accuracy;
