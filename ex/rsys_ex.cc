@@ -24,14 +24,16 @@ typedef svd<double, data_holder> svd_t;
 int basic_example();
 int sigmoid_example();
 int movielens_example();
+int my_data_example();
 
 int main() {
-    int basic = 0, sigmoid = 0, mlens = 0;
+    int basic = 0, sigmoid = 0, mlens = 0, my_data = 0;
 
 //    basic = basic_example();
-    sigmoid = sigmoid_example();
+//    sigmoid = sigmoid_example();
 //    mlens = movielens_example();
-    return basic + sigmoid + mlens;
+    my_data = my_data_example();
+    return basic + sigmoid + mlens + my_data;
 }
 
 float rand_max = static_cast <float> (RAND_MAX);
@@ -113,14 +115,29 @@ int sigmoid_example() {
     m.set(3, 0, 1);   m.set(3, 1, 1);   m.set(3, 2, -1); m.set(3, 3, 0);  m.set(3, 4, -1);
     m.set(4, 0, -1);  m.set(4, 1, 0);  m.set(4, 2, -1); m.set(4, 3, -1);  m.set(4, 4, -1);
 
+    std::vector<svd_t::item_score_t> scores;
+    scores.push_back(svd_t::item_score_t(1, 1, 0));
+    scores.push_back(svd_t::item_score_t(1, 2, 1));
+    scores.push_back(svd_t::item_score_t(1, 3, 0));
+    scores.push_back(svd_t::item_score_t(2, 2, 1));
+    scores.push_back(svd_t::item_score_t(2, 3, 1));
+    scores.push_back(svd_t::item_score_t(2, 4, 0));
+    scores.push_back(svd_t::item_score_t(3, 2, 0));
+    scores.push_back(svd_t::item_score_t(3, 4, 0.2));
+    scores.push_back(svd_t::item_score_t(4, 1, 1));
+    scores.push_back(svd_t::item_score_t(4, 2, 1));
+    scores.push_back(svd_t::item_score_t(4, 4, 0));
+    scores.push_back(svd_t::item_score_t(5, 2, 0));
+
     std::cout << m << std::endl;
 
-    rsys_t::config_t c(m, 4, 0.005);
+    rsys_t::config_t c(5, 5, -1, 4, 0.005);
     c.set_max_iterations(1000);
+    c.assign_seq_ids();
 
     svd_t r(c);
 
-    r.learn_offline();
+    r.learn_online(scores);
 
 //    r.learn_online(2, 2, 5.0);
     std::cout << "Finished" << std::endl;
@@ -256,3 +273,118 @@ int movielens_example() {
     return 0;
 }
 
+
+int my_data_example() {
+
+    size_t users_count = 101;
+    size_t items_count = 1073;
+
+    std::string prefix = "/home/igor/Projects/cpp/rsys/datasets/";
+    std::string filename = prefix + "my_data.dat";
+    std::fstream fs;
+    fs.open(filename, std::ios_base::in);
+    if (!fs.is_open()) {
+        std::cerr << "Couldn\'t open file" << std::endl;
+        return 1;
+    }
+
+    std::vector<svd_t::item_score_t> training_set;
+    std::vector<svd_t::item_score_t> test_set;
+    int k = 0;
+    while (!fs.eof() && k < 3959) {
+        std::string line;
+        fs >> line;
+        std::stringstream ss(line);
+        std::string item;
+
+        std::getline(ss, item, ':');
+        int user_id = to_int(item);
+
+        std::getline(ss, item, ':');
+        std::getline(ss, item, ':');
+        int item_id = to_int(item);
+
+        std::getline(ss, item, ':');
+        std::getline(ss, item, ':');
+        int rating = to_int(item);
+
+        auto s = svd_t::item_score_t((size_t) user_id, (size_t) item_id, rating);
+//        if (_rand() < 0.67) {
+            training_set.push_back(s);
+//        } else {
+//            test_set.push_back(s);
+//        }
+        ++k;
+    }
+    fs.close();
+    std::cout << training_set.size() << " " << test_set.size() << std::endl;
+
+    std::vector<size_t> users;
+    std::vector<size_t> items;
+
+
+    fs.open(prefix + "my_data_users.dat", std::ios_base::in);
+    if (!fs.is_open()) {
+        std::cerr << "Couldn\'t open file" << std::endl;
+        return 1;
+    }
+
+    while (!fs.eof()) {
+        size_t u = 0;
+        fs >> u;
+        users.push_back(u);
+    }
+    fs.close();
+
+    fs.open(prefix + "my_data_items.dat", std::ios_base::in);
+    if (!fs.is_open()) {
+        std::cerr << "Couldn\'t open file" << std::endl;
+        return 1;
+    }
+
+    while (!fs.eof()) {
+        size_t item = 0;
+        fs >> item;
+        items.push_back(item);
+    }
+
+    fs.close();
+
+    std::cout << "parsed" << std::endl;
+
+    rsys_t::config_t c(users_count, items_count, -1, 4, 0.005);
+    c.set_max_iterations(1000);
+    c.set_users_ids(users);
+    c.set_items_ids(items);
+
+
+
+    svd_t r(c);
+
+    r.learn_online(training_set);
+
+//    r.learn_online(2, 2, 5.0);
+    std::cout << "Finished" << std::endl;
+
+//    std::cout << "Initial:" << std::endl << m << std::endl;
+
+//    std::cout << "Predictions:" << std::endl;
+//    for (size_t i = 1; i <= m.rows(); ++i) {
+//        for (size_t j = 1; j <= m.cols(); ++j) {
+//            std::cout << std::setprecision(3) << r.predict(i, j) << " ";
+//        }
+//        std::cout << std::endl;
+//    }
+
+    std::cout << std::endl << "Recommendations for (4, 100): \n";
+    auto recommendations = r.recommend(1, 0);
+
+    std::cout << "[\n";
+    for (const auto& v : recommendations) {
+        std::cout << "\t" << v << ",\n";
+    }
+    std::cout << "]";
+    std::cout << std::endl;
+
+    return 0;
+}

@@ -16,6 +16,10 @@
 #include <queue>
 #include <functional>
 #include <cmath>
+#include <dirent.h>
+#include <boost/variant/detail/substitute.hpp>
+#include <ev.h>
+#include <complex>
 
 using namespace rsys::ds;
 
@@ -74,6 +78,8 @@ namespace rsys {
 
         T sigma(const T& x);
 
+        void generate_rand_values();
+
     private:
         config_t _config;
         size_t _users_count;
@@ -90,6 +96,7 @@ namespace rsys {
         const DS<T>* _ratings;
         DS_item_iterator* _ratings_begin;
         DS_item_iterator* _ratings_end;
+
     };
 
     template<typename T, template<class> class DS>
@@ -117,19 +124,25 @@ namespace rsys {
             std::cout << "_exporter == nullptr" << std::endl;
         }
         if (!import_res) {
-            srand(static_cast<unsigned int>(time(nullptr)));
-            double rand_max = static_cast <double> (RAND_MAX);
+            generate_rand_values();
+        }
+    }
 
-            for (auto& i : conf.get_users_ids()) {
-                for (size_t j = 0; j < _features_count; ++j) {
-                    _pU.set(i, j, static_cast <double> (rand()) / rand_max);
-                }
+    template<typename T, template<class> class DS>
+    void svd<T, DS>::generate_rand_values() {
+        std::cout << "generating random" << std::endl;
+        srand(static_cast<unsigned int>(time(nullptr)));
+        double rand_max = static_cast <double> (RAND_MAX);
+
+        for (auto& i : _config.get_users_ids()) {
+            for (size_t j = 0; j < _features_count; ++j) {
+                _pU.set(i, j, static_cast <double> (rand()) / rand_max);
             }
+        }
 
-            for (auto& i : conf.get_items_ids()) {
-                for (size_t j = 0; j < _features_count; ++j) {
-                    _pI.set(i, j, static_cast <double> (rand()) / rand_max);
-                }
+        for (auto& i : _config.get_items_ids()) {
+            for (size_t j = 0; j < _features_count; ++j) {
+                _pI.set(i, j, static_cast <double> (rand()) / rand_max);
             }
         }
     }
@@ -227,13 +240,14 @@ namespace rsys {
     template <typename Iter>
     void svd<T,DS>::fit(Iter begin, Iter end, float& learning_rate, const float& lambda, float& rmse, size_t& total) {
         for (auto it = begin; it != end; ++it) {
-
+//            std::cout << ".";
             size_t user_id = it->user_id;
             size_t item_id = it->item_id;
             const T& r = it->score;
 
             fit(user_id, item_id, r, learning_rate, lambda, rmse, total);
         }
+//        std::cout << std::endl;
     }
 
     template <typename T, template<class> class DS>
@@ -256,7 +270,7 @@ namespace rsys {
         float threshold = 0.01;
 
         while (fabs(rmse - old_rmse) > eps) {
-//            std::cout << "Iteration #" << iteration << std::endl;
+            std::cout << "Iteration #" << iteration << std::endl;
             iteration++;
             old_rmse = rmse;
 
@@ -265,7 +279,7 @@ namespace rsys {
 
             rmse /= total;
             rmse = std::sqrt(rmse);
-//             std::cout << "RMSE = " << rmse << std::endl;
+            std::cout << "RMSE = " << rmse << std::endl;
 
             if (old_rmse - rmse < threshold) {
                 learning_rate *= 0.8;
@@ -301,6 +315,7 @@ namespace rsys {
             std::cout << "No ratnigs to process" << std::endl;
             return;
         }
+        generate_rand_values();
 
         auto fitter = [this](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
             this->fit(*_ratings_begin,
@@ -315,6 +330,8 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     void svd<T,DS>::learn_offline(const std::vector<item_score_t>& scores) noexcept {
+        generate_rand_values();
+
         auto fitter = [this, &scores](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
             this->fit(scores.begin(),
                       scores.end(),
@@ -340,6 +357,12 @@ namespace rsys {
 
     template<typename T, template<class> class DS>
     void svd<T,DS>::learn_online(const std::vector<item_score_t>& scores) noexcept {
+//        std::cout << "LEARNING. SIZE = " << scores.size() << std::endl;
+//        auto max = std::min(100, (int) scores.size());
+//        for (int i = 0; i < max; ++i) {
+//            std::cout << scores[i] << std::endl;
+//        }
+
         auto fitter = [this, &scores](float& learning_rate, const float& lambda, float& rmse, size_t& total) {
             this->fit(scores.begin(),
                       scores.end(),
