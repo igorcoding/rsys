@@ -16,25 +16,18 @@
 #include <queue>
 #include <functional>
 #include <cmath>
-#include <dirent.h>
-#include <boost/variant/detail/substitute.hpp>
-#include <ev.h>
 #include <complex>
 
 using namespace rsys::ds;
 
 namespace rsys {
 
-//    template<typename T, template<class> class DS>
-//    class svd;
-
-    template<typename T = double, template<class> class DS = matrix>
+    template<typename T = double>
     class svd : public model<T> {
     public:
-        typedef config<svd<T, DS>> config_t;
+        typedef config<svd<T>> config_t;
         typedef item_score<T> item_score_t;
-        typedef exporters::svd_exporter<svd<T,DS>> exporter_t;
-        typedef typename DS<T>::template item_iterator<item_score_t> DS_item_iterator;
+        typedef exporters::svd_exporter<svd<T>> exporter_t;
 
         svd(const config_t& conf);
         ~svd();
@@ -92,15 +85,10 @@ namespace rsys {
         double _mu;
 
         std::shared_ptr<exporter_t> _exporter;
-
-        const DS<T>* _ratings;
-        DS_item_iterator* _ratings_begin;
-        DS_item_iterator* _ratings_end;
-
     };
 
-    template<typename T, template<class> class DS>
-    svd<T, DS>::svd(const config_t& conf)
+    template<typename T>
+    svd<T>::svd(const config_t& conf)
             : _config(conf),
               _users_count(_config.users_count()),
               _items_count(_config.items_count()),
@@ -111,11 +99,7 @@ namespace rsys {
               _bi(conf.get_items_ids()),
               _mu(0),
 
-              _exporter(_config.exporter()),
-
-              _ratings(_config._ratings),
-              _ratings_begin(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_begin<item_score_t>()) : nullptr),
-              _ratings_end(_ratings != nullptr ? new DS_item_iterator(_ratings->template item_iterator_end<item_score_t>()) : nullptr) {
+              _exporter(_config.exporter()) {
 
         bool import_res = false;
         if (_exporter != nullptr) {
@@ -128,8 +112,8 @@ namespace rsys {
         }
     }
 
-    template<typename T, template<class> class DS>
-    void svd<T, DS>::generate_rand_values() {
+    template<typename T>
+    void svd<T>::generate_rand_values() {
         std::cout << "generating random" << std::endl;
         srand(static_cast<unsigned int>(time(nullptr)));
         double rand_max = static_cast <double> (RAND_MAX);
@@ -147,27 +131,23 @@ namespace rsys {
         }
     }
 
-    template<typename T, template<class> class DS>
-    svd<T,DS>::~svd() {
-        delete _ratings_begin;
-        _ratings_begin = nullptr;
-        delete _ratings_end;
-        _ratings_end = nullptr;
+    template<typename T>
+    svd<T>::~svd() {
     }
 
-    template<typename T, template<class> class DS>
-    T svd<T, DS>::predict(size_t user_id, size_t item_id) noexcept {
-        return (_pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu);
+    template<typename T>
+    T svd<T>::predict(size_t user_id, size_t item_id) noexcept {
+        return sigma(_pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu);
     }
 
-    template<typename T, template<class> class DS>
+    template<typename T>
     inline
-    T svd<T, DS>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
-        return (user.dot(item) + _bu[user_id] + _bi[item_id] + _mu);
+    T svd<T>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
+        return sigma(user.dot(item) + _bu[user_id] + _bi[item_id] + _mu);
     }
 
-    template<typename T, template<class> class DS>
-    void svd<T, DS>::add_user(size_t user_id) {
+    template<typename T>
+    void svd<T>::add_user(size_t user_id) {
         auto& new_row = _pU.add_row(user_id);
         _bu.add_row(user_id);
 
@@ -177,8 +157,8 @@ namespace rsys {
         }
     }
 
-    template<typename T, template<class> class DS>
-    void svd<T, DS>::add_users(const std::vector<size_t>& users) {
+    template<typename T>
+    void svd<T>::add_users(const std::vector<size_t>& users) {
         auto new_row = _pU.add_rows(users);
         _bu.add_rows(users);
 
@@ -190,8 +170,8 @@ namespace rsys {
         }
     }
 
-    template<typename T, template<class> class DS>
-    void svd<T, DS>::add_item(size_t item_id) {
+    template<typename T>
+    void svd<T>::add_item(size_t item_id) {
         auto& new_row = _pI.add_row(item_id);
         _bi.add_row(item_id);
 
@@ -201,8 +181,8 @@ namespace rsys {
         }
     }
 
-    template<typename T, template<class> class DS>
-    void svd<T, DS>::add_items(const std::vector<size_t>& items) {
+    template<typename T>
+    void svd<T>::add_items(const std::vector<size_t>& items) {
         auto new_row = _pI.add_rows(items);
         _bi.add_rows(items);
 
@@ -214,8 +194,8 @@ namespace rsys {
         }
     }
 
-    template <typename T, template<class> class DS> inline
-    void svd<T,DS>::fit(size_t user_id, size_t item_id, const T& rating, double& learning_rate, const double& lambda, double& rmse, size_t& total) {
+    template <typename T> inline
+    void svd<T>::fit(size_t user_id, size_t item_id, const T& rating, double& learning_rate, const double& lambda, double& rmse, size_t& total) {
         auto& pu = _pU[user_id];
         auto& qi = _pI[item_id];
 
@@ -236,28 +216,25 @@ namespace rsys {
         }
     }
 
-    template <typename T, template<class> class DS>
+    template <typename T>
     template <typename Iter>
-    void svd<T,DS>::fit(Iter begin, Iter end, double& learning_rate, const double& lambda, double& rmse, size_t& total) {
+    void svd<T>::fit(Iter begin, Iter end, double& learning_rate, const double& lambda, double& rmse, size_t& total) {
         for (auto it = begin; it != end; ++it) {
-//            std::cout << ".";
             size_t user_id = it->user_id;
             size_t item_id = it->item_id;
             const T& r = it->score;
 
             fit(user_id, item_id, r, learning_rate, lambda, rmse, total);
         }
-//        std::cout << std::endl;
     }
 
-    template <typename T, template<class> class DS>
-    T svd<T,DS>::sigma(const T& x) {
-//        return x;
+    template <typename T>
+    T svd<T>::sigma(const T& x) {
         return 1.0 / (1.0 + std::exp(-x));
     }
 
-    template<typename T, template<class> class DS>
-    double svd<T, DS>::learn(std::function<void(double&, const double&, double&, size_t&)> fitter) noexcept {
+    template<typename T>
+    double svd<T>::learn(std::function<void(double&, const double&, double&, size_t&)> fitter) noexcept {
         auto lambda = _config.regularization();
         auto max_iterations = _config.max_iterations();
         auto print_results = _config.print_results();
@@ -311,27 +288,14 @@ namespace rsys {
 
     }
 
-    template<typename T, template<class> class DS>
-    double svd<T,DS>::learn_offline() noexcept {
-        if (_ratings == nullptr) {
-            std::cout << "No ratnigs to process" << std::endl;
-            return -1.0;
-        }
-        generate_rand_values();
-
-        auto fitter = [this](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
-            this->fit(*_ratings_begin,
-                      *_ratings_end,
-                      learning_rate,
-                      lambda,
-                      rmse,
-                      total);
-        };
-        return learn(fitter);
+    template<typename T>
+    double svd<T>::learn_offline() noexcept {
+        std::cout << "No ratnigs to process" << std::endl;
+        return -1.0;
     }
 
-    template<typename T, template<class> class DS>
-    double svd<T,DS>::learn_offline(const std::vector<item_score_t>& scores) noexcept {
+    template<typename T>
+    double svd<T>::learn_offline(const std::vector<item_score_t>& scores) noexcept {
         generate_rand_values();
 
         auto fitter = [this, &scores](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
@@ -345,8 +309,8 @@ namespace rsys {
         return learn(fitter);
     }
 
-    template<typename T, template<class> class DS>
-    double svd<T,DS>::learn_online(size_t user_id, size_t item_id, const T& rating) noexcept {
+    template<typename T>
+    double svd<T>::learn_online(size_t user_id, size_t item_id, const T& rating) noexcept {
         auto fitter = [this, user_id, item_id, &rating](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
             this->fit(user_id, item_id, rating,
                       learning_rate,
@@ -357,14 +321,8 @@ namespace rsys {
         return learn(fitter);
     }
 
-    template<typename T, template<class> class DS>
-    double svd<T,DS>::learn_online(const std::vector<item_score_t>& scores) noexcept {
-//        std::cout << "LEARNING. SIZE = " << scores.size() << std::endl;
-//        auto max = std::min(100, (int) scores.size());
-//        for (int i = 0; i < max; ++i) {
-//            std::cout << scores[i] << std::endl;
-//        }
-
+    template<typename T>
+    double svd<T>::learn_online(const std::vector<item_score_t>& scores) noexcept {
         auto fitter = [this, &scores](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
             this->fit(scores.begin(),
                       scores.end(),
@@ -376,8 +334,8 @@ namespace rsys {
         return learn(fitter);
     }
 
-    template<typename T, template<class> class DS>
-    std::vector<typename svd<T, DS>::item_score_t> svd<T, DS>::recommend(size_t user_id, int k) noexcept {
+    template<typename T>
+    std::vector<typename svd<T>::item_score_t> svd<T>::recommend(size_t user_id, int k) noexcept {
         auto comp = [](const item_score_t& a, const item_score_t& b) {
             return a.score > b.score;
         };
@@ -389,15 +347,14 @@ namespace rsys {
 
         for (auto it : _pI.m()) {
             size_t i = it.first;
-            if (_ratings == nullptr || ((*_ratings)[user_id][i-1] == _config.def_value())) {
-                auto score = predict(user_id, i);
-                item_score_t s(user_id, i, score);
 
-                if (k > 0 && heap.size() == ik) {
-                    heap.pop();
-                }
-                heap.push(s);
+            auto score = predict(user_id, i);
+            item_score_t s(user_id, i, score);
+
+            if (k > 0 && heap.size() == ik) {
+                heap.pop();
             }
+            heap.push(s);
         }
 
         auto heap_size = heap.size();

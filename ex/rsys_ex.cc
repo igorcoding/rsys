@@ -16,9 +16,8 @@
 
 using namespace rsys;
 
-template <typename T> using data_holder = ds::matrix<T>;
-typedef rsys::recommender<double, data_holder, svd> rsys_t;
-typedef svd<double, data_holder> svd_t;
+typedef rsys::recommender<double, svd> rsys_t;
+typedef svd<double> svd_t;
 
 
 int basic_example();
@@ -31,8 +30,8 @@ int main() {
 
 //    basic = basic_example();
 //    sigmoid = sigmoid_example();
-    mlens = movielens_example();
-//    my_data = my_data_example();
+//    mlens = movielens_example();
+    my_data = my_data_example();
     return basic + sigmoid + mlens + my_data;
 }
 
@@ -42,78 +41,71 @@ double _rand() {
 }
 
 int basic_example() {
-    rsys_t::datasource_t m(5, 5, -1);
-//    data_holder<double> m({{4, 5, 2, -1, -1},
-//                           {-1, 4, 4, 3, -1},
-//                           {-1, 2, -1, 5, -1 }}, -1);
-
-    m.set(0, 0, 4);   m.set(0, 1, 5);   m.set(0, 2, 2);  m.set(0, 3, -1);  m.set(0, 4, -1);
-    m.set(1, 0, -1);  m.set(1, 1, 4);   m.set(1, 2, 4);  m.set(1, 3, 3);   m.set(1, 4, -1);
-    m.set(2, 0, -1);  m.set(2, 1, 2);   m.set(2, 2, -1); m.set(2, 3, 5);  m.set(2, 4, -1);
-    m.set(3, 0, 5);   m.set(3, 1, 4);   m.set(3, 2, -1); m.set(3, 3, 4);  m.set(3, 4, -1);
-    m.set(4, 0, -1);  m.set(4, 1, -1);  m.set(4, 2, -1); m.set(4, 3, -1);  m.set(4, 4, -1);
-
-    std::cout << m << std::endl;
-
-
-//    m.add_rows(5);
-
-//    std::cout << std::endl;
-//    for (auto& row : m) {
-//        for (auto& val: *row) {
-//            std::cout << val << " ";
+//    rsys_t::datasource_t m(5, 5, -1);
+////    data_holder<double> m({{4, 5, 2, -1, -1},
+////                           {-1, 4, 4, 3, -1},
+////                           {-1, 2, -1, 5, -1 }}, -1);
+//
+//    m.set(0, 0, 4);   m.set(0, 1, 5);   m.set(0, 2, 2);  m.set(0, 3, -1);  m.set(0, 4, -1);
+//    m.set(1, 0, -1);  m.set(1, 1, 4);   m.set(1, 2, 4);  m.set(1, 3, 3);   m.set(1, 4, -1);
+//    m.set(2, 0, -1);  m.set(2, 1, 2);   m.set(2, 2, -1); m.set(2, 3, 5);  m.set(2, 4, -1);
+//    m.set(3, 0, 5);   m.set(3, 1, 4);   m.set(3, 2, -1); m.set(3, 3, 4);  m.set(3, 4, -1);
+//    m.set(4, 0, -1);  m.set(4, 1, -1);  m.set(4, 2, -1); m.set(4, 3, -1);  m.set(4, 4, -1);
+//
+//    std::cout << m << std::endl;
+//
+//
+////    m.add_rows(5);
+//
+////    std::cout << std::endl;
+////    for (auto& row : m) {
+////        for (auto& val: *row) {
+////            std::cout << val << " ";
+////        }
+////        std::cout << std::endl;
+////    }
+//
+////    rsys_t::config_t c(m, 4, 0.005);
+////    c.set_users_ids({0, 1, 2, 3, 4});
+////    c.set_items_ids({0, 1, 2, 3, 4});
+//
+////    rsys_t r(c);
+//
+//    svd_t r(c);
+//
+////    recommender::ensembler<double, mean_pred<double>> comb;
+////    comb.add_model(&r);
+////    comb.learn_offline();
+//
+//    r.learn_offline();
+//
+//    r.learn_online(2, 2, 5.0);
+//    std::cout << "Finished" << std::endl;
+//
+//    std::cout << "Initial:" << std::endl << m << std::endl;
+//
+//    std::cout << "Predictions:" << std::endl;
+//    for (size_t i = 0; i < m.rows(); ++i) {
+//        for (size_t j = 0; j < m.cols(); ++j) {
+//             std::cout << std::setprecision(3) << r.predict(i, j) << " ";
 //        }
 //        std::cout << std::endl;
 //    }
-
-    rsys_t::config_t c(m, 4, 0.005);
-//    c.set_users_ids({0, 1, 2, 3, 4});
-//    c.set_items_ids({0, 1, 2, 3, 4});
-
-//    rsys_t r(c);
-
-    svd_t r(c);
-
-//    recommender::ensembler<double, mean_pred<double>> comb;
-//    comb.add_model(&r);
-//    comb.learn_offline();
-
-    r.learn_offline();
-
-    r.learn_online(2, 2, 5.0);
-    std::cout << "Finished" << std::endl;
-
-    std::cout << "Initial:" << std::endl << m << std::endl;
-
-    std::cout << "Predictions:" << std::endl;
-    for (size_t i = 0; i < m.rows(); ++i) {
-        for (size_t j = 0; j < m.cols(); ++j) {
-             std::cout << std::setprecision(3) << r.predict(i, j) << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    std::cout << std::endl << "Recommendations for (4, 100): \n";
-    auto recommendations = r.recommend(4, 100);
-
-    std::cout << "[\n";
-    for (const auto& v : recommendations) {
-        std::cout << "\t" << v << ",\n";
-    }
-    std::cout << "]";
-    std::cout << std::endl;
-
+//
+//    std::cout << std::endl << "Recommendations for (4, 100): \n";
+//    auto recommendations = r.recommend(4, 100);
+//
+//    std::cout << "[\n";
+//    for (const auto& v : recommendations) {
+//        std::cout << "\t" << v << ",\n";
+//    }
+//    std::cout << "]";
+//    std::cout << std::endl;
+//
     return 0;
 }
 
 int sigmoid_example() {
-    rsys_t::datasource_t m(5, 5, -1);
-
-    m.set(0, 0, 0);   m.set(0, 1, 1);   m.set(0, 2, 0);  m.set(0, 3, -1);  m.set(0, 4, -1);
-    m.set(1, 0, -1);  m.set(1, 1, 1);   m.set(1, 2, 1);  m.set(1, 3, 0);   m.set(1, 4, -1);
-    m.set(2, 0, -1);  m.set(2, 1, 0);   m.set(2, 2, -1); m.set(2, 3, 0.2);  m.set(2, 4, -1);
-    m.set(3, 0, 1);   m.set(3, 1, 1);   m.set(3, 2, -1); m.set(3, 3, 0);  m.set(3, 4, -1);
-    m.set(4, 0, -1);  m.set(4, 1, 0);  m.set(4, 2, -1); m.set(4, 3, -1);  m.set(4, 4, -1);
 
     std::vector<svd_t::item_score_t> scores;
     scores.push_back(svd_t::item_score_t(1, 1, 0));
@@ -129,8 +121,6 @@ int sigmoid_example() {
     scores.push_back(svd_t::item_score_t(4, 4, 0));
     scores.push_back(svd_t::item_score_t(5, 2, 0));
 
-    std::cout << m << std::endl;
-
     rsys_t::config_t c(5, 5, -1, 4, 0.005);
     c.set_max_iterations(1000);
     c.assign_seq_ids();
@@ -142,11 +132,10 @@ int sigmoid_example() {
 //    r.learn_online(2, 2, 5.0);
     std::cout << "Finished" << std::endl;
 
-    std::cout << "Initial:" << std::endl << m << std::endl;
 
     std::cout << "Predictions:" << std::endl;
-    for (size_t i = 1; i <= m.rows(); ++i) {
-        for (size_t j = 1; j <= m.cols(); ++j) {
+    for (size_t i = 1; i <= 5; ++i) {
+        for (size_t j = 1; j <= 5; ++j) {
             std::cout << std::setprecision(3) << r.predict(i, j) << " ";
         }
         std::cout << std::endl;

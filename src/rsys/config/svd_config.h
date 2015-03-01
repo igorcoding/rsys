@@ -22,20 +22,17 @@ namespace rsys {
 
 
 
-    template <typename T, template <class> class DS>
+    template <typename T>
     class svd;
 
-    template <typename T, template <class> class DS>
-    class config<svd<T,DS>> {
-        friend class svd<T,DS>;
+    template <typename T>
+    class config<svd<T>> {
+        friend class svd<T>;
     public:
-        config(const DS<T>& _ratings, size_t _features_count, double regularization = 0.0f, int max_iterations = 0, bool print_results = true, double learning_rate = 0.005);
         config(size_t users_count, size_t items_count, const T& def_value, size_t _features_count, double regularization = 0.0f, int max_iterations = 0, bool print_results = true, double learning_rate = 0.005);
         config(const config& rhs);
         ~config();
-//        config(const DS<T>* _ratings, size_t _features_count, double regularization = 0.0f, int max_iterations = 0, bool print_results = true, double learning_rate = 0.005);
 
-//        config& set_ratings(const DS<T>& ratings);
         config& set_def_value(const T& def_value);
         config& set_users_count(size_t users_count);
         config& set_items_count(size_t items_count);
@@ -49,12 +46,6 @@ namespace rsys {
         config& assign_seq_ids();
 //        config& set_exporter(exporters::svd_exporter<svd<T, DS>>* e);
         template <template <class> class EXPORTER_TYPE> config& set_exporter(const exporters::svd_config& e);
-
-        const DS<T>& ratings() const {
-            if (!_ratings)
-                throw no_ratings_error();
-            return *_ratings;
-        }
 
         const T& def_value() const { return _def_value; }
         size_t users_count() const { return _users_count; }
@@ -76,10 +67,9 @@ namespace rsys {
             }
             return _items_ids;
         }
-        std::shared_ptr<exporters::svd_exporter<svd<T,DS>>> exporter() { return _exporter; }
+        std::shared_ptr<exporters::svd_exporter<svd<T>>> exporter() { return _exporter; }
 
     private:
-        DS<T>* _ratings;
         T _def_value;
         size_t _users_count;
         size_t _items_count;
@@ -90,29 +80,12 @@ namespace rsys {
         bool _print_results;
         std::vector<size_t> _users_ids;
         std::vector<size_t> _items_ids;
-        std::shared_ptr<exporters::svd_exporter<svd<T,DS>>> _exporter;
+        std::shared_ptr<exporters::svd_exporter<svd<T>>> _exporter;
     };
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>::config(const DS<T>& ratings, size_t features_count, double regularization, int max_iterations, bool print_results, double learning_rate)
-            : _ratings(new DS<T>(ratings)),
-              _def_value(_ratings->get_def_value()),
-              _users_count(_ratings->rows()),
-              _items_count(_ratings->cols()),
-              _features_count(features_count),
-              _learning_rate(learning_rate),
-              _regularization(regularization),
-              _max_iterations(max_iterations),
-              _print_results(print_results),
-              _exporter(nullptr)
-    {
-        assign_seq_ids();
-    }
-
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>::config(size_t users_count, size_t items_count, const T& def_value, size_t features_count, double regularization, int max_iterations, bool print_results, double learning_rate)
-            : _ratings(nullptr),
-              _def_value(def_value),
+    template <typename T>
+    config<svd<T>>::config(size_t users_count, size_t items_count, const T& def_value, size_t features_count, double regularization, int max_iterations, bool print_results, double learning_rate)
+            : _def_value(def_value),
               _users_count(users_count),
               _items_count(items_count),
               _features_count(features_count),
@@ -124,10 +97,9 @@ namespace rsys {
     {
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>::config(const config<svd<T,DS>>& rhs)
-            : _ratings(rhs._ratings ? new DS<T>(*rhs._ratings) : nullptr),
-              _def_value(rhs._def_value),
+    template <typename T>
+    config<svd<T>>::config(const config<svd<T>>& rhs)
+            : _def_value(rhs._def_value),
               _users_count(rhs._users_count),
               _items_count(rhs._items_count),
               _features_count(rhs._features_count),
@@ -139,77 +111,74 @@ namespace rsys {
               _items_ids(rhs._items_ids),
               _exporter(rhs._exporter)
     {
-//        std::cout << "Copying config" << std::endl;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>::~config() {
-        delete _ratings;
-        _ratings = nullptr;
+    template <typename T>
+    config<svd<T>>::~config() {
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_def_value(const T& def_value) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_def_value(const T& def_value) {
         _def_value = def_value;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_users_count(size_t users_count) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_users_count(size_t users_count) {
         _users_count = users_count;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_items_count(size_t items_count) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_items_count(size_t items_count) {
         _items_count = items_count;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_features_count(size_t features_count) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_features_count(size_t features_count) {
         _features_count = features_count;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_learning_rate(double learning_rate) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_learning_rate(double learning_rate) {
         _learning_rate = learning_rate;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_regularization(double regularization) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_regularization(double regularization) {
         _regularization = regularization;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_max_iterations(int max_iterations) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_max_iterations(int max_iterations) {
         _max_iterations = max_iterations;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_print_result(bool print_result) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_print_result(bool print_result) {
         _print_results = print_result;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_users_ids(const std::vector<size_t>& users_ids) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_users_ids(const std::vector<size_t>& users_ids) {
         _users_ids = users_ids;
         return *this;
     }
 
-    template <typename T, template <class> class DS>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_items_ids(const std::vector<size_t>& items_ids) {
+    template <typename T>
+    config<svd<T>>& config<svd<T>>::set_items_ids(const std::vector<size_t>& items_ids) {
         _items_ids = items_ids;
         return *this;
     }
 
-    template <typename T, template <class> class DS> inline
-    config<svd<T,DS>>& config<svd<T,DS>>::assign_seq_ids() {
+    template <typename T> inline
+    config<svd<T>>& config<svd<T>>::assign_seq_ids() {
         for (size_t i = 1; i <= _users_count; ++i) {
             _users_ids.push_back(i);
         }
@@ -220,17 +189,11 @@ namespace rsys {
         return *this;
     }
 
-//    template <typename T, template <class> class DS>
-//    config<svd<T,DS>>& config<svd<T,DS>>::set_exporter(exporters::svd_exporter<svd<T, DS>>* e) {
-//        _exporter.reset(e);
-//        return *this;
-//    }
-
-    template <typename T, template <class> class DS>
+    template <typename T>
     template <template <class> class EXPORTER_TYPE>
-    config<svd<T,DS>>& config<svd<T,DS>>::set_exporter(const exporters::svd_config& conf) {
-        static_assert(std::is_base_of<exporters::svd_exporter<svd<T, DS>>, EXPORTER_TYPE<svd<T,DS>>>::value, "");
-        _exporter = std::make_shared<EXPORTER_TYPE<svd<T,DS>>>(conf);
+    config<svd<T>>& config<svd<T>>::set_exporter(const exporters::svd_config& conf) {
+        static_assert(std::is_base_of<exporters::svd_exporter<svd<T>>, EXPORTER_TYPE<svd<T>>>::value, "");
+        _exporter = std::make_shared<EXPORTER_TYPE<svd<T>>>(conf);
         return *this;
     }
 

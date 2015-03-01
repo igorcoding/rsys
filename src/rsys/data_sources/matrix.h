@@ -233,34 +233,6 @@ namespace rsys {
             }
         }
 
-//        template<typename T>
-//        matrix<T>::matrix(std::initializer_list<std::initializer_list<T>> list, const T& default_value)
-//                : _total(0),
-//                  _def_value(default_value) {
-//            _rows = list.size();
-//            _cols = list.begin()->size();
-
-//            _m = new mvector<T>*[_rows];
-//
-//            size_t i = 0;
-//            typename std::initializer_list<std::initializer_list<T>>::iterator it1;
-//            typename std::initializer_list<T>::iterator it2;
-//            for (it1 = list.begin(); it1 != list.end(); ++it1, ++i) {
-//                T* new_cols = new T[_cols];
-//
-//                size_t j = 0;
-//                for (it2 = it1->begin(); it2 != it1->end(); ++it2, ++j) {
-//                    new_cols[j] = *it2;
-//
-//                    _m[i] = new mvector<T>(new_cols, _cols);
-//
-//                    if ((*_m[i])[j] != _def_value) {
-//                        ++_total;
-//                    }
-//                }
-//            }
-//        }
-
         template<typename T>
         matrix<T>::matrix(const matrix<T>& rhs)
                 : _rows(rhs._rows),

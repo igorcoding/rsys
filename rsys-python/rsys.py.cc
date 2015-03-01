@@ -82,12 +82,6 @@ void export_data_sources() {
 }
 
 
-template <typename T>
-void config_set_users_ids(typename rsys::template svd<T, rsys::ds::matrix>::config_t& self, const std::vector<size_t>& users_ids) {
-    self.set_users_ids(users_ids);
-}
-
-
 template <typename SVD>
 std::shared_ptr<rsys::exporters::svd_mysql_exporter<SVD>> newSVDMySQLExporter(const rsys::exporters::svd_mysql_config& conf) {
     return std::make_shared<rsys::exporters::svd_mysql_exporter<SVD>>(conf);
@@ -104,8 +98,6 @@ void export_exporters() {
     scope().attr("exporters") = exporters_module;
     // set the current scope to the new sub-module
     scope exporters_scope = exporters_module;
-
-    typedef svd<T, ds::matrix> t_svd;
 
     const std::string& (mysql_config::*host_get)() const = &mysql_config::host;
     mysql_config& (mysql_config::*host_set)(const std::string&) = &mysql_config::host;
@@ -191,39 +183,17 @@ void export_exporters() {
                                             make_function(mu_table_set,       return_value_policy<reference_existing_object>()))
 
             ;
-
-//    class_<svd_mysql_exporter<t_svd>,
-//           std::shared_ptr<svd_mysql_exporter<t_svd>>,
-//           bases<mysql_exporter, svd_exporter<t_svd>>>("SVDMySQLExporter", init<svd_mysql_config>())
-//            ;
-
-//    def("newSVDMySQLExporter", &newSVDMySQLExporter<t_svd>);
 }
 
-//template <typename SVD>
-//typename SVD::config_t& set_exporter(typename SVD::config_t& self, boost::python::str type, const svd_config& conf) {
-//    if (type == "mysql") {
-//        self.set_exporter<svd_mysql_exporter>(conf);
-//    }
-//    return self;
-//}
-
-//template <typename SVD, typename CONF_T, typename EXPORTER_T>
-//typename SVD::config_t& set_exporter(typename SVD::config_t& self, const CONF_T& conf) {
-////    self.set_exporter<EXPORTER_T>(conf);
-//    return self;
-//}
-
 template <typename T>
-void set_exporter(typename rsys::template svd<T, rsys::ds::matrix>::config_t& self, const svd_mysql_config& conf) {
+void set_exporter(typename rsys::template svd<T>::config_t& self, const svd_mysql_config& conf) {
     self.set_exporter<svd_mysql_exporter>(conf);
 }
 
 template <typename T>
 void export_rsys() {
     using namespace rsys;
-    typedef ds::matrix<T> t_matrix;
-    typedef svd<T, ds::matrix> t_svd;
+    typedef svd<T> t_svd;
     typedef typename t_svd::config_t config_t;
     typedef typename t_svd::item_score_t item_score_t;
 
@@ -249,13 +219,9 @@ void export_rsys() {
     register_ptr_to_python<std::shared_ptr<exporters::svd_exporter<t_svd>>>();
 //    config_t& (config_t::*set_exporter_ref)(const std::shared_ptr<exporters::svd_exporter<t_svd>>&) = &config_t::set_exporter;
 
-    class_<config_t>("SVDConfig", init<t_matrix, size_t, float, int, bool, float>(
-            (arg("dataset"), arg("features_count"), arg("regularization") = 0.0f, arg("max_iterations") = 0, arg("print_results") = true, arg("learning_rate") = 0.005)
+    class_<config_t>("SVDConfig",init<size_t, size_t, T, size_t, float, int, bool, float>(
+            (arg("users_count"), arg("items_count"), arg("def_value"), arg("features_count"), arg("regularization") = 0.0f, arg("max_iterations") = 0, arg("print_results") = true, arg("learning_rate") = 0.005)
     ))
-            .def(init<size_t, size_t, T, size_t, float, int, bool, float>(
-                    (arg("users_count"), arg("items_count"), arg("def_value"), arg("features_count"), arg("regularization") = 0.0f, arg("max_iterations") = 0, arg("print_results") = true, arg("learning_rate") = 0.005)
-            ))
-            .def("ratings", &config_t::ratings, return_value_policy<copy_const_reference>())
             .def("def_value", &config_t::def_value, return_value_policy<copy_const_reference>())
             .def("users_count", &config_t::users_count)
             .def("items_count", &config_t::items_count)
