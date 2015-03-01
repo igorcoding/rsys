@@ -7,8 +7,7 @@
 using namespace rsys;
 using namespace rsys::exporters;
 
-template <typename T> using data_holder = ds::matrix<T>;
-typedef svd<double, data_holder> svd_t;
+typedef svd<> svd_t;
 
 int main() {
     svd_t::config_t c(1, 5, -1, 4, 0.005);
