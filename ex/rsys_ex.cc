@@ -11,6 +11,7 @@
 #include "rsys/svd.h"
 #include "rsys/ensemblers/ensembler.h"
 #include "rsys/exporters/svd_mysql_exporter.h"
+#include "rsys/data_sources/mysql_source.h"
 
 #define DEBUG
 
@@ -127,7 +128,7 @@ int sigmoid_example() {
 
     svd_t r(c);
 
-    r.learn_online(scores);
+    r.learn_offline(scores.begin(), scores.end());
 
 //    r.learn_online(2, 2, 5.0);
     std::cout << "Finished" << std::endl;
@@ -269,45 +270,45 @@ int my_data_example() {
     size_t items_count = 1073;
 
     std::string prefix = "/home/igor/Projects/cpp/rsys/datasets/";
-    std::string filename = prefix + "my_data.dat";
+//    std::string filename = prefix + "my_data.dat";
     std::fstream fs;
-    fs.open(filename, std::ios_base::in);
-    if (!fs.is_open()) {
-        std::cerr << "Couldn\'t open file" << std::endl;
-        return 1;
-    }
-
-    std::vector<svd_t::item_score_t> training_set;
-    std::vector<svd_t::item_score_t> test_set;
-    int k = 0;
-    while (!fs.eof() && k < 3959) {
-        std::string line;
-        fs >> line;
-        std::stringstream ss(line);
-        std::string item;
-
-        std::getline(ss, item, ':');
-        int user_id = to_int(item);
-
-        std::getline(ss, item, ':');
-        std::getline(ss, item, ':');
-        int item_id = to_int(item);
-
-        std::getline(ss, item, ':');
-        std::getline(ss, item, ':');
-        int rating = to_int(item);
-
-        auto s = svd_t::item_score_t((size_t) user_id, (size_t) item_id, rating);
-//        if (_rand() < 0.67) {
-            training_set.push_back(s);
-//        } else {
-//            test_set.push_back(s);
-//        }
-        ++k;
-    }
-    fs.close();
-    std::cout << training_set.size() << " " << test_set.size() << std::endl;
-
+//    fs.open(filename, std::ios_base::in);
+//    if (!fs.is_open()) {
+//        std::cerr << "Couldn\'t open file" << std::endl;
+//        return 1;
+//    }
+//
+//    std::vector<svd_t::item_score_t> training_set;
+//    std::vector<svd_t::item_score_t> test_set;
+//    int k = 0;
+//    while (!fs.eof() && k < 3959) {
+//        std::string line;
+//        fs >> line;
+//        std::stringstream ss(line);
+//        std::string item;
+//
+//        std::getline(ss, item, ':');
+//        int user_id = to_int(item);
+//
+//        std::getline(ss, item, ':');
+//        std::getline(ss, item, ':');
+//        int item_id = to_int(item);
+//
+//        std::getline(ss, item, ':');
+//        std::getline(ss, item, ':');
+//        int rating = to_int(item);
+//
+//        auto s = svd_t::item_score_t((size_t) user_id, (size_t) item_id, rating);
+////        if (_rand() < 0.67) {
+//            training_set.push_back(s);
+////        } else {
+////            test_set.push_back(s);
+////        }
+//        ++k;
+//    }
+//    fs.close();
+//    std::cout << training_set.size() << " " << test_set.size() << std::endl;
+//
     std::vector<size_t> users;
     std::vector<size_t> items;
 
@@ -345,12 +346,20 @@ int my_data_example() {
     c.set_max_iterations(1000);
     c.set_users_ids(users);
     c.set_items_ids(items);
+    c.set_print_result(false);
 
 
+    using rsys::ds::mysql_source;
+
+    rsys::db_conf::mysql_config mysql_conf;
+    mysql_conf.user("vkrsys_user")
+              .password("vkrsys_password")
+              .db_name("vkrsys");
+    mysql_source<double> msource(mysql_conf, "SELECT user_id, song_id, rating FROM app_rating");
 
     svd_t r(c);
 
-    r.learn_online(training_set);
+    r.learn_offline(msource.begin(), msource.end());
 
 //    r.learn_online(2, 2, 5.0);
     std::cout << "Finished" << std::endl;

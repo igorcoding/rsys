@@ -2,6 +2,7 @@
 #define MYSQL_EXPORTER_H
 
 #include "errors.h"
+#include "../db_conf/mysql_config.h"
 
 #include <string>
 #include <mysql_connection.h>
@@ -13,34 +14,7 @@
 
 namespace rsys {
     namespace exporters {
-
-        class mysql_config {
-        public:
-            mysql_config();
-            virtual ~mysql_config();
-
-            const std::string& host() const;
-            int port() const;
-            const std::string& user() const;
-            const std::string& password() const;
-            const std::string& db_name() const;
-            std::string conn_string() const;
-
-            mysql_config& host(const std::string& host);
-            mysql_config& port(int port);
-            mysql_config& user(const std::string& user);
-            mysql_config& password(const std::string& password);
-            mysql_config& db_name(const std::string& db_name);
-
-
-        private:
-            std::string _host;
-            int _port;
-            std::string _user;
-            std::string _password;
-            std::string _db_name;
-        };
-
+        using rsys::db_conf::mysql_config;
 
         class mysql_exporter {
         public:
