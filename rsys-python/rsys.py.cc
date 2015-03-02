@@ -3,6 +3,7 @@
 #include "rsys/data_sources/mvector.h"
 #include "rsys/svd.h"
 #include "rsys/exporters/svd_mysql_exporter.h"
+#include "rsys/data_sources/mysql_source.h"
 
 #include "vector_converter.h"
 #include "exporters.h"
@@ -27,11 +28,8 @@ template <typename T>
 void export_data_sources() {
     using namespace rsys;
 
-    // make "from mypackage.Util import <whatever>" work
-    object data_sources_module(handle<>(borrowed(PyImport_AddModule("rsys.data_sources"))));
-    // make "from mypackage import Util" work
-    scope().attr("data_sources") = data_sources_module;
-    // set the current scope to the new sub-module
+    object data_sources_module(handle<>(borrowed(PyImport_AddModule("rsys.ds"))));
+    scope().attr("ds") = data_sources_module;
     scope data_sources_scope = data_sources_module;
 
     typedef ds::mvector<T> t_mvector;
@@ -79,6 +77,8 @@ void export_data_sources() {
            .def(T() * self)
            .def(self / T());
 
+
+    class_<mysql_source<T>>("MySQLSource", init<mysql_config, std::string>((arg("config"), arg("query"))));
 }
 
 
@@ -88,16 +88,10 @@ std::shared_ptr<rsys::exporters::svd_mysql_exporter<SVD>> newSVDMySQLExporter(co
 }
 
 template <typename T>
-void export_exporters() {
-    using namespace rsys;
-    using namespace rsys::exporters;
-
-    // make "from mypackage.Util import <whatever>" work
-    object exporters_module(handle<>(borrowed(PyImport_AddModule("rsys.exporters"))));
-    // make "from mypackage import Util" work
-    scope().attr("exporters") = exporters_module;
-    // set the current scope to the new sub-module
-    scope exporters_scope = exporters_module;
+void export_db_conf() {
+    object module_name(handle<>(borrowed(PyImport_AddModule("rsys.db_conf"))));
+    scope().attr("db_conf") = module_name;
+    scope module_scope = module_name;
 
     const std::string& (mysql_config::*host_get)() const = &mysql_config::host;
     mysql_config& (mysql_config::*host_set)(const std::string&) = &mysql_config::host;
@@ -125,7 +119,18 @@ void export_exporters() {
                                       make_function(password_set, return_value_policy<reference_existing_object>()))
             .add_property("db_name",  make_function(db_name_get, return_value_policy<copy_const_reference>()),
                                       make_function(db_name_set, return_value_policy<reference_existing_object>()))
-                    ;
+            ;
+}
+
+template <typename T>
+void export_exporters() {
+    using namespace rsys;
+    using namespace rsys::exporters;
+
+    object exporters_module(handle<>(borrowed(PyImport_AddModule("rsys.exporters"))));
+    scope().attr("exporters") = exporters_module;
+    scope exporters_scope = exporters_module;
+
 
     class_<svd_config>("SVDConfig", init<>())
             ;
@@ -183,6 +188,16 @@ void export_exporters() {
                                             make_function(mu_table_set,       return_value_policy<reference_existing_object>()))
 
             ;
+}
+
+template <typename T>
+double learn_offline_by_mysql(rsys::svd<T>& self, rsys::ds::mysql_source<T> source) {
+    return self.learn_offline(source.begin(), source.end());
+}
+
+template <typename T>
+double learn_online_by_mysql(rsys::svd<T>& self, rsys::ds::mysql_source<T> source) {
+    return self.learn_online(source.begin(), source.end());
 }
 
 template <typename T>
@@ -259,8 +274,10 @@ void export_rsys() {
            .def("add_items", &t_svd::add_items, (arg("items")))
            .def("learn_offline", learn_offline1)
            .def("learn_offline", learn_offline2, arg("scores"))
+           .def("learn_offline", learn_offline_by_mysql<T>, arg("mysql_source"))
            .def("learn_online", learn_online1, (arg("user_id"), arg("item_id"), arg("rating")))
            .def("learn_online", learn_online2, arg("scores"))
+           .def("learn_online", learn_online_by_mysql<T>, arg("mysql_source"))
            .def("predict", predict1, (arg("user_id"), arg("item_id")))
            .def("recommend", &t_svd::recommend, (arg("user_id"), arg("count")));
 }
@@ -271,6 +288,7 @@ BOOST_PYTHON_MODULE(rsys) {
 
 
     export_data_sources<double>();
+    export_db_conf<double>();
     export_exporters<double>();
     export_rsys<double>();
 }

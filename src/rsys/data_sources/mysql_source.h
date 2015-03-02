@@ -4,6 +4,7 @@
 #include "db_source.h"
 #include "../db_conf/mysql_config.h"
 #include "../item_score.h"
+#include "../util/traits.h"
 
 #include <mysql_connection.h>
 #include <cppconn/driver.h>
@@ -17,9 +18,16 @@ namespace rsys {
         template <typename T>
         class mysql_source : public db_source {
         public:
-            class mysql_iterator {
+            template <typename IT>
+            class _mysql_iterator {
             public:
-                mysql_iterator(sql::ResultSet* data)
+                typedef typename traits<IT>::value_type value_type;
+                typedef typename traits<IT>::reference reference;
+                typedef typename traits<IT>::pointer pointer;
+                typedef typename traits<IT>::raw_pointer raw_pointer;
+                typedef typename traits<IT>::const_pointer const_pointer;
+
+                _mysql_iterator(pointer data)
                         : _data(data),
                           _current(nullptr),
                           _finished(false) {
@@ -29,7 +37,7 @@ namespace rsys {
                     }
                 }
 
-                mysql_iterator& operator ++() {
+                _mysql_iterator& operator ++() {
                     if (_data->next()) {
                         convert_data_to_current();
                     } else {
@@ -40,22 +48,22 @@ namespace rsys {
                     return *this;
                 }
 
-                bool operator ==(const mysql_iterator& rhs) {
+                bool operator ==(const _mysql_iterator& rhs) {
                     if (rhs._data == nullptr) {
                         return this->_finished;
                     }
                     return _data->getRow() == rhs._data->getRow();
                 }
 
-                bool operator !=(const mysql_iterator& rhs) {
+                bool operator !=(const _mysql_iterator& rhs) {
                     return !(*this == rhs);
                 }
 
-                const item_score<T>& operator*() {
+                const item_score<T>& operator*() const {
                     return *_current;
                 }
 
-                const item_score<T>* operator->() {
+                const item_score<T>* operator->() const {
                     return _current.get();
                 }
 
@@ -65,16 +73,22 @@ namespace rsys {
                 }
 
             private:
-                std::shared_ptr<sql::ResultSet> _data;
+                std::shared_ptr<value_type> _data;
                 std::shared_ptr<item_score<T>> _current;
                 bool _finished;
             };
 
+            typedef _mysql_iterator<sql::ResultSet*> mysql_iterator;
+            typedef _mysql_iterator<const sql::ResultSet*> const_mysql_iterator;
+
             mysql_source(const db_conf::mysql_config& conf, const std::string& query);
+            mysql_source(const mysql_source& rhs);
             virtual ~mysql_source();
 
             mysql_iterator begin() { return mysql_iterator(execute()); }
+//            const_mysql_iterator begin() const { return const_mysql_iterator(execute()); }
             mysql_iterator end() { return mysql_iterator(nullptr); }
+//            const_mysql_iterator end() const { return const_mysql_iterator(nullptr); }
 
         private:
             sql::ResultSet* execute();
@@ -93,6 +107,16 @@ namespace rsys {
         mysql_source<T>::mysql_source(const db_conf::mysql_config& conf, const std::string& query)
             : _conf(conf),
               _query(query),
+              _stmt(nullptr) {
+            _driver = get_driver_instance();
+            _conn = _driver->connect(_conf.conn_string(), _conf.user(), _conf.password());
+            _conn->setSchema(_conf.db_name());
+        }
+
+        template <typename T>
+        mysql_source<T>::mysql_source(const mysql_source& rhs)
+            : _conf(rhs._conf),
+              _query(rhs._query),
               _stmt(nullptr) {
             _driver = get_driver_instance();
             _conn = _driver->connect(_conf.conn_string(), _conf.user(), _conf.password());

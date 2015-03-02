@@ -16,6 +16,7 @@ setup(name="rsys",
         Extension("rsys", ["./rsys.py.cc",
                            "../src/rsys/data_sources/mexception.cc",
                            "../src/rsys/util/util.cc",
+                           "../src/rsys/db_conf/mysql_config.cc",
                            "../src/rsys/exporters/mysql_exporter.cc",
                            "../src/rsys/exporters/svd_mysql_exporter.cc",
                            ], **params)

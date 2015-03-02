@@ -59,6 +59,7 @@ namespace rsys {
         double learn_offline() noexcept;
         double learn_offline(const std::vector<item_score_t>& scores) noexcept;
         template <typename FwdIter> double learn_offline(FwdIter begin, FwdIter end) noexcept;
+        template <typename FwdIter> double learn_online(FwdIter begin, FwdIter end) noexcept;
         double learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
         double learn_online(const std::vector<item_score_t>& scores) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
@@ -318,6 +319,20 @@ namespace rsys {
     double svd<T>::learn_offline(FwdIter begin, FwdIter end) noexcept {
         generate_rand_values();
 
+        auto fitter = [this, &begin, &end](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
+            this->fit(begin,
+                    end,
+                    learning_rate,
+                    lambda,
+                    rmse,
+                    total);
+        };
+        return learn(fitter);
+    }
+
+    template<typename T>
+    template<typename FwdIter>
+    double svd<T>::learn_online(FwdIter begin, FwdIter end) noexcept {
         auto fitter = [this, &begin, &end](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
             this->fit(begin,
                     end,
