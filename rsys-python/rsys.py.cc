@@ -4,6 +4,8 @@
 #include "rsys/svd.h"
 #include "rsys/exporters/svd_mysql_exporter.h"
 #include "rsys/data_sources/mysql_source.h"
+#include "rsys/predictors/linear_predictor.h"
+#include "rsys/predictors/sigmoid_predictor.h"
 
 #include "vector_converter.h"
 #include "exporters.h"
@@ -22,6 +24,8 @@ namespace boost {
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <rsys/predictors/sigmoid_predictor.h>
+
 using namespace boost::python;
 
 template <typename T>
@@ -79,6 +83,24 @@ void export_data_sources() {
 
 
     class_<mysql_source<T>>("MySQLSource", init<mysql_config, std::string>((arg("config"), arg("query"))));
+}
+
+template <typename T>
+void export_predictors() {
+    using namespace rsys;
+
+    object predictors_module(handle<>(borrowed(PyImport_AddModule("rsys.predictors"))));
+    scope().attr("predictors") = predictors_module;
+    scope predictors_scope = predictors_module;
+
+    typedef predictors::linear_predictor<T> t_lin_pred;
+    typedef predictors::sigmoid_predictor<T> t_sigmoid_pred;
+
+    class_<t_lin_pred>("LinearPredictor", init<>())
+            .def("predict", &t_lin_pred::predict, (arg("score")));
+
+    class_<t_sigmoid_pred>("SigmoidPredictor", init<>())
+            .def("predict", &t_sigmoid_pred::predict, (arg("score")));
 }
 
 
@@ -206,6 +228,16 @@ void set_exporter(typename rsys::template svd<T>::config_t& self, const svd_mysq
 }
 
 template <typename T>
+void set_predictor(typename rsys::template svd<T>::config_t& self, const std::string& type) {
+    std::cout << "Predictor type = " << type << std::endl;
+    if (type == "linear") {
+        self.set_predictor<rsys::predictors::linear_predictor>();
+    } else if (type == "sigmoid") {
+        self.set_predictor<rsys::predictors::sigmoid_predictor>();
+    }
+}
+
+template <typename T>
 void export_rsys() {
     using namespace rsys;
     typedef svd<T> t_svd;
@@ -257,6 +289,7 @@ void export_rsys() {
             .def("set_items_ids", &config_t::set_items_ids, return_value_policy<reference_existing_object>(), (arg("items_ids")))
 //            .def("set_mysql_exporter", &set_exporter<t_svd, svd_mysql_config, svd_mysql_exporter>, return_value_policy<reference_existing_object>(), (arg("exporter_conf")))
             .def("set_mysql_exporter", &set_exporter<T>, with_custodian_and_ward<1, 2>(), (arg("exporter_conf")))
+            .def("set_predictor", &set_predictor<T>, (arg("predictor_type")))
             .def("assign_seq_ids", &config_t::assign_seq_ids, return_value_policy<reference_existing_object>())
                     ;
 
@@ -288,6 +321,7 @@ BOOST_PYTHON_MODULE(rsys) {
 
 
     export_data_sources<double>();
+    export_predictors<double>();
     export_db_conf<double>();
     export_exporters<double>();
     export_rsys<double>();

@@ -3,6 +3,8 @@
 
 #include "config.h"
 #include "../exporters/svd_exporter.h"
+#include "../predictors/predictor.h"
+#include "../predictors/linear_predictor.h"
 
 #include <exception>
 #include <string>
@@ -46,6 +48,7 @@ namespace rsys {
         config& assign_seq_ids();
 //        config& set_exporter(exporters::svd_exporter<svd<T, DS>>* e);
         template <template <class> class EXPORTER_TYPE> config& set_exporter(const exporters::svd_config& e);
+        template <template <class> class PREDICTOR_TYPE> config& set_predictor();
 
         const T& def_value() const { return _def_value; }
         size_t users_count() const { return _users_count; }
@@ -68,6 +71,7 @@ namespace rsys {
             return _items_ids;
         }
         std::shared_ptr<exporters::svd_exporter<svd<T>>> exporter() { return _exporter; }
+        std::shared_ptr<predictors::predictor<T>> predictor() { return _predictor; }
 
     private:
         T _def_value;
@@ -81,6 +85,7 @@ namespace rsys {
         std::vector<size_t> _users_ids;
         std::vector<size_t> _items_ids;
         std::shared_ptr<exporters::svd_exporter<svd<T>>> _exporter;
+        std::shared_ptr<predictors::predictor<T>> _predictor;
     };
 
     template <typename T>
@@ -93,7 +98,8 @@ namespace rsys {
               _regularization(regularization),
               _max_iterations(max_iterations),
               _print_results(print_results),
-              _exporter(nullptr)
+              _exporter(nullptr),
+              _predictor(std::make_shared<predictors::linear_predictor<T>>())
     {
     }
 
@@ -109,7 +115,8 @@ namespace rsys {
               _print_results(rhs._print_results),
               _users_ids(rhs._users_ids),
               _items_ids(rhs._items_ids),
-              _exporter(rhs._exporter)
+              _exporter(rhs._exporter),
+              _predictor(rhs._predictor)
     {
     }
 
@@ -194,6 +201,14 @@ namespace rsys {
     config<svd<T>>& config<svd<T>>::set_exporter(const exporters::svd_config& conf) {
         static_assert(std::is_base_of<exporters::svd_exporter<svd<T>>, EXPORTER_TYPE<svd<T>>>::value, "");
         _exporter = std::make_shared<EXPORTER_TYPE<svd<T>>>(conf);
+        return *this;
+    }
+
+    template <typename T>
+    template <template <class> class PREDICTOR_TYPE>
+    config<svd<T>>& config<svd<T>>::set_predictor() {
+        static_assert(std::is_base_of<predictors::predictor<T>, PREDICTOR_TYPE<T>>::value, "");
+        _predictor = std::make_shared<PREDICTOR_TYPE<T>>();
         return *this;
     }
 

@@ -3,24 +3,25 @@ import os
 import random
 import math
 import pylab
+from db import Db
 
+db = Db('/home/igor/Projects/python/vkrsys/config.conf')
+users = db.get_users_ids()
+items = db.get_items_ids()
 
 def parse_data():
     training_set = []
     test_set = []
 
-    prefix = '/home/igor/Projects/cpp/rsys/datasets/ml-1m/'
-    with open(os.path.join(prefix, 'ratings.dat')) as f:
-        for line in f:
-            d = line.split('::')
+    data = db.execute('SELECT user_id, song_id, rating FROM app_rating ORDER BY user_id, song_id')
 
-            score = rsys.ItemScore(int(d[0]), int(d[1]), int(d[2]))
-            if random.random() < 0.67:
-                training_set.append(score)
-            else:
-                test_set.append(score)
+    for d in data:
+        score = rsys.ItemScore(int(d[0]), int(d[1]), int(d[2]))
+        if random.random() < 0.67:
+            training_set.append(score)
+        else:
+            test_set.append(score)
     return training_set, test_set
-
 
 def count_rmse(svd, test_set):
     print 'Counting test_set RMSE'
@@ -60,14 +61,24 @@ def plot_data(train_set_data, test_set_data, filename, title, xlabel='x'):
 def features(users_count, items_count):
     train_set_error = []
     test_set_error = []
-    with open("features_train_set.dat", 'w') as train_set_file:
-        with open("features_test_set.dat", 'w') as test_set_file:
+
+
+    mysql_conf = rsys.exporters.SVDMySQLConfig()
+    mysql_conf.user = db.conn_info['user']
+    mysql_conf.password = db.conn_info['passwd']
+    mysql_conf.db_name = db.conn_info['db']
+    mysql_conf.users_table = "auth_user"
+    mysql_conf.items_table = "app_song"
+
+    with open("vkrsys_features_train_set.dat", 'w') as train_set_file:
+        with open("vkrsys_features_test_set.dat", 'w') as test_set_file:
             for d in xrange(1, 11):
-                config = rsys.SVDConfig(users_count, items_count, -1, d, 0.005)
+                config = rsys.SVDConfig(users_count, items_count, -1, d, 0.05)
                 config.set_print_result(False)
-                config.assign_seq_ids()
-                config.set_max_iterations(500)
-                config.set_predictor('linear')
+                config.set_users_ids(users)
+                config.set_items_ids(items)
+                config.set_predictor('sigmoid')
+                # config.set_mysql_exporter(mysql_conf)
                 svd = rsys.SVD(config)
 
                 training_set, test_set = parse_data()
@@ -87,15 +98,30 @@ def features(users_count, items_count):
 def lambda_est(users_count, items_count):
     train_set_error = []
     test_set_error = []
-    l = 0.0001
-    with open("lambda_train_set.dat", 'w') as train_set_file:
-        with open("lambda_test_set.dat", 'w') as test_set_file:
-            while l < 1.5:
-                config = rsys.SVDConfig(users_count, items_count, -1, 4, l)
+
+
+    mysql_conf = rsys.exporters.SVDMySQLConfig()
+    mysql_conf.user = db.conn_info['user']
+    mysql_conf.password = db.conn_info['passwd']
+    mysql_conf.db_name = db.conn_info['db']
+    mysql_conf.users_table = "auth_user"
+    mysql_conf.items_table = "app_song"
+
+    train_source = \
+        rsys.ds.MySQLSource(mysql_conf,
+                            "SELECT user_id, song_id, rating FROM app_rating ORDER BY user_id, song_id LIMIT 2000")
+    valid_source = db.execute("SELECT user_id, song_id, rating FROM app_rating ORDER BY user_id, song_id LIMIT 10000 OFFSET 2000")
+
+    l = 0.00001
+    with open("vkrsys_lambda_train_set.dat", 'w') as train_set_file:
+        with open("vkrsys_lambda_test_set.dat", 'w') as test_set_file:
+            while l < 0.01:
+                config = rsys.SVDConfig(users_count, items_count, -1, 6, l)
                 config.set_print_result(False)
-                config.assign_seq_ids()
-                config.set_max_iterations(500)
-                config.set_predictor('linear')
+                config.set_users_ids(users)
+                config.set_items_ids(items)
+                config.set_predictor('sigmoid')
+                # config.set_mysql_exporter(mysql_conf)
                 svd = rsys.SVD(config)
 
                 training_set, test_set = parse_data()
@@ -109,7 +135,7 @@ def lambda_est(users_count, items_count):
                 train_set_file.write("%f:%f:\n" % (l, training_rmse))
                 test_set_file.write("%f:%f:\n" % (l, test_rmse))
 
-                l *= 3
+                l *= 2
 
     return train_set_error, test_set_error
 
@@ -119,16 +145,16 @@ def main():
     items_count = 3952
 
     est_features = True
-    est_lambda = False
+    est_lambda = True
 
     if est_features:
         f_train_set_error, f_test_set_error = features(users_count, items_count)
-        plot_data(f_train_set_error, f_test_set_error, 'mlens_features_count.png',
+        plot_data(f_train_set_error, f_test_set_error, 'vkrsys_features_count.png',
                   title='RMSE vs features count', xlabel='features count')
 
     if est_lambda:
         l_train_set_error, l_test_set_error = lambda_est(users_count, items_count)
-        plot_data(l_train_set_error, l_test_set_error, 'mlens_lambda.png',
+        plot_data(l_train_set_error, l_test_set_error, 'vkrsys_lambda.png',
                   title='RMSE vs lambda', xlabel='lambda')
 
 

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <rsys/predictors/sigmoid_predictor.h>
 
 #include "rsys/data_sources/mvector.h"
 #include "rsys/data_sources/sparse_matrix.h"
@@ -31,8 +32,8 @@ int main() {
 
 //    basic = basic_example();
 //    sigmoid = sigmoid_example();
-//    mlens = movielens_example();
-    my_data = my_data_example();
+    mlens = movielens_example();
+//    my_data = my_data_example();
     return basic + sigmoid + mlens + my_data;
 }
 
@@ -179,6 +180,8 @@ int movielens_example() {
 
     std::vector<svd_t::item_score_t> training_set;
     std::vector<svd_t::item_score_t> test_set;
+    std::vector<size_t> users;
+    std::vector<size_t> items;
     int k = 0;
     while (!fs.eof() && k < 1000209) {
         std::string line;
@@ -198,6 +201,8 @@ int movielens_example() {
         int rating = to_int(item);
 
         auto s = svd_t::item_score_t((size_t) user_id, (size_t) item_id, rating);
+        users.push_back(s.user_id);
+        items.push_back(s.item_id);
         if (_rand() < 0.67) {
             training_set.push_back(s);
         } else {
@@ -210,7 +215,9 @@ int movielens_example() {
     std::cout << "parsed" << std::endl;
 
     svd_t::config_t c(users_count, items_count, -1, 4, 0.005, 100, false);
-    c.assign_seq_ids();
+    c.set_users_ids(users);
+    c.set_items_ids(items);
+    c.set_predictor<predictors::linear_predictor>();
     svd_t svd(c);
 
     svd.learn_online(training_set);
@@ -347,6 +354,7 @@ int my_data_example() {
     c.set_users_ids(users);
     c.set_items_ids(items);
     c.set_print_result(false);
+    c.set_predictor<predictors::sigmoid_predictor>();
 
 
     using rsys::ds::mysql_source;

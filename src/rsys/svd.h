@@ -31,6 +31,7 @@ namespace rsys {
         typedef config<svd<T>> config_t;
         typedef item_score<T> item_score_t;
         typedef exporters::svd_exporter<svd<T>> exporter_t;
+        typedef predictors::predictor<T> predictor_t;
 
         svd(const config_t& conf);
         ~svd();
@@ -74,8 +75,6 @@ namespace rsys {
         template <typename Iter> void fit(Iter begin, Iter end, double& learning_rate, const double& lambda, double& rmse, size_t& total);
         void fit(size_t user_id, size_t item_id, const T& rating, double& learning_rate, const double& lambda, double& rmse, size_t& total);
 
-        T sigma(const T& x);
-
         void generate_rand_values();
 
     private:
@@ -90,6 +89,7 @@ namespace rsys {
         double _mu;
 
         std::shared_ptr<exporter_t> _exporter;
+        std::shared_ptr<predictor_t> _predictor;
     };
 
     template<typename T>
@@ -104,7 +104,8 @@ namespace rsys {
               _bi(conf.get_items_ids()),
               _mu(0),
 
-              _exporter(_config.exporter()) {
+              _exporter(_config.exporter()),
+              _predictor(_config.predictor()) {
 
         bool import_res = false;
         if (_exporter != nullptr) {
@@ -142,13 +143,13 @@ namespace rsys {
 
     template<typename T>
     T svd<T>::predict(size_t user_id, size_t item_id) noexcept {
-        return sigma(_pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu);
+        return _predictor->predict(_pU[user_id].dot(_pI[item_id]) + _bu[user_id] + _bi[item_id] + _mu);
     }
 
     template<typename T>
     inline
     T svd<T>::predict(const mvector<T>& user, const mvector<T>& item, size_t user_id, size_t item_id) noexcept {
-        return sigma(user.dot(item) + _bu[user_id] + _bi[item_id] + _mu);
+        return _predictor->predict(user.dot(item) + _bu[user_id] + _bi[item_id] + _mu);
     }
 
     template<typename T>
@@ -233,10 +234,7 @@ namespace rsys {
         }
     }
 
-    template <typename T>
-    T svd<T>::sigma(const T& x) {
-        return 1.0 / (1.0 + std::exp(-x));
-    }
+
 
     template<typename T>
     double svd<T>::learn(std::function<void(double&, const double&, double&, size_t&)> fitter) noexcept {
@@ -252,8 +250,7 @@ namespace rsys {
         double threshold = 0.01;
 
         while (fabs(rmse - old_rmse) > eps) {
-            std::cout << "Iteration #" << iteration << std::endl;
-            iteration++;
+            std::cout << "Iteration #" << iteration << ". ";
             old_rmse = rmse;
 
             size_t total = 0;
@@ -271,6 +268,7 @@ namespace rsys {
             if (max_iterations > 0 && iteration >= max_iterations) {
                 break;
             }
+            iteration++;
         }
 
         if (print_results) {

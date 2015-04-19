@@ -34,6 +34,10 @@ set(HEADER_FILES ${SRC_RSYS}/recommender.h
                  ${SRC_RSYS}/util/base_iterator.h
                  ${SRC_RSYS}/util/traits.h
                  ${SRC_RSYS}/util/util.h
+
+                 ${SRC_RSYS}/predictors/predictor.h
+                 ${SRC_RSYS}/predictors/linear_predictor.h
+                 ${SRC_RSYS}/predictors/sigmoid_predictor.h
                  )
 
 set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
@@ -46,5 +50,5 @@ set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
                  ${SRC_RSYS}/exporters/svd_mysql_exporter.cc
                  )
 
-add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
+add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES} )
 target_link_libraries(rsys mysqlcppconn)
