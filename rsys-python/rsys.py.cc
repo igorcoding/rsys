@@ -212,6 +212,16 @@ void export_exporters() {
 }
 
 template <typename T>
+double learn_offline_by_vector(rsys::svd<T>& self, const std::vector<rsys::item_score<T>>& scores) {
+    return self.learn_offline(scores.begin(), scores.end());
+}
+
+template <typename T>
+double learn_online_by_vector(rsys::svd<T>& self, const std::vector<rsys::item_score<T>>& scores) {
+    return self.learn_online(scores.begin(), scores.end());
+}
+
+template <typename T>
 double learn_offline_by_mysql(rsys::svd<T>& self, rsys::ds::mysql_source<T> source) {
     return self.learn_offline(source.begin(), source.end());
 }
@@ -293,22 +303,22 @@ void export_rsys() {
                     ;
 
     T (t_svd::*predict1)(size_t, size_t) noexcept = &t_svd::predict;
-    double (t_svd::*learn_offline1)() noexcept = &t_svd::learn_offline;
-    double (t_svd::*learn_offline2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_offline;
+    // double (t_svd::*learn_offline1)() noexcept = &t_svd::learn_offline;
+    // double (t_svd::*learn_offline2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_offline;
 
-    double (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
-    double (t_svd::*learn_online2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_online;
+    // double (t_svd::*learn_online1)(size_t, size_t, const T&) noexcept = &t_svd::learn_online;
+    // double (t_svd::*learn_online2)(const std::vector<item_score_t>&) noexcept = &t_svd::learn_online;
 
     class_<t_svd>("SVD", init<config_t>())
            .def("add_user", &t_svd::add_user)
            .def("add_users", &t_svd::add_users, (arg("items")))
            .def("add_item", &t_svd::add_item)
            .def("add_items", &t_svd::add_items, (arg("items")))
-           .def("learn_offline", learn_offline1)
-           .def("learn_offline", learn_offline2, arg("scores"))
+           // .def("learn_offline", learn_offline1)
+           .def("learn_offline", learn_offline_by_vector<T>, arg("scores"))
            .def("learn_offline", learn_offline_by_mysql<T>, arg("mysql_source"))
-           .def("learn_online", learn_online1, (arg("user_id"), arg("item_id"), arg("rating")))
-           .def("learn_online", learn_online2, arg("scores"))
+           // .def("learn_online", learn_online1, (arg("user_id"), arg("item_id"), arg("rating")))
+           .def("learn_online", learn_online_by_vector<T>, arg("scores"))
            .def("learn_online", learn_online_by_mysql<T>, arg("mysql_source"))
            .def("predict", predict1, (arg("user_id"), arg("item_id")))
            .def("recommend", &t_svd::recommend, (arg("user_id"), arg("count")));

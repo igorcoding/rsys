@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <rsys/predictors/sigmoid_predictor.h>
+#include <rsys/models/cfuu/aggregators/aggr_avg.h>
 
 #include "rsys/data_sources/mvector.h"
 #include "rsys/data_sources/sparse_matrix.h"
@@ -13,6 +14,8 @@
 #include "rsys/ensemblers/ensembler.h"
 #include "rsys/exporters/svd_mysql_exporter.h"
 #include "rsys/data_sources/mysql_source.h"
+#include "rsys/ratings_data.h"
+#include "rsys/models/cfuu/cfuu.h"
 
 #define DEBUG
 
@@ -28,11 +31,32 @@ int movielens_example();
 int my_data_example();
 
 int main() {
+    rsys::ratings_data<double> rd;
+    rd.add(item_score<double>(1, 15, 4.3));
+    std::cout << *rd.user(1).front() << std::endl;
+    std::cout << *rd.item(15).front() << std::endl;
+
+    rsys::config<rsys::cfuu<double>> cfuu_conf;
+    cfuu_conf.set_aggregator(new rsys::cfuu_aggr::aggr_avg<double>);
+    rsys::cfuu<double> cfuu(cfuu_conf);
+
+    std::vector<item_score<double>> data = {
+            { 1, 15, 4.3 },
+            { 2, 32, 2.5 },
+            { 2, 16, 3 },
+            { 1, 16, 4 },
+            { 3, 32, 5 }
+    };
+
+    cfuu.train(data.begin(), data.end());
+    std::cout << cfuu.predict(1, 32) << std::endl;
+
+
     int basic = 0, sigmoid = 0, mlens = 0, my_data = 0;
 
 //    basic = basic_example();
 //    sigmoid = sigmoid_example();
-    mlens = movielens_example();
+//    mlens = movielens_example();
 //    my_data = my_data_example();
     return basic + sigmoid + mlens + my_data;
 }

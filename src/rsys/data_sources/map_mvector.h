@@ -12,11 +12,12 @@ namespace rsys { namespace ds {
         class map_mvector {
         public:
 
+            map_mvector(const T& default_value = T());
             map_mvector(const std::vector<K>& rows_ids, const T& default_value = T());
             ~map_mvector() {}
 
             const std::map<K, T>& m() const { return _m; }
-            size_t size() const { return _size; }
+            size_t size() const { return _m.size(); }
             const T& get_def_value() const { return _def_value; }
 
             T& operator [](const K& row_key);
@@ -41,9 +42,15 @@ namespace rsys { namespace ds {
         };
 
         template <typename K, typename T>
-        map_mvector<K,T>::map_mvector(const std::vector<K>& rows_keys, const T& default_value)
-                : _size(rows_keys.size()),
+        map_mvector<K,T>::map_mvector(const T& default_value)
+                : _size(0),
                   _def_value(default_value),
+                  _m() {
+        }
+
+        template <typename K, typename T>
+        map_mvector<K,T>::map_mvector(const std::vector<K>& rows_keys, const T& default_value)
+                : _def_value(default_value),
                   _m() {
             for (auto& row_key : rows_keys) {
                 _m[row_key] = _def_value;
@@ -88,12 +95,7 @@ namespace rsys { namespace ds {
 
         template <typename K, typename T>
         void map_mvector<K,T>::set(const K& row_key, const T& obj) {
-            auto it = _m.find(row_key);
-            if (it != _m.end()) {
-                it->second = obj;
-            } else {
-                throw index_out_of_bound();
-            }
+            _m[row_key] = obj;
         }
 
         template <typename K, typename T>

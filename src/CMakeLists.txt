@@ -5,6 +5,7 @@ include_directories(.)
 
 set(HEADER_FILES
                  # ${SRC_RSYS}/recommender.h
+                 rsys/ratings_data.h
                  ${SRC_RSYS}/item_score.h
                  ${SRC_RSYS}/models/model.h
 
@@ -13,8 +14,12 @@ set(HEADER_FILES
 
                  ${SRC_RSYS}/models/rbm.h
 
-                 rsys/models/cf_uu/cf_uu.h
-                 rsys/models/cf_uu/cf_uu_config.h
+                 rsys/models/cfuu/cfuu.h
+                 rsys/models/cfuu/cfuu_config.h
+                 rsys/models/cfuu/aggregators/aggr.h
+                 rsys/models/cfuu/aggregators/aggr_avg.h
+                 rsys/models/cfuu/aggregators/aggr_simple.h
+                 rsys/models/cfuu/aggregators/aggr_simple_biased.h
 
                  ${SRC_RSYS}/config/config.h
 
@@ -27,6 +32,7 @@ set(HEADER_FILES
                  ${SRC_RSYS}/exporters/svd_mysql_exporter.h
                  ${SRC_RSYS}/exporters/errors.h
 
+                 rsys/data_sources/map_index.h
                  ${SRC_RSYS}/data_sources/data_source.h
                  ${SRC_RSYS}/data_sources/mvector.h
                  ${SRC_RSYS}/data_sources/imatrix.h
@@ -57,5 +63,5 @@ set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
                  ${SRC_RSYS}/exporters/svd_mysql_exporter.cc
                  )
 
-add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES} rsys/models/cf_uu/aggregators/aggr_avg.h rsys/models/cf_uu/aggregators/aggr_simple.h rsys/models/cf_uu/aggregators/aggr_simple_biased.h rsys/models/cf_uu/aggregators/aggr.h rsys/ratings_data.h)
+add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
 target_link_libraries(rsys mysqlcppconn)
