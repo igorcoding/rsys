@@ -9,7 +9,7 @@
 #include "rsys/data_sources/sparse_matrix.h"
 #include "rsys/data_sources/matrix.h"
 #include "rsys/recommender.h"
-#include "rsys/svd.h"
+#include "rsys/models/svd.h"
 #include "rsys/ensemblers/ensembler.h"
 #include "rsys/exporters/svd_mysql_exporter.h"
 #include "rsys/data_sources/mysql_source.h"
@@ -220,7 +220,7 @@ int movielens_example() {
     c.set_predictor<predictors::linear_predictor>();
     svd_t svd(c);
 
-    svd.learn_online(training_set);
+    svd.learn_online(training_set.begin(), training_set.end());
     std::cout << "Finished" << std::endl;
 
     auto deltas = {

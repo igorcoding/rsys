@@ -1,7 +1,6 @@
-#include "rsys/svd.h"
+#include "rsys/models/svd.h"
 #include "rsys/data_sources/matrix.h"
 #include "rsys/data_sources/mvector.h"
-#include "rsys/svd.h"
 #include "rsys/exporters/svd_mysql_exporter.h"
 #include "rsys/data_sources/mysql_source.h"
 #include "rsys/predictors/linear_predictor.h"

@@ -1,15 +1,22 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -std=c++14")
 
 set(SRC_RSYS rsys)
+include_directories(.)
 
-set(HEADER_FILES ${SRC_RSYS}/recommender.h
-                 ${SRC_RSYS}/model.h
-                 ${SRC_RSYS}/svd.h
-                 ${SRC_RSYS}/rbm.h
+set(HEADER_FILES
+                 # ${SRC_RSYS}/recommender.h
                  ${SRC_RSYS}/item_score.h
+                 ${SRC_RSYS}/models/model.h
+
+                 ${SRC_RSYS}/models/svd.h
+                 ${SRC_RSYS}/config/svd_config.h
+
+                 ${SRC_RSYS}/models/rbm.h
+
+                 rsys/models/cf_uu/cf_uu.h
+                 rsys/models/cf_uu/cf_uu_config.h
 
                  ${SRC_RSYS}/config/config.h
-                 ${SRC_RSYS}/config/svd_config.h
 
                  ${SRC_RSYS}/db_conf/mysql_config.h
 
@@ -50,5 +57,5 @@ set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
                  ${SRC_RSYS}/exporters/svd_mysql_exporter.cc
                  )
 
-add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES} )
+add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES} rsys/models/cf_uu/aggregators/aggr_avg.h rsys/models/cf_uu/aggregators/aggr_simple.h rsys/models/cf_uu/aggregators/aggr_simple_biased.h rsys/models/cf_uu/aggregators/aggr.h rsys/ratings_data.h)
 target_link_libraries(rsys mysqlcppconn)

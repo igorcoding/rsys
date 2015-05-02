@@ -1,8 +1,8 @@
 #include "recommender.h"
-#include "model.h"
+#include "models/model.h"
 #include "item_score.h"
-#include "svd.h"
-#include "rbm.h"
+#include "models/svd.h"
+#include "models/rbm.h"
 
 #include "data_sources/data_source.h"
 #include "data_sources/imatrix.h"

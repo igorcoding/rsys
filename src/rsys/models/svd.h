@@ -2,24 +2,19 @@
 #define SVD_H
 
 #include "model.h"
-#include "data_sources/imatrix.h"
-#include "data_sources/matrix.h"
-#include "data_sources/map_matrix.h"
-#include "data_sources/map_mvector.h"
-#include "item_score.h"
-#include "config/svd_config.h"
-#include "exporters/svd_exporter.h"
+#include "rsys/data_sources/imatrix.h"
+#include "rsys/data_sources/matrix.h"
+#include "rsys/data_sources/map_matrix.h"
+#include "rsys/data_sources/map_mvector.h"
+#include "rsys/item_score.h"
+#include "rsys/config/svd_config.h"
+#include "rsys/exporters/svd_exporter.h"
 
-#include <ctime>
 #include <cstdlib>
 #include <iostream>
 #include <queue>
 #include <functional>
 #include <cmath>
-#include <dirent.h>
-#include <boost/variant/detail/substitute.hpp>
-#include <ev.h>
-#include <complex>
 
 using namespace rsys::ds;
 
@@ -57,12 +52,8 @@ namespace rsys {
         void add_item(size_t item_id);
         void add_items(const std::vector<size_t>& items);
 
-        double learn_offline() noexcept;
-        double learn_offline(const std::vector<item_score_t>& scores) noexcept;
         template <typename FwdIter> double learn_offline(FwdIter begin, FwdIter end) noexcept;
         template <typename FwdIter> double learn_online(FwdIter begin, FwdIter end) noexcept;
-        double learn_online(size_t user_id, size_t item_id, const T& rating) noexcept;
-        double learn_online(const std::vector<item_score_t>& scores) noexcept;
         T predict(size_t user_id, size_t item_id) noexcept;
         std::vector<item_score_t> recommend(size_t user_id, int k) noexcept;
 
@@ -292,27 +283,6 @@ namespace rsys {
     }
 
     template<typename T>
-    double svd<T>::learn_offline() noexcept {
-        std::cout << "No ratnigs to process" << std::endl;
-        return -1.0;
-    }
-
-    template<typename T>
-    double svd<T>::learn_offline(const std::vector<item_score_t>& scores) noexcept {
-        generate_rand_values();
-
-        auto fitter = [this, &scores](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
-            this->fit(scores.begin(),
-                      scores.end(),
-                      learning_rate,
-                      lambda,
-                      rmse,
-                      total);
-        };
-        return learn(fitter);
-    }
-
-    template<typename T>
     template<typename FwdIter>
     double svd<T>::learn_offline(FwdIter begin, FwdIter end) noexcept {
         generate_rand_values();
@@ -338,31 +308,6 @@ namespace rsys {
                     lambda,
                     rmse,
                     total);
-        };
-        return learn(fitter);
-    }
-
-    template<typename T>
-    double svd<T>::learn_online(size_t user_id, size_t item_id, const T& rating) noexcept {
-        auto fitter = [this, user_id, item_id, &rating](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
-            this->fit(user_id, item_id, rating,
-                      learning_rate,
-                      lambda,
-                      rmse,
-                      total);
-        };
-        return learn(fitter);
-    }
-
-    template<typename T>
-    double svd<T>::learn_online(const std::vector<item_score_t>& scores) noexcept {
-        auto fitter = [this, &scores](double& learning_rate, const double& lambda, double& rmse, size_t& total) {
-            this->fit(scores.begin(),
-                      scores.end(),
-                      learning_rate,
-                      lambda,
-                      rmse,
-                      total);
         };
         return learn(fitter);
     }

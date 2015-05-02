@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "rsys/exporters/svd_mysql_exporter.h"
-#include "rsys/svd.h"
+#include "rsys/models/svd.h"
 
 
 using namespace rsys;

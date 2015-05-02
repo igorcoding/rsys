@@ -9,6 +9,8 @@
 #include <exception>
 #include <string>
 #include <memory>
+#include <vector>
+#include <iostream>
 
 namespace rsys {
 

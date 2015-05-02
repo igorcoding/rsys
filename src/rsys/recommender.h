@@ -3,7 +3,7 @@
 
 #include "config/config.h"
 #include "item_score.h"
-#include "model.h"
+#include "models/model.h"
 
 namespace rsys {
 

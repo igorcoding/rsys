@@ -1,8 +1,8 @@
 #ifndef ENSEMBLER_H
 #define ENSEMBLER_H
 
-#include "../model.h"
-#include "../item_score.h"
+#include "rsys/models/model.h"
+#include "rsys/item_score.h"
 
 #include <vector>
 #include <deque>
