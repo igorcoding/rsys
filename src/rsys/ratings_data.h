@@ -6,13 +6,14 @@
 
 #include <list>
 #include <map>
+#include <algorithm>
 
 namespace rsys {
     template <typename T>
     class ratings_data {
     public:
         typedef item_score<T> iscore_t;
-        typedef ds::map_index<size_t, iscore_t*> index_t;
+        typedef ds::map_index<size_t, iscore_t*, std::vector> index_t;
 
         ratings_data();
         ~ratings_data();
@@ -21,11 +22,11 @@ namespace rsys {
         template <typename FwdIt> void load(FwdIt begin, FwdIt end);
         void clear();
 
-        const typename index_t::cont_t& user(size_t u) const;
-        const typename index_t::cont_t& item(size_t i) const;
+        typename index_t::cont_t& user(size_t u);
+        typename index_t::cont_t& item(size_t i);
 
-        const T& user_avg(size_t u) const;
-        const T& item_avg(size_t i) const;
+        T user_avg(size_t u) const;
+        T item_avg(size_t i) const;
 
     private:
         index_t _users_index;
@@ -86,23 +87,41 @@ namespace rsys {
     }
 
     template <typename T> inline
-    const typename ratings_data<T>::index_t::cont_t& ratings_data<T>::user(size_t u) const {
-        return _users_index.at(u);
+    typename ratings_data<T>::index_t::cont_t& ratings_data<T>::user(size_t u) {
+        auto& l = _users_index[u];
+        std::sort(l.begin(), l.end(), [](auto& lhs, auto& rhs) {
+            return lhs->item_id < rhs->item_id;
+        });
+        return l;
     }
 
     template <typename T> inline
-    const typename ratings_data<T>::index_t::cont_t& ratings_data<T>::item(size_t i) const {
-        return _items_index.at(i);
+    typename ratings_data<T>::index_t::cont_t& ratings_data<T>::item(size_t i) {
+        auto& l =  _items_index[i];
+        std::sort(l.begin(), l.end(), [](auto& lhs, auto& rhs) {
+            return lhs->user_id < rhs->user_id;
+        });
+        return l;
     }
 
     template <typename T> inline
-    const T& ratings_data<T>::user_avg(size_t u) const {
-        return _users_avg.at(u);
+    T ratings_data<T>::user_avg(size_t u) const {
+        auto it = _users_avg.find(u);
+        if (it != _users_avg.end()) {
+            return it->second;
+        } else {
+            return (T) 0.0;
+        }
     }
 
     template <typename T> inline
-    const T& ratings_data<T>::item_avg(size_t i) const {
-        return _items_avg.at(i);
+    T ratings_data<T>::item_avg(size_t i) const {
+        auto it = _items_avg.find(i);
+        if (it != _items_avg.end()) {
+            return it->second;
+        } else {
+            return (T) 0.0;
+        }
     }
 }
 

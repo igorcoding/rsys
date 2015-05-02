@@ -11,7 +11,7 @@ namespace rsys {
         public:
             aggr_avg();
 
-            virtual T aggregate(const ratings_data<T>& data, size_t user_id, size_t item_id) const;
+            virtual T aggregate(ratings_data<T>& data, size_t user_id, size_t item_id) const;
         private:
 
         };
@@ -22,7 +22,7 @@ namespace rsys {
         }
 
         template <typename T>
-        T aggr_avg<T>::aggregate(const ratings_data<T>& data, size_t user_id, size_t item_id) const {
+        T aggr_avg<T>::aggregate(ratings_data<T>& data, size_t user_id, size_t item_id) const {
             auto users_rated_item = data.item(item_id);
             T score = (T) 0.0;
 

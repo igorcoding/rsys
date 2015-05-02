@@ -5,6 +5,9 @@
 #include <iomanip>
 #include <rsys/predictors/sigmoid_predictor.h>
 #include <rsys/models/cfuu/aggregators/aggr_avg.h>
+#include <rsys/models/cfuu/aggregators/aggr_simple.h>
+#include <rsys/models/cfuu/simil/simil_pearson.h>
+#include <rsys/models/cfuu/simil/simil_cos.h>
 
 #include "rsys/data_sources/mvector.h"
 #include "rsys/data_sources/sparse_matrix.h"
@@ -37,14 +40,14 @@ int main() {
     std::cout << *rd.item(15).front() << std::endl;
 
     rsys::config<rsys::cfuu<double>> cfuu_conf;
-    cfuu_conf.set_aggregator(new rsys::cfuu_aggr::aggr_avg<double>);
+    cfuu_conf.set_aggregator(new rsys::cfuu_aggr::aggr_simple<double>(std::make_shared<rsys::cfuu_simil::simil_pearson<double>>()));
     rsys::cfuu<double> cfuu(cfuu_conf);
 
     std::vector<item_score<double>> data = {
             { 1, 15, 4.3 },
-            { 2, 32, 2.5 },
-            { 2, 16, 3 },
             { 1, 16, 4 },
+            { 2, 16, 3 },
+            { 2, 32, 2.5 },
             { 3, 32, 5 }
     };
 

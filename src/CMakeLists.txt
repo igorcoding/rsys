@@ -20,6 +20,9 @@ set(HEADER_FILES
                  rsys/models/cfuu/aggregators/aggr_avg.h
                  rsys/models/cfuu/aggregators/aggr_simple.h
                  rsys/models/cfuu/aggregators/aggr_simple_biased.h
+                 rsys/models/cfuu/simil/simil.h
+                 rsys/models/cfuu/simil/simil_pearson.h
+                 rsys/models/cfuu/simil/simil_cos.h
 
                  ${SRC_RSYS}/config/config.h
 

@@ -13,7 +13,7 @@ namespace rsys {
         public:
             virtual ~aggregator() {}
 
-            virtual T aggregate(const ratings_data<T>& data, size_t user_id, size_t item_id) const = 0;
+            virtual T aggregate(ratings_data<T>& data, size_t user_id, size_t item_id) const = 0;
 
         private:
 

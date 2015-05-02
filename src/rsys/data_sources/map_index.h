@@ -21,7 +21,10 @@ namespace rsys {
 
             void add(const K& key, const V& value);
             cont_t& at(const K& key);
-            cont_t& at(const K& key) const;
+            const cont_t& at(const K& key) const;
+
+            cont_t& operator[](const K& key);
+            const cont_t& operator[](const K& key) const;
 
         private:
             std::map<K, cont_t*> _index;
@@ -56,18 +59,40 @@ namespace rsys {
         typename map_index<K, V, Cont>::cont_t& map_index<K, V, Cont>::at(const K& key) {
             auto f = _index.find(key);
             if (f != _index.end()) { // we have it
-                return *(*f->second);
+                return *(f->second);
             }
             throw index_out_of_bound();
         }
 
         template <typename K, typename V, template <class, class> class Cont>
-        typename map_index<K, V, Cont>::cont_t& map_index<K, V, Cont>::at(const K& key) const {
+        const typename map_index<K, V, Cont>::cont_t& map_index<K, V, Cont>::at(const K& key) const {
             auto f = _index.find(key);
             if (f != _index.end()) { // we have it
                 return *(f->second);
             }
             throw index_out_of_bound();
+        }
+
+        template <typename K, typename V, template <class, class> class Cont>
+        typename map_index<K, V, Cont>::cont_t& map_index<K, V, Cont>::operator[](const K& key) {
+            auto f = _index.find(key);
+            if (f != _index.end()) { // we have it
+                return *(f->second);
+            }
+            auto l = new cont_t();
+            _index[key] = l;
+            return *l;
+        }
+
+        template <typename K, typename V, template <class, class> class Cont>
+        const typename map_index<K, V, Cont>::cont_t& map_index<K, V, Cont>::operator[](const K& key) const {
+            auto f = _index.find(key);
+            if (f != _index.end()) { // we have it
+                return *(f->second);
+            }
+            auto l = new cont_t();
+            _index[key] = l;
+            return *l;
         }
 
     }
