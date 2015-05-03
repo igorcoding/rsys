@@ -5,11 +5,17 @@
 #include "aggregators/aggr.h"
 #include "cfuu.h"
 
-namespace rsys {
-    template <typename T>
-    class cfuu;
+#include <memory>
 
-    template <typename T>
+namespace rsys {
+    namespace cf {
+        template<typename T>
+        class cfuu;
+    }
+
+    using namespace cf;
+
+    template<typename T>
     class config<cfuu<T>> {
     public:
         config();
@@ -18,38 +24,38 @@ namespace rsys {
         ~config();
 
 
-        const cfuu_aggr::aggregator<T>* get_aggregator() const { return _aggregator.get(); }
+        const aggr::aggregator<T>* get_aggregator() const { return _aggregator.get(); }
 
 
-        void set_aggregator(cfuu_aggr::aggregator<T>* aggregator) {
+        void set_aggregator(aggr::aggregator<T>* aggregator) {
             _aggregator.reset(aggregator);
         }
 
     private:
-        std::shared_ptr<cfuu_aggr::aggregator<T>> _aggregator;
+        std::shared_ptr<aggr::aggregator<T>> _aggregator;
 
     };
 
-    template <typename T>
+    template<typename T>
     config<cfuu<T>>::config()
-        : _aggregator(nullptr) {
+            : _aggregator(nullptr) {
 
     }
 
-    template <typename T>
+    template<typename T>
     config<cfuu<T>>::config(const config<cfuu<T>>& rhs)
-        : _aggregator(rhs._aggregator) {
+            : _aggregator(rhs._aggregator) {
 
     }
 
-    template <typename T>
+    template<typename T>
     config<cfuu<T>>::config(config<cfuu<T>>&& rhs)
-        : _aggregator(nullptr) {
+            : _aggregator(nullptr) {
         _aggregator.reset(rhs._aggregator.get());
         rhs._aggregator.reset(nullptr);
     }
 
-    template <typename T>
+    template<typename T>
     config<cfuu<T>>::~config() {
     }
 

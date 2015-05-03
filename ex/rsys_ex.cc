@@ -4,10 +4,10 @@
 #include <sstream>
 #include <iomanip>
 #include <rsys/predictors/sigmoid_predictor.h>
-#include <rsys/models/cfuu/aggregators/aggr_avg.h>
-#include <rsys/models/cfuu/aggregators/aggr_simple.h>
-#include <rsys/models/cfuu/simil/simil_pearson.h>
-#include <rsys/models/cfuu/simil/simil_cos.h>
+#include <rsys/models/cf/aggregators/aggr_avg.h>
+#include <rsys/models/cf/aggregators/aggr_simple.h>
+#include <rsys/models/cf/simil/simil_pearson.h>
+#include <rsys/models/cf/simil/simil_cos.h>
 
 #include "rsys/data_sources/mvector.h"
 #include "rsys/data_sources/sparse_matrix.h"
@@ -18,7 +18,7 @@
 #include "rsys/exporters/svd_mysql_exporter.h"
 #include "rsys/data_sources/mysql_source.h"
 #include "rsys/ratings_data.h"
-#include "rsys/models/cfuu/cfuu.h"
+#include "rsys/models/cf/cfuu.h"
 
 #define DEBUG
 
@@ -40,7 +40,7 @@ int main() {
     std::cout << *rd.item(15).front() << std::endl;
 
     rsys::config<rsys::cfuu<double>> cfuu_conf;
-    cfuu_conf.set_aggregator(new rsys::cfuu_aggr::aggr_simple<double>(std::make_shared<rsys::cfuu_simil::simil_pearson<double>>()));
+    cfuu_conf.set_aggregator(new rsys::aggr::aggr_simple<double>(std::make_shared<rsys::simil::simil_pearson<double>>()));
     rsys::cfuu<double> cfuu(cfuu_conf);
 
     std::vector<item_score<double>> data = {

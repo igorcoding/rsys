@@ -1,69 +1,68 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -std=c++14")
 
-set(SRC_RSYS rsys)
 include_directories(.)
 
 set(HEADER_FILES
-                 # ${SRC_RSYS}/recommender.h
+                 # rsys/recommender.h
                  rsys/ratings_data.h
-                 ${SRC_RSYS}/item_score.h
-                 ${SRC_RSYS}/models/model.h
+                 rsys/item_score.h
+                 rsys/models/model.h
 
-                 ${SRC_RSYS}/models/svd.h
-                 ${SRC_RSYS}/config/svd_config.h
+                 rsys/models/svd.h
+                 rsys/config/svd_config.h
 
-                 ${SRC_RSYS}/models/rbm.h
+                 rsys/models/rbm.h
 
-                 rsys/models/cfuu/cfuu.h
-                 rsys/models/cfuu/cfuu_config.h
-                 rsys/models/cfuu/aggregators/aggr.h
-                 rsys/models/cfuu/aggregators/aggr_avg.h
-                 rsys/models/cfuu/aggregators/aggr_simple.h
-                 rsys/models/cfuu/aggregators/aggr_simple_biased.h
-                 rsys/models/cfuu/simil/simil.h
-                 rsys/models/cfuu/simil/simil_pearson.h
-                 rsys/models/cfuu/simil/simil_cos.h
+                 rsys/models/cf/cfuu.h
+                 rsys/models/cf/cfuu_config.h
+                 rsys/models/cf/aggregators/aggr.h
+                 rsys/models/cf/aggregators/aggr_avg.h
+                 rsys/models/cf/aggregators/aggr_simple.h
+                 rsys/models/cf/aggregators/aggr_simple_biased.h
+                 rsys/models/cf/simil/similarity.h
+                 rsys/models/cf/simil/simil_pearson.h
+                 rsys/models/cf/simil/simil_cos.h
 
-                 ${SRC_RSYS}/config/config.h
+                 rsys/config/config.h
 
-                 ${SRC_RSYS}/db_conf/mysql_config.h
+                 rsys/db_conf/mysql_config.h
 
-                 ${SRC_RSYS}/ensemblers/ensembler.h
+                 rsys/ensemblers/ensembler.h
 
-                 ${SRC_RSYS}/exporters/mysql_exporter.h
-                 ${SRC_RSYS}/exporters/svd_exporter.h
-                 ${SRC_RSYS}/exporters/svd_mysql_exporter.h
-                 ${SRC_RSYS}/exporters/errors.h
+                 rsys/exporters/mysql_exporter.h
+                 rsys/exporters/svd_exporter.h
+                 rsys/exporters/svd_mysql_exporter.h
+                 rsys/exporters/errors.h
 
                  rsys/data_sources/map_index.h
-                 ${SRC_RSYS}/data_sources/data_source.h
-                 ${SRC_RSYS}/data_sources/mvector.h
-                 ${SRC_RSYS}/data_sources/imatrix.h
-                 ${SRC_RSYS}/data_sources/matrix.h
-                 ${SRC_RSYS}/data_sources/map_matrix.h
-                 ${SRC_RSYS}/data_sources/map_mvector.h
-                 ${SRC_RSYS}/data_sources/sparse_matrix.h
-                 ${SRC_RSYS}/data_sources/mexception.h
-                 ${SRC_RSYS}/data_sources/db_source.h
-                 ${SRC_RSYS}/data_sources/mysql_source.h
+                 rsys/data_sources/data_source.h
+                 rsys/data_sources/mvector.h
+                 rsys/data_sources/imatrix.h
+                 rsys/data_sources/matrix.h
+                 rsys/data_sources/map_matrix.h
+                 rsys/data_sources/map_mvector.h
+                 rsys/data_sources/sparse_matrix.h
+                 rsys/data_sources/mexception.h
+                 rsys/data_sources/db_source.h
+                 rsys/data_sources/mysql_source.h
 
-                 ${SRC_RSYS}/util/base_iterator.h
-                 ${SRC_RSYS}/util/traits.h
-                 ${SRC_RSYS}/util/util.h
+                 rsys/util/base_iterator.h
+                 rsys/util/traits.h
+                 rsys/util/util.h
 
-                 ${SRC_RSYS}/predictors/predictor.h
-                 ${SRC_RSYS}/predictors/linear_predictor.h
-                 ${SRC_RSYS}/predictors/sigmoid_predictor.h
+                 rsys/predictors/predictor.h
+                 rsys/predictors/linear_predictor.h
+                 rsys/predictors/sigmoid_predictor.h
                  )
 
-set(SOURCE_FILES ${SRC_RSYS}/data_sources/mexception.cc
-                 ${SRC_RSYS}/core.cc
-                 ${SRC_RSYS}/util/util.cc
+set(SOURCE_FILES rsys/data_sources/mexception.cc
+                 rsys/core.cc
+                 rsys/util/util.cc
 
-                 ${SRC_RSYS}/db_conf/mysql_config.cc
+                 rsys/db_conf/mysql_config.cc
 
-                 ${SRC_RSYS}/exporters/mysql_exporter.cc
-                 ${SRC_RSYS}/exporters/svd_mysql_exporter.cc
+                 rsys/exporters/mysql_exporter.cc
+                 rsys/exporters/svd_mysql_exporter.cc
                  )
 
 add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
