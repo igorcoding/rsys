@@ -38,7 +38,16 @@ namespace rsys {
 
             template<typename T>
             T aggr_avg<T>::aggregate_item(ratings_data<T>& data, size_t user_id, size_t item_id) const {
-                return 0;
+                // TODO: to be revised. Seems weird
+                auto items_rated_by_user = data.user(user_id);
+                T score = (T) 0.0;
+
+                for (auto& i : items_rated_by_user) {
+                    score += i->score;
+                }
+
+                score /= items_rated_by_user.size();
+                return score;
             }
         }
     }

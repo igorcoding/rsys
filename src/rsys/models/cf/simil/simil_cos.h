@@ -69,7 +69,49 @@ namespace rsys {
 
             template<typename T>
             T simil_cos<T>::sim_item(ratings_data<T>& data, size_t item1, size_t item2) {
-                return 0;
+                auto rated_for_item1 = data.item(item1);
+                auto rated_for_item2 = data.item(item2);
+
+                auto item1_it = rated_for_item1.begin();
+                auto item2_it = rated_for_item2.begin();
+
+                T numerator_acc = (T) 0.0;
+                T denom_acc1 = (T) 0.0;
+                T denom_acc2 = (T) 0.0;
+                while (item1_it != rated_for_item1.end() && item2_it != rated_for_item2.end()) {
+                    auto& i1 = *item1_it;
+                    auto& i2 = *item2_it;
+
+                    auto p1 = i1->score;
+                    auto p2 = i2->score;
+
+                    denom_acc1 += p1 * p1;
+                    denom_acc2 += p2 * p2;
+                    if (i1->user_id == i2->user_id) {
+                        numerator_acc += p1 * p2;
+
+                        ++item1_it;
+                        ++item2_it;
+                    } else if (i1->user_id < i2->user_id) {
+                        ++item1_it;
+                    } else {
+                        ++item2_it;
+                    }
+                }
+
+                while (item1_it != rated_for_item1.end()) {
+                    auto p1 = (*item1_it)->score;
+                    denom_acc1 += p1 * p1;
+                    ++item1_it;
+                }
+
+                while (item2_it != rated_for_item2.end()) {
+                    auto p2 = (*item2_it)->score;
+                    denom_acc2 += p2 * p2;
+                    ++item2_it;
+                }
+
+                return numerator_acc / (std::sqrt(denom_acc1 * denom_acc2));
             }
         }
     }

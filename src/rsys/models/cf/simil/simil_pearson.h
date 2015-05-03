@@ -62,7 +62,42 @@ namespace rsys {
 
             template<typename T>
             T simil_pearson<T>::sim_item(ratings_data<T>& data, size_t item1, size_t item2) {
-                return 0;
+                auto item1_avg = data.item_avg(item1);
+                auto item2_avg = data.item_avg(item2);
+
+                auto rated_for_item1 = data.item(item1);
+                auto rated_for_item2 = data.item(item2);
+
+                auto item1_it = rated_for_item1.begin();
+                auto item2_it = rated_for_item2.begin();
+
+                T numerator_acc = (T) 0.0;
+                T denom_acc1 = (T) 0.0;
+                T denom_acc2 = (T) 0.0;
+                while (item1_it != rated_for_item1.end() && item2_it != rated_for_item2.end()) {
+                    auto& i1 = *item1_it;
+                    auto& i2 = *item2_it;
+                    if (i1->user_id == i2->user_id) {
+                        auto p1 = (i1->score - item1_avg);
+                        auto p2 = (i2->score - item2_avg);
+                        numerator_acc += p1 * p2;
+                        denom_acc1 += p1 * p1;
+                        denom_acc2 += p2 * p2;
+
+                        ++item1_it;
+                        ++item2_it;
+                    } else if (i1->user_id < i2->user_id) {
+                        ++item1_it;
+                    } else {
+                        ++item2_it;
+                    }
+                }
+
+                auto d = std::sqrt(denom_acc1 * denom_acc2);
+                if (d == 0) {
+                    return 0.0;
+                }
+                return numerator_acc / d;
             }
         }
     }

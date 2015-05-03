@@ -32,7 +32,7 @@ namespace rsys {
             template<typename T>
             T aggr_simple_biased<T>::aggregate_user(ratings_data<T>& data, size_t user_id, size_t item_id) const {
                 auto users_rated_item = data.item(item_id);
-                T score = data.user_avg(user_id);
+                T score = (T) 0.0;
 
                 T k = (T) 0.0;
                 for (auto& u : users_rated_item) {
@@ -42,12 +42,29 @@ namespace rsys {
                 }
 
                 score *= 1.0 / k;
+                score += data.user_avg(user_id);
                 return score;
             }
 
             template<typename T>
             T aggr_simple_biased<T>::aggregate_item(ratings_data<T>& data, size_t user_id, size_t item_id) const {
-                return 0;
+                auto items_rated_by_user = data.user(user_id);
+                T score = (T) 0.0;
+
+                T k = (T) 0.0;
+                for (auto& i : items_rated_by_user) {
+                    auto s = _similarity->sim_item(data, item_id, i->item_id);
+                    score += s * (i->score - data.item_avg(i->item_id));
+                    k += s;
+                }
+
+                if (k == 0) {
+                    return 0;
+                }
+
+                score *= 1.0 / k;
+                score += data.item_avg(item_id);
+                return score;
             }
         }
     }

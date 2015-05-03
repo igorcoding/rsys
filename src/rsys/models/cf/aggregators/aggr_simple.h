@@ -46,7 +46,22 @@ namespace rsys {
 
             template<typename T>
             T aggr_simple<T>::aggregate_item(ratings_data<T>& data, size_t user_id, size_t item_id) const {
-                return 0;
+                auto items_rated_by_user = data.user(user_id);
+                T score = (T) 0.0;
+
+                T k = (T) 0.0;
+                for (auto& i : items_rated_by_user) {
+                    auto s = _similarity->sim_item(data, item_id, i->item_id);
+                    score += s * i->score;
+                    k += s;
+                }
+
+                if (k == 0) {
+                    return 0.0;
+                }
+
+                score *= 1.0 / k;
+                return score;
             }
         }
     }

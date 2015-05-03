@@ -13,8 +13,12 @@ set(HEADER_FILES
 
                  rsys/models/rbm.h
 
+                 rsys/models/cf/cf_base.h
+                 rsys/models/cf/cf_config.h
                  rsys/models/cf/cfuu.h
                  rsys/models/cf/cfuu_config.h
+                 rsys/models/cf/cfii.h
+                 rsys/models/cf/cfii_config.h
                  rsys/models/cf/aggregators/aggr.h
                  rsys/models/cf/aggregators/aggr_avg.h
                  rsys/models/cf/aggregators/aggr_simple.h
@@ -65,5 +69,5 @@ set(SOURCE_FILES rsys/data_sources/mexception.cc
                  rsys/exporters/svd_mysql_exporter.cc
                  )
 
-add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES})
+add_library(rsys SHARED ${HEADER_FILES} ${SOURCE_FILES} )
 target_link_libraries(rsys mysqlcppconn)
