@@ -57,7 +57,7 @@ namespace rsys {
 
         template<typename T>
         std::vector<typename cf_base<T>::item_score_t> cf_base<T>::recommend(size_t user_id, int k) noexcept {
-            return std::vector<cf_base<T>::item_score_t>();
+            return std::vector<item_score_t>();
         }
     }  // namespace cf
 }  // namespace rsys

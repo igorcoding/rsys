@@ -11,7 +11,8 @@ set(HEADER_FILES
                  rsys/models/svd.h
                  rsys/config/svd_config.h
 
-                 rsys/models/rbm.h
+                 rsys/models/rbm/rbm.h
+                 rsys/models/rbm/rbm_config.h
 
                  rsys/models/cf/cf_base.h
                  rsys/models/cf/cf_config.h

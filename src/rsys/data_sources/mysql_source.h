@@ -32,8 +32,12 @@ namespace rsys {
                           _current(nullptr),
                           _finished(false) {
                     if (_data != nullptr) {
-                        _data->next();
-                        convert_data_to_current();
+                        if (_data->next()) {
+                            convert_data_to_current();
+                        } else {
+                            _data = nullptr;
+                            _finished = true;
+                        }
                     }
                 }
 

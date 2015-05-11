@@ -30,12 +30,47 @@ typedef rsys::recommender<double, svd> rsys_t;
 typedef svd<double> svd_t;
 
 
+int cf_example();
 int basic_example();
 int sigmoid_example();
 int movielens_example();
 int my_data_example();
 
 int main() {
+    svd_t::config_t c(1, 1091, -1, 4, 0.005);
+    c.set_max_iterations(1000);
+    c.assign_seq_ids();
+
+    svd_t r(c);
+
+    exporters::svd_mysql_config mysql_conf;
+    mysql_conf.db_name("vkrsys");
+    mysql_conf.user("vkrsys_user");
+    mysql_conf.password("vkrsys_password");
+
+    mysql_conf.users_table("auth_user")
+              .items_table("app_song");
+
+    mysql_source<double> source(mysql_conf, "SELECT user_id, song_id, rating FROM app_rating ORDER BY user_id, song_id");
+
+    r.learn_offline(source.begin(), source.end());
+
+
+    int basic = 0, sigmoid = 0, mlens = 0, my_data = 0;
+
+//    basic = basic_example();
+//    sigmoid = sigmoid_example();
+//    mlens = movielens_example();
+//    my_data = my_data_example();
+    return basic + sigmoid + mlens + my_data;
+}
+
+double rand_max = static_cast <double> (RAND_MAX);
+double _rand() {
+    return static_cast <double> (rand()) / rand_max;
+}
+
+int cf_example() {
     rsys::ratings_data<double> rd;
     rd.add(item_score<double>(1, 15, 4.3));
     std::cout << *rd.user(1).front() << std::endl;
@@ -56,21 +91,8 @@ int main() {
 
     cfii.train(data.begin(), data.end());
     std::cout << cfii.predict(1, 32) << std::endl;
-
-
-    int basic = 0, sigmoid = 0, mlens = 0, my_data = 0;
-
-//    basic = basic_example();
-//    sigmoid = sigmoid_example();
-//    mlens = movielens_example();
-//    my_data = my_data_example();
-    return basic + sigmoid + mlens + my_data;
 }
 
-double rand_max = static_cast <double> (RAND_MAX);
-double _rand() {
-    return static_cast <double> (rand()) / rand_max;
-}
 
 int basic_example() {
 //    rsys_t::datasource_t m(5, 5, -1);
