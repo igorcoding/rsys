@@ -59,20 +59,12 @@ namespace rsys { namespace ds {
 
         template <typename K, typename T>
         T& map_mvector<K,T>::operator [](const K& row_key) {
-            auto it = _m.find(row_key);
-            if (it != _m.end()) {
-                return it->second;
-            }
-            throw index_out_of_bound();
+            return _m[row_key];
         }
 
         template <typename K, typename T>
         const T& map_mvector<K,T>::operator [](const K& row_key) const {
-            auto it = _m.find(row_key);
-            if (it != _m.end()) {
-                return it->second;
-            }
-            throw index_out_of_bound();
+            return _m[row_key];
         }
 
         template <typename K, typename T>

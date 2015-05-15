@@ -19,6 +19,8 @@ namespace rsys {
             cfii(config_t&& conf);
             cfii(const config_t& conf);
 
+            template<typename FwdIt>
+            void train(FwdIt begin, FwdIt end, bool clear = true);
             T predict(size_t user_id, size_t item_id) noexcept;
         };
 
@@ -31,6 +33,13 @@ namespace rsys {
         template<typename T>
         cfii<T>::cfii(const config_t& conf)
                 : cf_base<T>(conf) {
+
+        }
+
+        template<typename T>
+        template<typename FwdIt>
+        void cfii<T>::train(FwdIt begin, FwdIt end, bool clear) {
+            cf_base<T>::train(begin, end, clear);
 
         }
 

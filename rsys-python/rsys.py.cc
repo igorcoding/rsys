@@ -1,4 +1,12 @@
 #include "rsys/models/svd.h"
+#include "rsys/models/cf/cfuu.h"
+#include "rsys/models/cf/cfii.h"
+#include "rsys/models/cf/simil/simil_pearson.h"
+#include "rsys/models/cf/simil/simil_cos.h"
+#include "rsys/models/cf/aggregators/aggr_avg.h"
+#include "rsys/models/cf/aggregators/aggr_simple.h"
+#include "rsys/models/cf/aggregators/aggr_simple_biased.h"
+
 #include "rsys/data_sources/matrix.h"
 #include "rsys/data_sources/mvector.h"
 #include "rsys/exporters/svd_mysql_exporter.h"
@@ -24,6 +32,9 @@ namespace boost {
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <rsys/predictors/sigmoid_predictor.h>
+#include <rsys/models/cf/simil/similarity.h>
+#include <rsys/models/cf/simil/simil_pearson.h>
+#include <rsys/models/cf/simil/simil_cos.h>
 
 using namespace boost::python;
 
@@ -247,7 +258,7 @@ void set_predictor(typename rsys::template svd<T>::config_t& self, const std::st
 }
 
 template <typename T>
-void export_rsys() {
+void export_svd() {
     using namespace rsys;
     typedef svd<T> t_svd;
     typedef typename t_svd::config_t config_t;
@@ -324,14 +335,42 @@ void export_rsys() {
            .def("recommend", &t_svd::recommend, (arg("user_id"), arg("count")));
 }
 
+
+template <typename T>
+void export_cf() {
+    object _module(handle<>(borrowed(PyImport_AddModule("rsys.cf"))));
+    scope().attr("cf") = _module;
+    scope _scope = _module;
+
+    using namespace rsys::cf;
+
+    class_<simil::similarity<T>, std::shared_ptr<simil::similarity<T>>, boost::noncopyable>("Similarity", no_init);
+    class_<simil::simil_pearson<T>, std::shared_ptr<simil::simil_pearson<T>>, bases<simil::similarity<T>>>("SimilarityPearson",init<>());
+    class_<simil::simil_cos<T>, std::shared_ptr<simil::simil_cos<T>>, bases<simil::similarity<T>>>("SimilarityCos",init<>());
+    register_ptr_to_python<std::shared_ptr<simil::similarity<T>>>();
+
+    class_<aggr::aggregator<T>, boost::noncopyable>("Aggregator", no_init);
+    class_<aggr::aggr_avg<T>, bases<aggr::aggregator<T>>>("AggregatorAvg", init<>());
+    class_<aggr::aggr_simple<T>, bases<aggr::aggregator<T>>>("AggregatorSimple", init<std::shared_ptr<simil::similarity<T>>>());
+    class_<aggr::aggr_simple_biased<T>, bases<aggr::aggregator<T>>>("AggregatorSimpleBiased", init<std::shared_ptr<simil::similarity<T>>>());
+
+
+}
+
+
+template <typename T>
+void export_all() {
+    export_data_sources<T>();
+    export_predictors<T>();
+    export_db_conf<T>();
+    export_exporters<T>();
+    export_svd<T>();
+    export_cf<T>();
+}
+
 BOOST_PYTHON_MODULE(rsys) {
     object package = scope();
     package.attr("__path__") = "rsys";
 
-
-    export_data_sources<double>();
-    export_predictors<double>();
-    export_db_conf<double>();
-    export_exporters<double>();
-    export_rsys<double>();
+    export_all<double>();
 }

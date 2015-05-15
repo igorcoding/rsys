@@ -37,23 +37,25 @@ int movielens_example();
 int my_data_example();
 
 int main() {
-    svd_t::config_t c(1, 1091, -1, 4, 0.005);
-    c.set_max_iterations(1000);
-    c.assign_seq_ids();
+//    svd_t::config_t c(1, 1091, -1, 4, 0.005);
+//    c.set_max_iterations(1000);
+//    c.assign_seq_ids();
+//
+//    svd_t r(c);
+//
+//    exporters::svd_mysql_config mysql_conf;
+//    mysql_conf.db_name("vkrsys");
+//    mysql_conf.user("vkrsys_user");
+//    mysql_conf.password("vkrsys_password");
+//
+//    mysql_conf.users_table("auth_user")
+//              .items_table("app_song");
+//
+//    mysql_source<double> source(mysql_conf, "SELECT user_id, song_id, rating FROM app_rating ORDER BY user_id, song_id");
+//
+//    r.learn_offline(source.begin(), source.end());
 
-    svd_t r(c);
-
-    exporters::svd_mysql_config mysql_conf;
-    mysql_conf.db_name("vkrsys");
-    mysql_conf.user("vkrsys_user");
-    mysql_conf.password("vkrsys_password");
-
-    mysql_conf.users_table("auth_user")
-              .items_table("app_song");
-
-    mysql_source<double> source(mysql_conf, "SELECT user_id, song_id, rating FROM app_rating ORDER BY user_id, song_id");
-
-    r.learn_offline(source.begin(), source.end());
+    movielens_example();
 
 
     int basic = 0, sigmoid = 0, mlens = 0, my_data = 0;
@@ -65,21 +67,16 @@ int main() {
     return basic + sigmoid + mlens + my_data;
 }
 
-double rand_max = static_cast <double> (RAND_MAX);
-double _rand() {
-    return static_cast <double> (rand()) / rand_max;
-}
 
 int cf_example() {
-    rsys::ratings_data<double> rd;
-    rd.add(item_score<double>(1, 15, 4.3));
-    std::cout << *rd.user(1).front() << std::endl;
-    std::cout << *rd.item(15).front() << std::endl;
+//    rsys::ratings_data<double> rd;
+//    rd.add(item_score<double>(1, 15, 4.3));
+//    std::cout << *rd.user(1).front() << std::endl;
+//    std::cout << *rd.item(15).front() << std::endl;
 
-    rsys::config<rsys::cf::cfii<double>> _conf;
-//    _conf.set_aggregator(new rsys::cf::aggr::aggr_avg<double>());
-    _conf.set_aggregator(new rsys::cf::aggr::aggr_simple_biased<double>(std::make_shared<rsys::cf::simil::simil_pearson<double>>()));
-    rsys::cf::cfii<double> cfii(_conf);
+    rsys::config<rsys::cf::cfuu<double>> _conf;
+    _conf.set_aggregator(new rsys::cf::aggr::aggr_simple_biased<double>(new rsys::cf::simil::simil_cos<double>()));
+    rsys::cf::cfuu<double> cf(_conf);
 
     std::vector<item_score<double>> data = {
             { 1, 15, 4.3 },
@@ -89,8 +86,19 @@ int cf_example() {
             { 3, 32, 5 }
     };
 
-    cfii.train(data.begin(), data.end());
-    std::cout << cfii.predict(1, 32) << std::endl;
+    cf.train(data.begin(), data.end());
+//    std::cout << cf.predict(1, 32) << std::endl;
+
+    std::cout << std::endl << "Recommendations for (1, 100): \n";
+    auto recommendations = cf.recommend(1, 100);
+
+    std::cout << "[\n";
+    for (const auto& v : recommendations) {
+        std::cout << "\t" << v << ",\n";
+    }
+    std::cout << "]";
+    std::cout << std::endl;
+    return 0;
 }
 
 
@@ -255,7 +263,7 @@ int movielens_example() {
         auto s = svd_t::item_score_t((size_t) user_id, (size_t) item_id, rating);
         users.push_back(s.user_id);
         items.push_back(s.item_id);
-        if (_rand() < 0.67) {
+        if (rand01() < 0.67) {
             training_set.push_back(s);
         } else {
             test_set.push_back(s);
@@ -266,42 +274,58 @@ int movielens_example() {
     std::cout << training_set.size() << " " << test_set.size() << std::endl;
     std::cout << "parsed" << std::endl;
 
-    svd_t::config_t c(users_count, items_count, -1, 4, 0.005, 100, false);
-    c.set_users_ids(users);
-    c.set_items_ids(items);
-    c.set_predictor<predictors::linear_predictor>();
-    svd_t svd(c);
+    rsys::config<rsys::cf::cfuu<double>> _conf;
+    _conf.set_aggregator(new rsys::cf::aggr::aggr_simple_biased<double>(new rsys::cf::simil::simil_pearson<double>));
+    rsys::cf::cfuu<double> cf(_conf);
 
-    svd.learn_online(training_set.begin(), training_set.end());
-    std::cout << "Finished" << std::endl;
+    cf.train(training_set.begin(), training_set.end());
 
-    auto deltas = {
-            0.0,
-            0.1,
-            0.5,
-            0.7,
-            1.0,
-            1.2
-    };
-    for (auto& delta : deltas) {
-        size_t correct = 0;
-        for (size_t i = 0; i < test_set.size(); ++i) {
-            auto &t = test_set[i];
+    std::cout << std::endl << "Recommendations for (1, 100): \n";
+    auto recommendations = cf.recommend(1, 20);
 
-            auto actual_score = t.score;
-            auto predicted_score = std::round(svd.predict(t.user_id, t.item_id));
-
-
-            if (actual_score - delta < predicted_score && predicted_score < actual_score + delta) {
-                correct += 1;
-            }
-        }
-
-        auto accuracy = ((double) correct) / ((double) test_set.size());
-
-
-        std::cout << "Delta = " << delta << "Accuracy: " << correct << " / " << test_set.size() << " = " << accuracy;
+    std::cout << "[\n";
+    for (const auto& v : recommendations) {
+        std::cout << "\t" << v << ",\n";
     }
+    std::cout << "]";
+    std::cout << std::endl;
+
+//    svd_t::config_t c(users_count, items_count, -1, 4, 0.005, 100, false);
+//    c.set_users_ids(users);
+//    c.set_items_ids(items);
+//    c.set_predictor<predictors::linear_predictor>();
+//    svd_t svd(c);
+//
+//    svd.learn_online(training_set.begin(), training_set.end());
+//    std::cout << "Finished" << std::endl;
+//
+//    auto deltas = {
+//            0.0,
+//            0.1,
+//            0.5,
+//            0.7,
+//            1.0,
+//            1.2
+//    };
+//    for (auto& delta : deltas) {
+//        size_t correct = 0;
+//        for (size_t i = 0; i < test_set.size(); ++i) {
+//            auto &t = test_set[i];
+//
+//            auto actual_score = t.score;
+//            auto predicted_score = std::round(svd.predict(t.user_id, t.item_id));
+//
+//
+//            if (actual_score - delta < predicted_score && predicted_score < actual_score + delta) {
+//                correct += 1;
+//            }
+//        }
+//
+//        auto accuracy = ((double) correct) / ((double) test_set.size());
+//
+//
+//        std::cout << "Delta = " << delta << "Accuracy: " << correct << " / " << test_set.size() << " = " << accuracy;
+//    }
 //    std::cout << "Precision: " << correct << " / " << test_set.size() << " = " << accuracy;
 //    std::cout << "Recall: " << correct << " / " << test_set.size() << " = " << accuracy;
 

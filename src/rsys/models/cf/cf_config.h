@@ -19,7 +19,7 @@ namespace rsys {
             ~cf_config();
 
 
-            const aggr::aggregator<T>* get_aggregator() const { return _aggregator.get(); }
+            aggr::aggregator<T>* get_aggregator() { return _aggregator.get(); }
 
 
             void set_aggregator(aggr::aggregator<T>* aggregator) {

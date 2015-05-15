@@ -2,8 +2,6 @@
 #define SVD_H
 
 #include "model.h"
-#include "rsys/data_sources/imatrix.h"
-#include "rsys/data_sources/matrix.h"
 #include "rsys/data_sources/map_matrix.h"
 #include "rsys/data_sources/map_mvector.h"
 #include "rsys/item_score.h"
@@ -85,9 +83,8 @@ namespace rsys {
 
     template<typename T>
     svd<T>::svd(const config_t& conf)
-            : _config(conf),
-              _users_count(_config.users_count()),
-              _items_count(_config.items_count()),
+            : model<T>(_config.users_count(), _config.items_count()),
+              _config(conf),
               _features_count(_config.features_count()),
               _pU(conf.get_users_ids(), _features_count),
               _pI(conf.get_items_ids(), _features_count),
@@ -97,6 +94,7 @@ namespace rsys {
 
               _exporter(_config.exporter()),
               _predictor(_config.predictor()) {
+        srand(static_cast<unsigned int>(time(nullptr)));
 
         bool import_res = false;
         if (_exporter != nullptr) {
@@ -112,18 +110,13 @@ namespace rsys {
     template<typename T>
     void svd<T>::generate_rand_values() {
         std::cout << "generating random" << std::endl;
-        srand(static_cast<unsigned int>(time(nullptr)));
-        double rand_max = static_cast <double> (RAND_MAX);
 
-        for (auto& i : _config.get_users_ids()) {
-            for (size_t j = 0; j < _features_count; ++j) {
-                _pU.set(i, j, static_cast <double> (rand()) / rand_max);
+        for (size_t j = 0; j < _features_count; ++j) {
+            for (auto& i : _config.get_users_ids()) {
+                _pU.set(i, j, rand01());
             }
-        }
-
-        for (auto& i : _config.get_items_ids()) {
-            for (size_t j = 0; j < _features_count; ++j) {
-                _pI.set(i, j, static_cast <double> (rand()) / rand_max);
+            for (auto& i : _config.get_items_ids()) {
+                _pI.set(i, j, rand01());
             }
         }
     }
@@ -148,9 +141,8 @@ namespace rsys {
         auto& new_row = _pU.add_row(user_id);
         _bu.add_row(user_id);
 
-        double rand_max = static_cast <double> (RAND_MAX);
         for (auto& elem : new_row) {
-            elem = static_cast <double> (rand()) / rand_max;
+            elem = rand01();
         }
     }
 
@@ -159,10 +151,9 @@ namespace rsys {
         auto new_row = _pU.add_rows(users);
         _bu.add_rows(users);
 
-        double rand_max = static_cast <double> (RAND_MAX);
         for (auto& row : new_row) {
             for (auto& elem : *row) {
-                elem = static_cast <double> (rand()) / rand_max;
+                elem = rand01();
             }
         }
     }
@@ -172,9 +163,8 @@ namespace rsys {
         auto& new_row = _pI.add_row(item_id);
         _bi.add_row(item_id);
 
-        double rand_max = static_cast <double> (RAND_MAX);
         for (auto& elem : new_row) {
-            elem = static_cast <double> (rand()) / rand_max;
+            elem = rand01();
         }
     }
 
@@ -183,10 +173,9 @@ namespace rsys {
         auto new_row = _pI.add_rows(items);
         _bi.add_rows(items);
 
-        double rand_max = static_cast <double> (RAND_MAX);
         for (auto& row : new_row) {
             for (auto& elem : *row) {
-                elem = static_cast <double> (rand()) / rand_max;
+                elem = rand01();
             }
         }
     }

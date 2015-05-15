@@ -12,8 +12,10 @@ namespace rsys {
             public:
                 aggr_avg();
 
-                virtual T aggregate_user(ratings_data<T>& data, size_t user_id, size_t item_id) const;
-                virtual T aggregate_item(ratings_data<T>& data, size_t user_id, size_t item_id) const;
+
+                virtual void train_user(ratings_data<T>& data);
+                virtual T aggregate_user(ratings_data<T>& data, size_t user_id, size_t item_id);
+                virtual T aggregate_item(ratings_data<T>& data, size_t user_id, size_t item_id);
             private:
 
             };
@@ -24,7 +26,7 @@ namespace rsys {
             }
 
             template<typename T>
-            T aggr_avg<T>::aggregate_user(ratings_data<T>& data, size_t user_id, size_t item_id) const {
+            T aggr_avg<T>::aggregate_user(ratings_data<T>& data, size_t user_id, size_t item_id) {
                 auto users_rated_item = data.item(item_id);
                 T score = (T) 0.0;
 
@@ -32,12 +34,14 @@ namespace rsys {
                     score += u->score;
                 }
 
-                score /= users_rated_item.size();
+                if (users_rated_item.size() != 0) {
+                    score /= users_rated_item.size();
+                }
                 return score;
             }
 
             template<typename T>
-            T aggr_avg<T>::aggregate_item(ratings_data<T>& data, size_t user_id, size_t item_id) const {
+            T aggr_avg<T>::aggregate_item(ratings_data<T>& data, size_t user_id, size_t item_id) {
                 // TODO: to be revised. Seems weird
                 auto items_rated_by_user = data.user(user_id);
                 T score = (T) 0.0;
@@ -45,9 +49,15 @@ namespace rsys {
                 for (auto& i : items_rated_by_user) {
                     score += i->score;
                 }
-
-                score /= items_rated_by_user.size();
+                if (items_rated_by_user.size() != 0) {
+                    score /= items_rated_by_user.size();
+                }
                 return score;
+            }
+
+            template <typename T>
+            void aggr_avg<T>::train_user(ratings_data<T>& data) {
+
             }
         }
     }

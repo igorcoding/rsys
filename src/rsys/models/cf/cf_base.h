@@ -7,6 +7,8 @@
 #include "rsys/ratings_data.h"
 #include "aggregators/aggr.h"
 
+#include <queue>
+
 namespace rsys {
     namespace cf {
 
@@ -18,6 +20,7 @@ namespace rsys {
 
             cf_base(config_t&& conf);
             cf_base(const config_t& conf);
+            ~cf_base();
 
             template<typename FwdIt>
             void train(FwdIt begin, FwdIt end, bool clear = true);
@@ -26,7 +29,7 @@ namespace rsys {
 
         protected:
             config_t _conf;
-            const aggr::aggregator<T>* _aggregator;
+            aggr::aggregator<T>* _aggregator;
             ratings_data<T> _data;
         };
 
@@ -46,6 +49,10 @@ namespace rsys {
         }
 
         template<typename T>
+        cf_base<T>::~cf_base() {
+        }
+
+        template<typename T>
         template<typename FwdIt>
         void cf_base<T>::train(FwdIt begin, FwdIt end, bool clear) {
             if (clear) {
@@ -57,7 +64,36 @@ namespace rsys {
 
         template<typename T>
         std::vector<typename cf_base<T>::item_score_t> cf_base<T>::recommend(size_t user_id, int k) noexcept {
-            return std::vector<item_score_t>();
+            auto comp = [](const item_score_t& a, const item_score_t& b) {
+                return a.score > b.score;
+            };
+            typedef std::priority_queue<item_score_t, std::vector<item_score_t>, decltype(comp)> heap_t;
+
+            heap_t heap(comp);
+
+            auto ik = static_cast<size_t>(k);
+
+            for (auto it = _data.items_iter_begin(); it != _data.items_iter_end(); ++it) {
+                size_t i = *it;
+
+                auto score = predict(user_id, i);
+                item_score_t s(user_id, i, score);
+
+                if (k > 0 && heap.size() == ik) {
+                    heap.pop();
+                }
+                heap.push(s);
+            }
+
+            auto heap_size = heap.size();
+            std::vector<item_score_t> ans(heap_size);
+            auto ans_it = ans.rbegin();
+            for (size_t i = 0; i < heap_size; ++i) {
+                *(ans_it++) = heap.top();
+                heap.pop();
+            }
+
+            return ans;
         }
     }  // namespace cf
 }  // namespace rsys

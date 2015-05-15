@@ -7,6 +7,7 @@
 #include <list>
 #include <map>
 #include <algorithm>
+#include <set>
 
 namespace rsys {
     template <typename T>
@@ -28,7 +29,16 @@ namespace rsys {
         T user_avg(size_t u) const;
         T item_avg(size_t i) const;
 
+        std::set<size_t>::const_iterator users_iter_begin() const { return _users_indexes.begin(); }
+        std::set<size_t>::const_iterator users_iter_end() const { return _users_indexes.end(); }
+
+        std::set<size_t>::const_iterator items_iter_begin() const { return _items_indexes.begin(); }
+        std::set<size_t>::const_iterator items_iter_end() const { return _items_indexes.end(); }
+
     private:
+        std::set<size_t> _users_indexes;
+        std::set<size_t> _items_indexes;
+
         index_t _users_index;
         index_t _items_index;
         std::list<iscore_t*> _scores;
@@ -51,20 +61,24 @@ namespace rsys {
     template <typename T> inline
     void ratings_data<T>::add(const item_score<T>& score) {
         iscore_t* s = new iscore_t(score);
+
+        _users_indexes.insert(s->user_id);
+        _items_indexes.insert(s->item_id);
+
         _scores.push_back(s);
         _users_index.add(s->user_id, s);
         _items_index.add(s->item_id, s);
 
-        auto users_prev_size = _users_avg.size();
-        auto items_prev_size = _items_avg.size();
+        auto users_size = _users_index.at(s->user_id).size();
+        auto items_size = _items_index.at(s->item_id).size();
 
-        _users_avg[s->user_id] *= users_prev_size;
+        _users_avg[s->user_id] *= users_size - 1;
         _users_avg[s->user_id] += s->score;
-        _users_avg[s->user_id] /= _users_avg.size();
+        _users_avg[s->user_id] /= users_size;
 
-        _items_avg[s->item_id] *= items_prev_size;
+        _items_avg[s->item_id] *= items_size - 1;
         _items_avg[s->item_id] += s->score;
-        _items_avg[s->item_id] /= _items_avg.size();
+        _items_avg[s->item_id] /= items_size;
     }
 
     template <typename T>

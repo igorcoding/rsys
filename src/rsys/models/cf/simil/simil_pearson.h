@@ -54,10 +54,7 @@ namespace rsys {
                 }
 
                 auto d = std::sqrt(denom_acc1 * denom_acc2);
-                if (d == 0) {
-                    return 0.0;
-                }
-                return numerator_acc / d;
+                return (numerator_acc + 0.01) / (d + 0.01);
             }
 
             template<typename T>
@@ -94,10 +91,7 @@ namespace rsys {
                 }
 
                 auto d = std::sqrt(denom_acc1 * denom_acc2);
-                if (d == 0) {
-                    return 0.0;
-                }
-                return numerator_acc / d;
+                return (numerator_acc + 0.01) / (d + 0.01);
             }
         }
     }
