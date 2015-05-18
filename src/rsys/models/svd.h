@@ -79,6 +79,9 @@ namespace rsys {
 
         std::shared_ptr<exporter_t> _exporter;
         std::shared_ptr<predictor_t> _predictor;
+
+        double _rmse;
+        double _prev_rmse;
     };
 
     template<typename T>
@@ -93,7 +96,10 @@ namespace rsys {
               _mu(0),
 
               _exporter(_config.exporter()),
-              _predictor(_config.predictor()) {
+              _predictor(_config.predictor()),
+
+              _rmse(1.0),
+              _prev_rmse(0.0) {
         srand(static_cast<unsigned int>(time(nullptr)));
 
         bool import_res = false;
@@ -223,13 +229,13 @@ namespace rsys {
         auto print_results = _config.print_results();
 
         int iteration = 1;
-        double rmse = 1.0;
-        double old_rmse = 0.0;
+        double rmse = _rmse;
+        double old_rmse = _prev_rmse;
         double eps = 0.00001;
         double learning_rate = _config.learning_rate();
         double threshold = 0.01;
 
-        while (fabs(rmse - old_rmse) > eps) {
+        while (iteration == 1 || fabs(rmse - old_rmse) > eps) {
             std::cout << "Iteration #" << iteration << ". ";
             old_rmse = rmse;
 
@@ -250,6 +256,8 @@ namespace rsys {
             }
             iteration++;
         }
+        _rmse = rmse;
+        _prev_rmse = old_rmse;
 
         if (print_results) {
             std::cout << "\n=== Results ===" << "\n";

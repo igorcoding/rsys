@@ -344,15 +344,15 @@ void export_cf() {
 
     using namespace rsys::cf;
 
-    class_<simil::similarity<T>, std::shared_ptr<simil::similarity<T>>, boost::noncopyable>("Similarity", no_init);
-    class_<simil::simil_pearson<T>, std::shared_ptr<simil::simil_pearson<T>>, bases<simil::similarity<T>>>("SimilarityPearson",init<>());
-    class_<simil::simil_cos<T>, std::shared_ptr<simil::simil_cos<T>>, bases<simil::similarity<T>>>("SimilarityCos",init<>());
+    class_<simil::similarity<T>, boost::noncopyable>("Similarity", no_init);
+    class_<simil::simil_pearson<T>, bases<simil::similarity<T>>>("SimilarityPearson",init<>());
+    class_<simil::simil_cos<T>, bases<simil::similarity<T>>>("SimilarityCos",init<>());
     register_ptr_to_python<std::shared_ptr<simil::similarity<T>>>();
 
     class_<aggr::aggregator<T>, boost::noncopyable>("Aggregator", no_init);
     class_<aggr::aggr_avg<T>, bases<aggr::aggregator<T>>>("AggregatorAvg", init<>());
-    class_<aggr::aggr_simple<T>, bases<aggr::aggregator<T>>>("AggregatorSimple", init<std::shared_ptr<simil::similarity<T>>>());
-    class_<aggr::aggr_simple_biased<T>, bases<aggr::aggregator<T>>>("AggregatorSimpleBiased", init<std::shared_ptr<simil::similarity<T>>>());
+    class_<aggr::aggr_simple<T>, bases<aggr::aggregator<T>>>("AggregatorSimple", init<simil::similarity<T>*>());
+    class_<aggr::aggr_simple_biased<T>, bases<aggr::aggregator<T>>>("AggregatorSimpleBiased", init<simil::similarity<T>*>());
 
 
 }
