@@ -101,15 +101,13 @@ namespace rsys {
               _rmse(1.0),
               _prev_rmse(0.0) {
         srand(static_cast<unsigned int>(time(nullptr)));
+        generate_rand_values();
 
         bool import_res = false;
         if (_exporter != nullptr) {
             import_res = _exporter->import_model(*this);
         } else {
             std::cout << "_exporter == nullptr" << std::endl;
-        }
-        if (!import_res) {
-            generate_rand_values();
         }
     }
 

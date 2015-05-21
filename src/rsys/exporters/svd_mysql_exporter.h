@@ -375,7 +375,8 @@ namespace rsys {
             res->next();
             int users_count = res->getInt(1);
             if (users_count != (int) m.get_config().users_count()) {
-                throw model_import_error("Users counts don\'t match");
+                std::cerr << "[Warning] Users counts don\'t match" << std::endl;
+//                throw model_import_error("Users counts don\'t match");
             }
 
 
@@ -408,7 +409,8 @@ namespace rsys {
             res->next();
             int items_count = res->getInt(1);
             if (items_count != (int) m.get_config().items_count()) {
-                throw model_import_error("Items counts don\'t match");
+                std::cerr << "[Warning] Items counts don\'t match" << std::endl;
+//                throw model_import_error("Items counts don\'t match");
             }
 
 
@@ -439,7 +441,8 @@ namespace rsys {
             res->next();
             int users_count = res->getInt(1);
             if (users_count != (int) m.get_config().users_count()) {
-                throw model_import_error("Users counts don\'t match");
+                std::cerr << "[Warning] Users counts don\'t match" << std::endl;
+//                throw model_import_error("Users counts don\'t match");
             }
 
             res.reset(stmt->executeQuery("SELECT user_id, value FROM " + bu));
@@ -466,7 +469,8 @@ namespace rsys {
             res->next();
             int items_count = res->getInt(1);
             if (items_count != (int) m.get_config().items_count()) {
-                throw model_import_error("Items counts don\'t match");
+                std::cerr << "[Warning] Items counts don\'t match" << std::endl;
+//                throw model_import_error("Items counts don\'t match");
             }
 
             res.reset(stmt->executeQuery("SELECT item_id, value FROM " + bi));
